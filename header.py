@@ -8,7 +8,9 @@ class HeaderFrame(tk.Frame):
         self.grid_propagate(False)
 
     def add_header_image(self):
-        header_image = PhotoImage(file="images/logo.png")
-        image_label = tk.Label(self, image=header_image)
-        image_label.pack(fill="y", expand=True)
+        header_image = PhotoImage(file="images/logoresize3.png")
+        image_label = tk.Label(self, image=header_image, borderwidth=0)
+        image_label.pack(side="left", padx=50)
         image_label.image = header_image
+        title_text = tk.Label(self, text = "Calibration Tool", font=("Arial", 20, 'bold'))
+        title_text.pack(side="right", padx=50)
