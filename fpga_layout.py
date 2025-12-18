@@ -7,8 +7,20 @@ import paramiko
 import time
 from dotenv import load_dotenv
 import os
+import sys
 
-load_dotenv()
+# Determine the correct path to the .env file
+if getattr(sys, 'frozen', False):
+    # Running in a PyInstaller bundle
+    application_path = os.path.dirname(sys.executable)
+else:
+    # Running in a normal Python environment
+    application_path = os.path.dirname(os.path.abspath(__file__))
+
+dotenv_path = os.path.join(application_path, '.env')
+
+# Load the .env file from the determined path
+load_dotenv(dotenv_path=dotenv_path)
 is_running = False
 client = paramiko.client.SSHClient()
 output_queue = queue.Queue()
