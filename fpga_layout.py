@@ -8,6 +8,8 @@ import time
 from dotenv import load_dotenv
 import os
 import sys
+import subprocess
+import nmap
 
 # Determine the correct path to the .env file
 if getattr(sys, 'frozen', False):
@@ -208,22 +210,34 @@ class RadarsAvailableFrame(tk.Frame):
 
 
     def find_other_radars(self):
-        client.load_system_host_keys()
-        client.connect(hostname="192.168.0.136", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-        transport = client.get_transport()
-        channel = transport.open_session()
-        channel.get_pty()
-        channel.invoke_shell()
+        # client.load_system_host_keys()
+        # client.connect(hostname="192.168.0.136", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        # transport = client.get_transport()
+        # channel = transport.open_session()
+        # channel.get_pty()
+        # channel.invoke_shell()
+        #
+        # channel.send("nmap -sL 192.168.0.*\n")
+        # time.sleep(2)
+        # output = ""
+        # while channel.recv_ready():
+        #     chunk = channel.recv(1024).decode("iso-8859-1")
+        #     output += chunk
+        #     time.sleep(2)
+        # self.update_radar_pulldown(output)
+        # client.close()
 
-        channel.send("nmap -sL 192.168.0.*\n")
-        time.sleep(2)
-        output = ""
-        while channel.recv_ready():
-            chunk = channel.recv(1024).decode("iso-8859-1")
-            output += chunk
-            time.sleep(2)
-        self.update_radar_pulldown(output)
-        client.close()
+        nm = nmap.PortScanner()
+        nm.scan(hosts = "192.168.0.0/255", arguments = "-sL")
+        for host in nm.all_hosts():
+            self.update_radar_pulldown(host)
+
+        # try:
+        #     result = subprocess.run(["nmap", "-sL", "192.168.0.*\n"], capture_output=True)
+        #     print(result.stdout)
+        # except subprocess.CalledProcessError as e:
+        #     print(f"Command Failed: {e.stderr}")
+
 
     def update_radar_pulldown(self, output):
         data = output.split("\n")
