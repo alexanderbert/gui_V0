@@ -1,5 +1,9 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from test2 import *
+
 from settings import *
 import threading
 import queue
@@ -8,6 +12,15 @@ import time
 from dotenv import load_dotenv
 import os
 import sys
+from datetime import datetime
+
+
+import tkinter as tk
+from tkinter import ttk, messagebox
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+
+
 
 # Determine the correct path to the .env file
 if getattr(sys, 'frozen', False):
@@ -21,9 +34,11 @@ dotenv_path = os.path.join(application_path, '.env')
 
 # Load the .env file from the determined path
 load_dotenv(dotenv_path=dotenv_path)
+
 is_running = False
 client = paramiko.client.SSHClient()
 output_queue = queue.Queue()
+
 
 
 class MainFrame(tk.Frame):
@@ -108,14 +123,39 @@ class OutputFrame(tk.Frame):
         # self.entry_dict = parent.entry_dict
         self.rowconfigure(list(range(8)), weight=1)
 
+        # FAILING
+        self.fig_x_dc = Figure(figsize=(1, 1))
+        ax = self.fig_x_dc.add_subplot(111)
+        # self.fig_y_dc = Figure(figsize=(1, 1))
+        # ax = self.fig_y_dc.add_subplot()
+
+
+    class LivePlot:
+        def __init__(self, parent, col, row):
+            self.times = []
+            self.values = []
+            self.col = col
+            self.row = row
+
+            self.figure = Figure(figsize=(6, 4), dpi=100)
+            self.ax = self.figure.add_subplot(111)
+
+            self.line, = self.ax.plot([], [])
+
+            self.canvas = FigureCanvasTkAgg(self.figure, master=parent)
+            self.canvas.get_tk_widget().grid(column=col, row=row, sticky="NSEW")
 
     def update_all_textboxes(self, output_list):
+        ## X_DC and Y_DC for graphical display
         x_dc_offset_value = output_list[0].split("= ")
-        self.x_dc_offset_textbox.replace("1.0", tk.END, x_dc_offset_value[1], "center")
-        self.x_dc_offset_textbox.tag_configure("center", justify="center")
+        # self.x_dc_offset_textbox.replace("1.0", tk.END, x_dc_offset_value[1], "center")
+        # self.x_dc_offset_textbox.tag_configure("center", justify="center")
+
         y_dc_offset_value = output_list[1].split("= ")
-        self.y_dc_offset_textbox.replace("1.0", tk.END, y_dc_offset_value[1], "center")
-        self.y_dc_offset_textbox.tag_configure("center", justify="center")
+        LivePlotApp(self.second_window ,x_dc_offset_value, y_dc_offset_value)
+        # self.y_dc_offset_textbox.replace("1.0", tk.END, y_dc_offset_value[1], "center")
+        # self.y_dc_offset_textbox.tag_configure("center", justify="center")
+
         x_min_max_value = output_list[2].split("X  ")
         self.x_min_max_textbox.replace("1.0", tk.END, x_min_max_value[1], "center")
         self.x_min_max_textbox.tag_configure("center", justify="center")
@@ -138,10 +178,19 @@ class OutputFrame(tk.Frame):
             output_labels = tk.Label(self, text=OUTPUT_FIELDS[index])
             output_labels.grid(column=0, row=index, sticky="NSEW")
             output_labels.config(font = ("Arial", 20))
-        self.x_dc_offset_textbox = tk.Text(self, font=("Arial", 20))
-        self.x_dc_offset_textbox.grid(column=1, row=0, sticky="NSEW")
-        self.y_dc_offset_textbox = tk.Text(self, font=("Arial", 20))
-        self.y_dc_offset_textbox.grid(column=1, row=1, sticky="NSEW")
+        #PREVIous
+        self.x_dc_offset_canvas = FigureCanvasTkAgg(self.fig_x_dc, self)
+        self.x_dc_offset_canvas.get_tk_widget().grid(column=1, row=0, rowspan =2, sticky="NSEW")
+        # self.y_dc_offset_canvas = FigureCanvasTkAgg(self.fig_y_dc, self)
+        # self.y_dc_offset_canvas.get_tk_widget().grid(column=1, row=1, sticky="NSEW")
+        #CURENTLY WORKING ON
+        # self.x_dc_offset_plot = self.LivePlot(OutputFrame, 1, 0)
+        # self.y_dc_offset_plot = self.LivePlot(OutputFrame,1,1)
+
+        # self.x_dc_offset_textbox = tk.Text(self, font=("Arial", 20))
+        # self.x_dc_offset_textbox.grid(column=1, row=0, sticky="NSEW")
+        # self.y_dc_offset_textbox = tk.Text(self, font=("Arial", 20))
+        # self.y_dc_offset_textbox.grid(column=1, row=1, sticky="NSEW")
         self.x_min_max_textbox = tk.Text(self, font=("Arial", 20))
         self.x_min_max_textbox.grid(column=1, row=2, sticky="NSEW")
         self.y_min_max_textbox = tk.Text(self, font=("Arial", 20))
@@ -157,6 +206,7 @@ class OutputFrame(tk.Frame):
         self.settings_label.grid(column=0, row=7, sticky="NSEW")
         self.settings_textbox = tk.Text(self, wrap="word", font=("Arial", 20))
         self.settings_textbox.grid(column=1, row=7, sticky="NSEW")
+        # return self.x_dc_offset_canvas, self.y_dc_offset_canvas
 
     def display_settings(self, settings):
         commands = settings.split(" ")
