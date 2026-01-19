@@ -190,7 +190,7 @@ class ControlFrame(tk.Frame):
 
 
 class RadarsAvailableFrame(tk.Frame):
-    radar_dict = {}
+    radar_dict = {"Select A Radar": "--------"}
     def __init__(self, parent):
         super().__init__(parent, background = "steel blue")
         self.radar_selected = None
