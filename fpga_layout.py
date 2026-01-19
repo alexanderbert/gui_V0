@@ -222,14 +222,12 @@ class RadarsAvailableFrame(tk.Frame):
                 client.close()
                 self.update_radar_pulldown(host, radar_hostname)
             except:
-                print("pass")
+                print(f"No connection to {host}")
 
     def update_radar_pulldown(self, ip_address, hostname):
         try:
-            for key, value in self.radar_dict.items():
-                if ip_address not in value:
-                    self.radar_dict[hostname] = ip_address
-                    self.radar_drop()
+            if ip_address not in self.radar_dict.values():
+                self.radar_dict[hostname] = ip_address
         except:
             print("ERROR")
 
