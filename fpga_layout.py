@@ -211,7 +211,7 @@ class RadarsAvailableFrame(tk.Frame):
 
     def find_other_radars(self):
         nm = nmap.PortScanner()
-        nm.scan(hosts = "192.168.0.0/255", arguments = "-sn")
+        nm.scan(hosts = "192.168.0.*", arguments = "-sn")
         for host in nm.all_hosts():
             try:
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -222,17 +222,16 @@ class RadarsAvailableFrame(tk.Frame):
                 client.close()
                 self.update_radar_pulldown(host, radar_hostname)
             except:
-                pass
+                print("pass")
 
     def update_radar_pulldown(self, ip_address, hostname):
-
-                try:
-                    for key, value in self.radar_dict.items():
-                        if ip_address not in value:
-                            self.radar_dict[hostname] = ip_address
-                            self.radar_drop()
-                except:
-                    print("ERROR")
+        try:
+            for key, value in self.radar_dict.items():
+                if ip_address not in value:
+                    self.radar_dict[hostname] = ip_address
+                    self.radar_drop()
+        except:
+            print("ERROR")
 
 
     def run_reset_radar(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_USERNAME')}"):
