@@ -212,48 +212,46 @@ class RadarsAvailableFrame(tk.Frame):
     def find_other_radars(self):
         # client.load_system_host_keys()
         # client.connect(hostname="192.168.0.136", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-        # transport = client.get_transport()
-        # channel = transport.open_session()
-        # channel.get_pty()
-        # channel.invoke_shell()
-        #
-        # channel.send("nmap -sL 192.168.0.*\n")
-        # time.sleep(2)
-        # output = ""
-        # while channel.recv_ready():
-        #     chunk = channel.recv(1024).decode("iso-8859-1")
-        #     output += chunk
-        #     time.sleep(2)
-        # self.update_radar_pulldown(output)
-        # client.close()
 
         nm = nmap.PortScanner()
-        nm.scan(hosts = "192.168.0.0/255", arguments = "-sL")
+        nm.scan(hosts = "192.168.0.0/255", arguments = "-sn")
         for host in nm.all_hosts():
-            self.update_radar_pulldown(host)
+            try:
+                client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                client.load_system_host_keys()
+                client.connect(hostname=f"{host}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=3)
+                stdin, stdout, stderr = client.exec_command("hostname")
+                radar_hostname = stdout.read().decode("utf-8")
+                client.close()
+                self.update_radar_pulldown(host, radar_hostname)
+            except:
+                pass
 
-        # try:
-        #     result = subprocess.run(["nmap", "-sL", "192.168.0.*\n"], capture_output=True)
-        #     print(result.stdout)
-        # except subprocess.CalledProcessError as e:
-        #     print(f"Command Failed: {e.stderr}")
+    # def update_radar_pulldown(self, output):
+    #     data = output.split("\n")
+    #     for line in data:
+    #         if "Nmap scan report for sq-radar-" in line:
+    #             radar_key = line[21:31]
+    #             radar_address = line[33:46]
+    #             try:
+    #                 if radar_key not in self.radar_dict:
+    #                     self.radar_dict[radar_key] = radar_address
+    #                     self.radar_drop()
+    #             except:
+    #                 print("ERROR")
 
+    def update_radar_pulldown(self, ip_address, hostname):
 
-    def update_radar_pulldown(self, output):
-        data = output.split("\n")
-        for line in data:
-            if "Nmap scan report for sq-radar-" in line:
-                radar_key = line[21:31]
-                radar_address = line[33:46]
                 try:
-                    if radar_key not in self.radar_dict:
-                        self.radar_dict[radar_key] = radar_address
-                        self.radar_drop()
+                    for key, value in self.radar_dict.items():
+                        if ip_address not in value:
+                            self.radar_dict[hostname] = ip_address
+                            self.radar_drop()
                 except:
                     print("ERROR")
 
 
-    def run_reset_radar(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}"):
+    def run_reset_radar(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_USERNAME')}"):
         client.load_system_host_keys()
         client.connect(hostname=hostname, username=username, password=password, look_for_keys=False, allow_agent=False)
         transport = client.get_transport()
