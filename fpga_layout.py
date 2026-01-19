@@ -190,7 +190,7 @@ class ControlFrame(tk.Frame):
 
 
 class RadarsAvailableFrame(tk.Frame):
-    radar_dict = {"sq-radar-1-DUMMY": "192.168.0.120", "sq-radar-2": "192.168.0.136"}
+    radar_dict = {}
     def __init__(self, parent):
         super().__init__(parent, background = "steel blue")
         self.radar_selected = None
@@ -210,9 +210,6 @@ class RadarsAvailableFrame(tk.Frame):
 
 
     def find_other_radars(self):
-        # client.load_system_host_keys()
-        # client.connect(hostname="192.168.0.136", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-
         nm = nmap.PortScanner()
         nm.scan(hosts = "192.168.0.0/255", arguments = "-sn")
         for host in nm.all_hosts():
@@ -226,19 +223,6 @@ class RadarsAvailableFrame(tk.Frame):
                 self.update_radar_pulldown(host, radar_hostname)
             except:
                 pass
-
-    # def update_radar_pulldown(self, output):
-    #     data = output.split("\n")
-    #     for line in data:
-    #         if "Nmap scan report for sq-radar-" in line:
-    #             radar_key = line[21:31]
-    #             radar_address = line[33:46]
-    #             try:
-    #                 if radar_key not in self.radar_dict:
-    #                     self.radar_dict[radar_key] = radar_address
-    #                     self.radar_drop()
-    #             except:
-    #                 print("ERROR")
 
     def update_radar_pulldown(self, ip_address, hostname):
 
