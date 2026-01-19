@@ -230,6 +230,7 @@ class RadarsAvailableFrame(tk.Frame):
                 self.radar_dict[hostname] = ip_address
         except:
             print("ERROR")
+        self.radar_drop()
 
 
     def run_reset_radar(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_USERNAME')}"):
