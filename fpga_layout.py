@@ -233,7 +233,7 @@ class RadarsAvailableFrame(tk.Frame):
         self.radar_drop()
 
 
-    def run_reset_radar(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_USERNAME')}"):
+    def run_reset_radar(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}"):
         client.load_system_host_keys()
         client.connect(hostname=hostname, username=username, password=password, look_for_keys=False, allow_agent=False)
         transport = client.get_transport()
