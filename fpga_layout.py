@@ -1,5 +1,11 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+import matplotlib
+matplotlib.use('TkAgg')
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+
 from settings import *
 import threading
 import queue
@@ -109,6 +115,9 @@ class OutputFrame(tk.Frame):
         # self.command_dict = parent.command_dict
         # self.entry_dict = parent.entry_dict
         self.rowconfigure(list(range(8)), weight=1)
+        # self.rowconfigure(0, weight=2)
+        # self.rowconfigure(list(range(1,7)), weight=1)
+        # self.grid_propagate(False)
 
 
     def update_all_textboxes(self, output_list):
@@ -140,10 +149,17 @@ class OutputFrame(tk.Frame):
             output_labels = tk.Label(self, text=OUTPUT_FIELDS[index])
             output_labels.grid(column=0, row=index, sticky="NSEW")
             output_labels.config(font = ("Arial", 20))
+
+        # self.graph_frame = tk.Frame(self)
+        # self.graph_frame.grid(column=1, row=0, sticky="NSEW")
+        # self.x_dc_offset_canvas = self.Plots(self.graph_frame,0, 0)
+        # self.y_dc_offset_canvas = self.Plots(self.graph_frame,0, 1)
+
         self.x_dc_offset_textbox = tk.Text(self, font=("Arial", 20))
         self.x_dc_offset_textbox.grid(column=1, row=0, sticky="NSEW")
         self.y_dc_offset_textbox = tk.Text(self, font=("Arial", 20))
         self.y_dc_offset_textbox.grid(column=1, row=1, sticky="NSEW")
+
         self.x_min_max_textbox = tk.Text(self, font=("Arial", 20))
         self.x_min_max_textbox.grid(column=1, row=2, sticky="NSEW")
         self.y_min_max_textbox = tk.Text(self, font=("Arial", 20))
@@ -151,7 +167,7 @@ class OutputFrame(tk.Frame):
         self.x_power_textbox = tk.Text(self, font=("Arial", 20))
         self.x_power_textbox.grid(column=1, row=4, sticky="NSEW")
         self.y_power_textbox = tk.Text(self, font=("Arial", 20))
-        self.y_power_textbox.grid(column=1, row=5, sticky="NSEW")
+        self.y_power_textbox.grid(column=1, row=5,sticky = "NSEW")
         self.rate_textbox = tk.Text(self, font=("Arial", 20))
         self.rate_textbox.grid(column=1, row=6, sticky="NSEW")
         self.settings_label = tk.Label(self, text="Settings")
@@ -173,6 +189,18 @@ class OutputFrame(tk.Frame):
                 output_string += f"{command}, "
 
         self.settings_textbox.insert(tk.END, output_string)
+
+    class Plots:
+        def __init__(self, parent, col, row):
+            self.column = col
+            self.row = row
+            self.fig = Figure(figsize = (10, 1))
+            self.ax = self.fig.add_subplot(111)
+            self.ax.set_xlabel(None)
+            self.ax.set_xticks([])
+            self.canvas = FigureCanvasTkAgg(self.fig, master=parent)
+            self.canvas.get_tk_widget().grid(column=self.column, row = self.row, sticky="NSEW")
+            self.canvas.draw()
 
 
 class ControlFrame(tk.Frame):
