@@ -220,7 +220,7 @@ class RadarsAvailableFrame(tk.Frame):
                 stdin, stdout, stderr = client.exec_command("hostname")
                 radar_hostname = stdout.read().decode("utf-8")
                 client.close()
-                self.update_radar_pulldown(host, radar_hostname)
+                self.update_radar_pulldown(host, radar_hostname.strip())
             except:
                 print(f"No connection to {host}")
 
