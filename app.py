@@ -1,5 +1,7 @@
 from fpga_layout import *
 from header import *
+from positioner import PositionerFrame
+
 
 class App(tk.Tk):
     def __init__(self):
@@ -24,10 +26,24 @@ class App(tk.Tk):
         self.main_frame = MainFrame(self.my_notebook)
         self.main_frame.control_frame.radars_available_frame.radar_drop()
 
-        self.frame2 = tk.Frame(self.my_notebook, bg="blue")
+        self.positioner_frame = PositionerFrame(self.my_notebook)
+        self.positioner_frame.control_frame.radars_available_frame.radar_drop()
 
         self.my_notebook.add(self.main_frame, text = "FPGA")
-        self.my_notebook.add(self.frame2, text = "Blue")
+        self.my_notebook.add(self.positioner_frame, text = "Positioner")
+
+
 
         self.mainloop()
+
+#     def open_second_window(self):
+#         self.second_window = SecondWindow(self)
+#
+# class SecondWindow(tk.Toplevel):
+#     def __init__(self, parent):
+#         super().__init__(parent)
+#         self.title("Charts")
+#         self.geometry("300x300")
+#         close_button = tk.Button(self, text="Close Window", command=self.destroy)
+#         close_button.pack(pady=10)
 App()

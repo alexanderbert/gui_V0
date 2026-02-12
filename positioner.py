@@ -7,6 +7,9 @@ import time
 import queue
 import threading
 
+from numpy.ma.extras import row_stack
+from tkterminal import Terminal
+
 client = paramiko.client.SSHClient()
 output_queue = queue.Queue()
 
@@ -35,13 +38,51 @@ class IOFrame(tk.Frame):
         self.input_frame.grid(column=0, row = 0, sticky = "NSEW")
 
 
+# class TerminalFrame(tk.Frame):
+#     def __init__(self, parent, col, row):
+#         super().__init__(parent, background = "white")
+#         self.terminal = Terminal(self)
+#         self.terminal.config(state="disabled")
+#         self.col = col
+#         self.row = row
+#         self.terminal.grid(column=col, row=row, sticky="NSEW")
+
 class InputFrame(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, background="gray7")
-        self.rowconfigure(list(range(11)), weight=1)
+        self.rowconfigure(0, weight=10)
+        self.rowconfigure(1, weight=1)
         self.tf_list = ["True", "False"]
         self.tf_selected = None
+        self.terminal = Terminal(self)
+        self.terminal.shell = True
+        self.terminal.grid(column=0, row = 0, sticky = "NSEW")
+        '''
+        figure out how to get prompt back after entering command while using a disabled state
+        self.terminal.config(state="disabled")
+        '''
 
+        #self.spot_scan = tk.Button(self, text = "Spot Scan", command= lambda: self.terminal.run_command("whoami"))
+        self.spot_scan = tk.Button(self, text="Spot Scan", command=lambda: self.terminal_command("whoami"))
+        self.spot_scan.grid(column=0, row = 1, sticky = "NSEW")
+        azimuth_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable="pass")
+        elevation_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable="amaass")
+        azimuth_entry.grid(column=1, row = 1, sticky = "NSEW")
+        elevation_entry.grid(column=2, row = 1, sticky = "NSEW")
+
+        self.rhi_scan = tk.Button(self, text = "RHI Scan", command= lambda: "pass")
+        self.rhi_scan.grid(column=3, row = 1, sticky = "NSEW")
+
+        self.rehome = tk.Button(self, text = "Re-Home", command= lambda: "pass")
+        self.rehome.grid(column=4, row = 1, sticky = "NSEW")
+        self.control_mode = tk.Button(self, text = "Control Mode", command= lambda: self.terminal.config(state="normal"))
+        self.control_mode.grid(column=5, row = 1, sticky = "NSEW")
+
+    def terminal_command(self, cmd):
+        # self.terminal.config(state="normal")
+        self.terminal.run_command(cmd)
+        # self.terminal.run_command("\n")
+        # self.terminal.config(state="disabled")
 
 class ControlFrame(tk.Frame):
     def __init__(self, parent, io_frame):
@@ -61,17 +102,23 @@ class RadarsAvailableFrame(tk.Frame):
     radar_dict = {"Select A Radar": "--------"}
     def __init__(self, parent):
         super().__init__(parent, background = "steel blue")
+        self.network_check_button = None
         self.radar_selected = None
         self.radars_available = None
-        self.columnconfigure(list(range(3)), weight=1)
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(list(range(2)), weight=1)
 
+
+        self.network_check_button = tk.Button(self, text="Network Check" , command= lambda: RadarsAvailableFrame.find_other_radars(self))
+        self.network_check_button.grid(column=0, row=1, sticky="SEW")
+        self.network_check_button.config(width=10, font=("Arial", 20))
 
     def radar_drop(self):
         self.radars_available = list(self.radar_dict.keys())
         self.radar_selected = tk.StringVar()
         self.radar_selected.set(self.radars_available[0])
         combo_drop = ttk.Combobox(self, textvariable=self.radar_selected, values = self.radars_available, state="readonly")
-        combo_drop.grid(column=1, row=0, sticky="EW")
+        combo_drop.grid(column=0, row=0, sticky="NEW")
         combo_drop.config(width=10)
         combo_drop.config(font = ("Arial", 20))
         return self.radar_selected
@@ -99,6 +146,8 @@ class RadarsAvailableFrame(tk.Frame):
         except:
             print("ERROR")
         self.radar_drop()
+
+
 
 class ButtonFrame(tk.Frame):
     def __init__(self, parent, radar_available_frame, io_frame):
@@ -149,11 +198,11 @@ class ButtonFrame(tk.Frame):
 
 
     def create_buttons(self):
-        self.button_end = tk.Button(self, text="End Run", command= lambda: self.stop_order())
+        self.button_end = tk.Button(self, text="Disconnect", command= lambda: self.stop_order())
         self.button_end.grid(column=0,  row=1)
         self.button_end.config(width=10, font=("Arial", 20))
 
-        self.button_reset = tk.Button(self, text="Reset", command = lambda: RadarsAvailableFrame.run_reset_radar(self.radar_available_frame,
+        self.button_reset = tk.Button(self, text="Home", command = lambda: RadarsAvailableFrame.run_reset_radar(self.radar_available_frame,
                                       command = "-r; sudo rmmod xdma; sudo modprobe xdma",
                                       hostname = self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get())))
         self.button_reset.grid(column=0, row=2)
@@ -163,9 +212,9 @@ class ButtonFrame(tk.Frame):
         self.submit_button.grid(column=0, row=0)
         self.submit_button.config(width=10, font=("Arial", 20))
 
-        self.network_check_button = tk.Button(self, text="Network Check" , command= lambda: RadarsAvailableFrame.find_other_radars(self.radar_available_frame))
-        self.network_check_button.grid(column=0, row=3)
-        self.network_check_button.config(width=10, font=("Arial", 20))
+        # self.network_check_button = tk.Button(self, text="Network Check" , command= lambda: RadarsAvailableFrame.find_other_radars(self.radar_available_frame))
+        # self.network_check_button.grid(column=0, row=3)
+        # self.network_check_button.config(width=10, font=("Arial", 20))
 
 
 class Button(tk.Button):
@@ -175,7 +224,7 @@ class Button(tk.Button):
 
 class SubmitButton(tk.Button):
     def __init__(self, parent, radar_available_frame, io_frame):
-        super().__init__(parent, text="Run FPGA", command=lambda: self.run_command())
+        super().__init__(parent, text="Connect", command=lambda: self.run_command())
         self.radar_available_frame = radar_available_frame
         self.io_frame = io_frame
 
