@@ -15,7 +15,7 @@ output_queue = queue.Queue()
 
 class PositionerFrame(tk.Frame):
     def __init__(self, parent):
-        super().__init__(parent, background = "Gray")
+        super().__init__(parent, background = "Red")
         self.columnconfigure(0, weight=6)
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
@@ -38,32 +38,51 @@ class IOFrame(tk.Frame):
         self.input_frame.grid(column=0, row = 0, sticky = "NSEW")
 
 
-# class TerminalFrame(tk.Frame):
-#     def __init__(self, parent, col, row):
-#         super().__init__(parent, background = "white")
-#         self.terminal = Terminal(self)
-#         self.terminal.config(state="disabled")
-#         self.col = col
-#         self.row = row
-#         self.terminal.grid(column=col, row=row, sticky="NSEW")
+class TerminalFrame(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent, background = "white")
+        self.terminal = Terminal(self)
+        self.terminal.grid(column=0, row=0, sticky="NSEW")
+        self.terminal.config(height= 50)
+
+    def terminal_command(self, cmd):
+        # self.terminal.config(state="normal")
+        self.terminal.run_command(cmd)
+        # self.terminal.run_command("\n")
+        # self.terminal.config(state="disabled")
+
+class OutputFrame(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent,background="gray7")
+
+        self.output_text = tk.Label(self, text = "Position: ", font = ("Arial", 20), foreground = "white")
+        self.output_text.grid(column=0, row=0, sticky="NSEW")
+
 
 class InputFrame(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, background="gray7")
         self.rowconfigure(0, weight=10)
         self.rowconfigure(1, weight=1)
+        self.columnconfigure(list(range(2)), weight=1)
         self.tf_list = ["True", "False"]
         self.tf_selected = None
-        self.terminal = Terminal(self)
-        self.terminal.shell = True
-        self.terminal.grid(column=0, row = 0, sticky = "NSEW")
+        # self.terminal = Terminal(self, font = ("Arial", 20), foreground="white")
+        # self.terminal.basename = f"Radar Selected: "
+        # self.terminal.grid(column=0, row = 0, sticky = "NSEW")
+        # self.terminal.shell = True
+        # self.terminal.grid(column=0, row = 0, sticky = "NSEW")
+        self.terminal_frame = TerminalFrame(self)
+        self.terminal_frame.grid(column=0, row = 0, sticky = "NSEW")
+        self.output_frame = OutputFrame(self)
+        self.output_frame.grid(column=1, row = 0, sticky = "NSEW")
         '''
         figure out how to get prompt back after entering command while using a disabled state
         self.terminal.config(state="disabled")
         '''
 
         #self.spot_scan = tk.Button(self, text = "Spot Scan", command= lambda: self.terminal.run_command("whoami"))
-        self.spot_scan = tk.Button(self, text="Spot Scan", command=lambda: self.terminal_command("whoami"))
+        self.spot_scan = tk.Button(self, text="Spot Scan", command=lambda: self.terminal_frame.terminal_command("whoami"))
         self.spot_scan.grid(column=0, row = 1, sticky = "NSEW")
         azimuth_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable="pass")
         elevation_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable="amaass")
@@ -78,11 +97,7 @@ class InputFrame(tk.Frame):
         self.control_mode = tk.Button(self, text = "Control Mode", command= lambda: self.terminal.config(state="normal"))
         self.control_mode.grid(column=5, row = 1, sticky = "NSEW")
 
-    def terminal_command(self, cmd):
-        # self.terminal.config(state="normal")
-        self.terminal.run_command(cmd)
-        # self.terminal.run_command("\n")
-        # self.terminal.config(state="disabled")
+
 
 class ControlFrame(tk.Frame):
     def __init__(self, parent, io_frame):
