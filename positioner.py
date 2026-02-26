@@ -12,6 +12,7 @@ import signal
 import subprocess
 import io
 from contextlib import redirect_stdout
+from datetime import datetime
 
 from numpy.ma.extras import row_stack
 from tkterminal import Terminal
@@ -20,6 +21,7 @@ client = paramiko.client.SSHClient()
 output_queue = queue.Queue()
 #GLOBAL VARIABLE POSITIONER CONNECTED
 selected_positioner_global = None
+channel_open = False
 
 class PositionerFrame(tk.Frame):
     def __init__(self, parent):
@@ -71,6 +73,12 @@ class TerminalFrame(tk.Frame):
     # @scan_type.setter
     # def scan_type(self, scan_type):
     #     self._scan_type = scan_type
+        self.status_text_box = tk.Text(self, font=("Arial", 16), bg="gray7", fg="white")
+        self.status_text_box.grid(column=0, row=0, sticky="NSEW")
+        self.status_text_box.config(height=30, width = 50)
+
+        self.pos_text_box = tk.Text(self, font=("Arial", 20), bg="gray7", fg="white")
+        self.pos_text_box.grid(column=1, row=0, sticky="NSEW")
 
 
     def set_positioner(self, positioner):
@@ -95,9 +103,11 @@ class TerminalFrame(tk.Frame):
         time.sleep(.5)
         channel.send("sudo su - radaraccess\n")
         time.sleep(1)
-        channel.send("ssh -t Radar5-tunnel\n")
+        #USE -t or not?
+        #channel.send("ssh -t Radar2-tunnel\n")
+        channel.send("ssh Radar5-tunnel\n")
         output = channel.recv(4096).decode("iso-8859-1")
-        print(output)
+        # print(output)
         time.sleep(1)
         return channel
 
@@ -116,102 +126,67 @@ class TerminalFrame(tk.Frame):
         # channel = transport.open_session()
         # channel.get_pty()
         # channel = client.invoke_shell()
-        # channel.send("whoami\n")
-        # time.sleep(1)
-        # output = channel.recv(4096).decode("iso-8859-1")
-        # print(output)
-        # time.sleep(1)
-        # output = channel.recv(4096).decode("iso-8859-1")
-        # print(output)
-        # channel.send("sudo su - radaraccess\n")
-        # time.sleep(1)
-        # output = channel.recv(4096).decode("iso-8859-1")
-        # print(output)
-        # time.sleep(1)
-        # ##### I AM IN radaracces@data
-        # ###WORKINGING!!!!
-        # channel.send("ssh -t Radar5-tunnel\n")
-        # time.sleep(1)
-        # output = channel.recv(4096).decode("iso-8859-1")
-        # print(output)
-        #
-        # time.sleep(1)
-        #channel.send("fuser -v /dev/ttyUSB1\r")
-
+        self.status_text_box.delete("1.0", tk.END)
         channel = self.alex_home_network_mode()
-
         ttyf="/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         channel.send(f"cat {ttyf} &\n")
+        time.sleep(.5)
         channel.send(f"echo scan status > {ttyf}\n")
-        output = channel.recv(4096).decode("iso-8859-1")
-        print(output)
-
-        ## READ MOTORS
-        # channel.send(f"echo scan mode PPI > {ttyf}\n")
-        # channel.send(f"head -n 8 {ttyf} &\n")
-        time.sleep(0.5)
-        channel.send(f"echo pos > {ttyf}\n")
-        channel.send("fg \n")
-        time.sleep(0.5)
-        channel.send(f"\x1a")
-
-
-        '''
-        go home and spot end on their own for az and el
-        rhi and ppi and sector need az and el
-        sector az major el minor
-        rhi el major az minor 
-        
-        specify start and end az and el
-        scan set default 0 -360  elbeam = (low of (-6) -default 0 - high of 45)
-        default but allow
-        scan set startaz 
-        scan set endaz
-        scan set startelbeam
-        scan set endelbeam
-        scan set speed sec/rev - default set to 20 (low 2- high300) 
-        scan set inc increment in degrees default set to 1.5 (0.1 low - 5 high)
-        scan set repeat - 0 or 1 re run or not, default 1
-        scan set slipdetect = 0 or 1 (1 will shut motor off if slip detected) default 1
-        modes ppi rhi rhis sector
-        spot - ignores endaz and endelbeam
-        ppi dont use startaz or endaz, the others do
-        beams are DESIRED BEAM is reflected
-        axis are for reflector - dont need axis for now internally stored
-        
-        working command below:
-        ttyf="/dev/ttyUSB1"
-        channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
-        scan mode rhi
-        scan set startaz 0 ---Start lower than end
-        scan set endaz 360
-        scan set startelbeam 0 ---start lower than end can swap if needed
-        scan set endelbeam 45
-        scan set speed 20.0
-        scan set inc 1.5
-        scan set repeat 1
-        scan set slipdetect 1
-        scan start\n")
-        
-        rhis and sector alternate on major axis elevation and azimuths respectively
-                
-        channel.send(f"echo scan status > {ttyf}\n")
-        # CHECK RUN: IF 1, running if 0 stopped - possible loop check every second, 300 seconds
-        #OUTPUT POS AND SCAN COMMANDS
+        time.sleep(.5)
         channel.send("fg\n")
         time.sleep(0.5)
         channel.send(f"\x1a")
-        
-        '''
-        # time.sleep(2)
-        # channel.send("pos\n")
-        time.sleep(1)
-        output2 = channel.recv(4096).decode("iso-8859-1")
-        print(output2)
-        time.sleep(1)
+        time.sleep(.5)
+        run_status_variable = ""
+        #output = channel.recv(4096).decode("iso-8859-1")
+        try:
+            output = channel.recv(8192).decode("iso-8859-1")
+            time.sleep(1)
+            print(output)
+            output_status = output.split("sq@sq-radar-5:~$ scan status", 1)
+            output_lines = output_status[1].split("\r")
+            for index, line in enumerate(output_lines):
+                print(f"{index}: {line}")
+                if "Run:" in line:
+                    run_status_variable = line.split("Run:")[1]
+                self.status_text_box.insert(tk.END, line)
+                if "Attenuations:" in line:
+                    #self.status_text_box.insert(tk.END, "\r")
+                    break
+        except:
+            channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
+            channel.send(f"cat {ttyf} &\n")
+            time.sleep(.5)
+            channel.send(f"echo scan status > {ttyf}\n")
+            time.sleep(.5)
+            channel.send("fg\n")
+            time.sleep(0.5)
+            channel.send(f"\x1a")
+            time.sleep(.5)
+            output = channel.recv(8192).decode("iso-8859-1")
+            time.sleep(1)
+            print(output)
+            output_status = output.split("scan status", 1)
+            output_lines = output_status[1].split("\r")
+            for index, line in enumerate(output_lines):
+                print(f"{index}: {line}")
+                if "Run:" in line:
+                    run_status_variable = line.split("Run:")[1]
+                self.status_text_box.insert(tk.END, line)
+                if "Attenuations:" in line:
+                    # self.status_text_box.insert(tk.END, "\r")
+                    break
+
         channel.close()
         client.close()
+        run_status_variable = int(run_status_variable.strip())
+        # print(f" RUN STATUS: {run_status_variable}")
+        # print((run_status_variable == 1))
+        print(f"RUN STATUS: {run_status_variable}")
+        return run_status_variable
+
+
 
 
     def spot_scan(self, start_az, end_az, start_elbeam, end_elbeam, speed, inc, repeat, slipdetect):
@@ -227,45 +202,25 @@ class TerminalFrame(tk.Frame):
         channel = self.alex_home_network_mode()
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
-                    scan mode spot
-                    scan set startaz {start_az}
-                    scan set endaz {end_az}
-                    scan set startelbeam {start_elbeam}
-                    scan set endelbeam {end_elbeam}
-                    scan set speed {speed}
-                    scan set inc {inc}
-                    scan set repeat {repeat}
-                    scan set slipdetect {slipdetect}
-                    scan start\n
+                    echo scan mode spot > {ttyf}
+                    echo scan set startaz {start_az} > {ttyf}
+                    echo scan set endaz {end_az} > {ttyf}
+                    echo scan set startelbeam {start_elbeam} > {ttyf}
+                    echo scan set endelbeam {end_elbeam} > {ttyf}
+                    echo scan set speed {speed} > {ttyf}
+                    echo scan set inc {inc} > {ttyf}
+                    echo scan set repeat {repeat} > {ttyf}
+                    echo scan set slipdetect {slipdetect} > {ttyf}
+                    echo scan start > {ttyf}\n
                     """)
-        channel.send("fg\n")
         time.sleep(0.5)
-        channel.send(f"\x1a")
-        time.sleep(0.5)
-        output = channel.recv(4096).decode("iso-8859-1")
-        print(output)
+        # output = channel.recv(4096).decode("iso-8859-1")
+        # print(output)
+        self.get_positioner_status()
         channel.close()
         client.close()
 
 
-
-    def terminal_command(self, cmd):
-        # self.terminal.config(state="normal")
-        self.terminal.run_command(cmd)
-        # self.terminal.run_command("\n")
-        # self.terminal.config(state="disabled")
-
-    # def print_hello(self, radar_selected):
-    #     self.terminal.config(state="normal")
-    #     print(f"{radar_selected} for now")
-    #     print(f"{self}")
-    #     self.terminal.run_command(f"ssh {radar_selected}")
-    #     self.terminal.config(state="disabled")
-
-    # def start_threading(self, cmd):
-    #     self.terminal.configure(state="normal")
-    #     thread = threading.Thread(target=self.terminal_command, args=(cmd,))
-    #     thread.start()
 
     def rhi_scan(self, start_az, end_az, start_ele, end_ele, speed, inc, repeat, slipdetect):
         self.scan_type_var.set(f"RHI Scan")
@@ -281,23 +236,21 @@ class TerminalFrame(tk.Frame):
         ttyf="/dev/ttyUSB1"
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
-                    scan mode rhi
-                    scan set startaz {start_az}
-                    scan set endaz {end_az}
-                    scan set startelbeam {start_ele}
-                    scan set endelbeam {end_ele}
-                    scan set speed {speed}
-                    scan set inc {inc}
-                    scan set repeat {repeat}
-                    scan set slipdetect {slipdetect}
-                    scan start\n
+                    echo scan mode rhi > {ttyf}
+                    echo scan set startaz {start_az} > {ttyf}
+                    echo scan set endaz {end_az} > {ttyf}
+                    echo scan set startelbeam {start_ele} > {ttyf}
+                    echo scan set endelbeam {end_ele} > {ttyf}
+                    echo scan set speed {speed} > {ttyf}
+                    echo scan set inc {inc} > {ttyf}
+                    echo scan set repeat {repeat} > {ttyf}
+                    echo scan set slipdetect {slipdetect} > {ttyf}
+                    echo scan start > {ttyf}\n
                     """)
-        channel.send("fg\n")
         time.sleep(0.5)
-        channel.send(f"\x1a")
-        time.sleep(0.5)
-        output = channel.recv(4096).decode("iso-8859-1")
-        print(output)
+        # output = channel.recv(4096).decode("iso-8859-1")
+        # print(output)
+        self.get_positioner_status()
         channel.close()
         client.close()
 
@@ -305,7 +258,7 @@ class TerminalFrame(tk.Frame):
         self.scan_type_var.set(f"RHI SQUARE Scan")
         # client.load_system_host_keys()
         # client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-        print("connected")
+        print("RHI SQUARE Scan connected")
         # transport = client.get_transport()
         # channel = transport.open_session()
         # channel.get_pty()
@@ -315,25 +268,23 @@ class TerminalFrame(tk.Frame):
         ttyf="/dev/ttyUSB1"
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
-                    scan mode rhisquare
-                    scan set startaz {start_az}
-                    scan set endaz {end_az}
-                    scan set startelbeam {start_ele}
-                    scan set endelbeam {end_ele}
-                    scan set speed {speed}
-                    scan set inc {inc}
-                    scan set repeat {repeat}
-                    scan set slipdetect {slipdetect}
-                    scan start\n
+                    echo scan mode rhisquare > {ttyf}
+                    echo scan set startaz {start_az} > {ttyf}
+                    echo scan set endaz {end_az} > {ttyf}
+                    echo scan set startelbeam {start_ele} > {ttyf}
+                    echo scan set endelbeam {end_ele} > {ttyf}
+                    echo scan set speed {speed} > {ttyf}
+                    echo scan set inc {inc} > {ttyf}
+                    echo scan set repeat {repeat} > {ttyf}
+                    echo scan set slipdetect {slipdetect} > {ttyf}
+                    echo scan start > {ttyf}\n
                     """)
-        channel.send("fg\n")
-        time.sleep(0.5)
-        channel.send(f"\x1a")
-        time.sleep(0.5)
-        output = channel.recv(4096).decode("iso-8859-1")
-        print(output)
+        time.sleep(1)
+        self.get_positioner_status()
         channel.close()
         client.close()
+
+        #channel.send(f"echo scan status > {ttyf}\n")
 
     def ppi_scan(self, start_az, end_az, start_ele, end_ele, speed, inc, repeat, slipdetect):
         self.scan_type_var.set(f"PPI SCAN")
@@ -349,23 +300,21 @@ class TerminalFrame(tk.Frame):
         ttyf="/dev/ttyUSB1"
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
-                    scan mode spot
-                    scan set startaz {start_az}
-                    scan set endaz {end_az}
-                    scan set startelbeam {start_ele}
-                    scan set endelbeam {end_ele}
-                    scan set speed {speed}
-                    scan set inc {inc}
-                    scan set repeat {repeat}
-                    scan set slipdetect {slipdetect}
-                    scan start\n
+                    echo scan mode ppi > {ttyf}
+                    echo scan set startaz {start_az} > {ttyf}
+                    echo scan set endaz {end_az} > {ttyf}
+                    echo scan set startelbeam {start_ele} > {ttyf}
+                    echo scan set endelbeam {end_ele} > {ttyf}
+                    echo scan set speed {speed} > {ttyf}
+                    echo scan set inc {inc} > {ttyf}
+                    echo scan set repeat {repeat} > {ttyf}
+                    echo scan set slipdetect {slipdetect} > {ttyf}
+                    echo scan start > {ttyf}\n
                     """)
-        channel.send("fg\n")
         time.sleep(0.5)
-        channel.send(f"\x1a")
-        time.sleep(0.5)
-        output = channel.recv(4096).decode("iso-8859-1")
-        print(output)
+        # output = channel.recv(4096).decode("iso-8859-1")
+        # print(output)
+        self.get_positioner_status()
         channel.close()
         client.close()
 
@@ -383,73 +332,110 @@ class TerminalFrame(tk.Frame):
         ttyf="/dev/ttyUSB1"
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
-                    scan mode sector
-                    scan set startaz {start_az}
-                    scan set endaz {end_az}
-                    scan set startelbeam {start_ele}
-                    scan set endelbeam {end_ele}
-                    scan set speed {speed}
-                    scan set inc {inc}
-                    scan set repeat {repeat}
-                    scan set slipdetect {slipdetect}
-                    scan start\n
+                    echo scan mode sector > {ttyf}
+                    echo scan set startaz {start_az} > {ttyf}
+                    echo scan set endaz {end_az} > {ttyf}
+                    echo scan set startelbeam {start_ele} > {ttyf}
+                    echo scan set endelbeam {end_ele} > {ttyf}
+                    echo scan set speed {speed} > {ttyf}
+                    echo scan set inc {inc} > {ttyf}
+                    echo scan set repeat {repeat} > {ttyf}
+                    echo scan set slipdetect {slipdetect} > {ttyf}
+                    echo scan start > {ttyf}\n
                     """)
-        channel.send("fg\n")
         time.sleep(0.5)
-        channel.send(f"\x1a")
-        time.sleep(0.5)
-        output = channel.recv(4096).decode("iso-8859-1")
-        print(output)
+        # output = channel.recv(4096).decode("iso-8859-1")
+        # print(output)
+        self.get_positioner_status()
         channel.close()
         client.close()
 
     def stop_scan(self):
-        client.load_system_host_keys()
-        client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
-                       password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-        print("connected")
-        transport = client.get_transport()
-        channel = transport.open_session()
-        channel.get_pty()
-        channel.invoke_shell()
+        # client.load_system_host_keys()
+        # client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
+        #                password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        # print("connected")
+        # transport = client.get_transport()
+        # channel = transport.open_session()
+        # channel.get_pty()
+        # channel.invoke_shell()
+        channel = self.alex_home_network_mode()
         time.sleep(1)
         ttyf="/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         channel.send(f"echo scan stop > {ttyf}\n")
         time.sleep(1)
+        run_status_variable = self.get_positioner_status()
+
+        for i in range(300):
+            if run_status_variable != 1:
+                print("SCAN STOPPED")
+                break
+            time.sleep(1)
+            self.stop_scan()
+
         channel.close()
         client.close()
 
     #NEED TO CHECK
     def get_current_position(self):
-        print(self.positioner_selected)
-        client.load_system_host_keys()
-        client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
-                       password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-        print("connected")
-        transport = client.get_transport()
-        channel = transport.open_session()
-        channel.get_pty()
-        channel.invoke_shell()
-        time.sleep(1)
+        self.pos_text_box.delete("1.0", tk.END)
+        # print(self.positioner_selected)
+        # client.load_system_host_keys()
+        # client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
+        #                password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        # print("connected")
+        # transport = client.get_transport()
+        # channel = transport.open_session()
+        # channel.get_pty()
+        # channel.invoke_shell()
+        # time.sleep(1)
+        channel = self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         channel.send(f"cat {ttyf} &\n")
-        channel.send(f"echo scan status > {ttyf}\n")
-        ouptut = channel.recv(4096).decode("iso-8859-1")
-        print(ouptut)
+        # channel.send(f"echo scan status > {ttyf}\n")
+        # ouptut = channel.recv(4096).decode("iso-8859-1")
+        # print(ouptut)
         ## READ MOTORS
         # channel.send(f"echo scan mode PPI > {ttyf}\n")
         # channel.send(f"head -n 8 {ttyf} &\n")
         time.sleep(0.5)
         channel.send(f"echo pos > {ttyf}\n")
+        time.sleep(0.5)
         channel.send("fg \n")
         time.sleep(0.5)
         channel.send(f"\x1a")
-        output = channel.recv(4096).decode("iso-8859-1")
+        output = channel.recv(8192).decode("iso-8859-1")
+        time.sleep(1)
         print(output)
+        try:
+            output_status = output.split("sq@sq-radar-5:~$ pos", 1)
+            output_lines = output_status[1].split("\r")
+            current_datetime = datetime.now()
+            self.pos_text_box.insert(tk.END, f"Time of Position Check:\n")
+            self.pos_text_box.insert(tk.END, current_datetime)
+            for line in output_lines:
+                print(line)
+                self.pos_text_box.insert(tk.END, line)
+                if "AZ/EL From Encoders:" in line:
+                    #self.status_text_box.insert(tk.END, "\r")
+                    break
+        except:
+            output_status = output.split("pos", 1)
+            output_lines = output_status[1].split("\r")
+            current_datetime = datetime.now()
+            self.pos_text_box.insert(tk.END, f"Time of Position Check:\r {current_datetime}\r")
+            for line in output_lines:
+                print(line)
+                self.pos_text_box.insert(tk.END, line)
+                if "AZ/EL From Encoders:" in line:
+                    # self.status_text_box.insert(tk.END, "\r")
+                    break
+
         channel.close()
         client.close()
+
 
     def re_home(self):
         self.terminal.config(state="normal")
@@ -464,13 +450,13 @@ class TerminalFrame(tk.Frame):
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         channel.send(f"echo rehome\n")
-        ## SET NEW HOME
+        time.sleep(0.5)
+        self.get_positioner_status()
         channel.close()
         client.close()
 
 
     def go_home(self):
-        self.terminal.config(state="normal")
         client.load_system_host_keys()
         client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
                        password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
@@ -482,22 +468,50 @@ class TerminalFrame(tk.Frame):
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         channel.send(f"echo gohome\n")
-        ## SET NEW HOME
+        time.sleep(0.5)
+        self.get_positioner_status()
         channel.close()
         client.close()
 
+    def set_home(self, key_stroke):
+        self.scan_type_var.set(f"SET HOME")
+        print(key_stroke)
+        # client.load_system_host_keys()
+        # client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        print("connected")
+        # transport = client.get_transport()
+        # channel = transport.open_session()
+        # channel.get_pty()
+        # channel.invoke_shell()
+        print(self.positioner_selected)
+        channel = self.alex_home_network_mode()
+        ttyf="/dev/ttyUSB1"
+        channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo")
+        channel.sleep(0.1)
+        channel.send(f"echo {key_stroke} > {ttyf}\n")
+        time.sleep(0.5)
+        channel.close()
+        client.close()
 
-    #WORKING
-    def toggle_terminal_state(self, btn):
-        current_state = self.terminal.cget("state")
+    def reset_positioner(self):
+        print(self.positioner_selected)
+        client.load_system_host_keys()
+        client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
+                       password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        print("connected")
+        transport = client.get_transport()
+        channel = transport.open_session()
+        channel.get_pty()
+        channel.invoke_shell()
+        time.sleep(1)
+        channel = self.terminal_frame.alex_home_network_mode()
+        ttyf = "/dev/ttyUSB1"
+        channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
+        time.sleep(0.5)
+        channel.send(f"echo scan reset > {ttyf}\n")
 
-        if current_state == "normal":
-            self.terminal.config(state="disabled")
-            btn.config(text="Enable Terminal")
-        else:
-            self.terminal.config(state="normal")
-            btn.config(text="Disable Terminal")
-            self.start_run_terminal()
+        channel.close()
+        client.close()
 
     def start_threading(self):
         thread = threading.Thread(target=self.get_positioner_status())
@@ -511,22 +525,28 @@ class OutputFrame(tk.Frame):
         self.grid_propagate(False)
         self.terminal_frame = terminal_frame
 
-        self.positioner_selected_label = tk.Label(self, textvariable= self.terminal_frame.positioner_selected_var, font = ("Arial", 20), foreground="white", background="gray7")
-        self.positioner_selected_label.grid(column=0, row=0, sticky="NSW")
-        self.position_text_label = tk.Label(self, text = f"Current Position:  ",
-                                    font = ("Arial", 20), foreground = "white", background="gray7")
-        self.position_text_label.grid(column=0, row=1, sticky="NSW")
+        #self.pos_text_box = tk.Text(self, height=1, width=20, background="gray7")
+        self.pos_text_box = tk.Text(self, font=("Arial", 20), bg="gray7", fg="white")
+        self.pos_text_box.grid(column=0, row=0, sticky="NSEW")
+        self.pos_text_box.config(height=30, width = 70)
 
-        self.current_home_label = tk.Label(self, text=f"Home: ",
-                                    font=("Arial", 20), foreground="white", background="gray7")
-        self.current_home_label.grid(column=0, row=2, sticky="NSW")
 
-        self.scan_type_label = tk.Label(self, textvariable = self.terminal_frame.scan_type_var,
-                                    font=("Arial", 20), foreground="white", background="gray7")
-        self.scan_type_label.grid(column=0, row=4, sticky="NSW")
+        # self.positioner_selected_label = tk.Label(self, textvariable= self.terminal_frame.positioner_selected_var, font = ("Arial", 20), foreground="white", background="gray7")
+        # self.positioner_selected_label.grid(column=0, row=0, sticky="NSW")
+        # self.position_text_label = tk.Label(self, text = f"Current Position:  ",
+        #                             font = ("Arial", 20), foreground = "white", background="gray7")
+        # self.position_text_label.grid(column=0, row=1, sticky="NSW")
+        #
+        # self.current_home_label = tk.Label(self, text=f"Home: ",
+        #                             font=("Arial", 20), foreground="white", background="gray7")
+        # self.current_home_label.grid(column=0, row=2, sticky="NSW")
+        #
+        # self.scan_type_label = tk.Label(self, textvariable = self.terminal_frame.scan_type_var,
+        #                             font=("Arial", 20), foreground="white", background="gray7")
+        # self.scan_type_label.grid(column=0, row=4, sticky="NSW")
+        #self.run_position_update()
 
-    def change_scan_type_label(self, scan_type):
-        self.scan_type_label.configure(text=scan_type)
+
 
 class ScanFrame(tk.Frame):
     def __init__(self, parent, terminal_frame):
@@ -543,6 +563,10 @@ class ScanFrame(tk.Frame):
         self.increment_var = tk.StringVar()
         self.repeat_var = tk.StringVar()
         self.slipdetect_var = tk.StringVar()
+        self.create_layout()
+
+
+    def create_layout(self):
 
         self.start_azimuth_label = tk.Label(self, text="Start Azimuth", font = ("Arial", 20), foreground="white", background="gray7")
         self.start_azimuth_label.grid(column=0, row=0, sticky="NSW")
@@ -607,7 +631,7 @@ class ScanFrame(tk.Frame):
         self.rhi_scan.grid(column=4, row = 0, sticky = "NSEW")
         self.rhi_scan.config(font = ("Arial", 20))
 
-        self.rhi_squared_scan = tk.Button(self, text="RHI Squared", command=lambda: self.start_threading("RHI SQUARED"))
+        self.rhi_squared_scan = tk.Button(self, text="RHI Square", command=lambda: self.start_threading("RHI SQUARE"))
         self.rhi_squared_scan.grid(column=4, row=1, sticky="NSEW")
         self.rhi_squared_scan.config(font=("Arial", 20))
 
@@ -624,6 +648,10 @@ class ScanFrame(tk.Frame):
         self.spot_scan.grid(column=5, row = 0, sticky="NSEW")
         self.spot_scan.config(font=("Arial", 20))
 
+        self.set_home = tk.Button(self, text="Set Home", command=lambda: self.set_home_interface())
+        self.set_home.grid(column=5, row = 1, sticky="NSEW")
+        self.set_home.config(font=("Arial", 20))
+
         self.go_home = tk.Button(self, text = "GO HOME", command=lambda: self.terminal_frame.go_home())
         self.go_home.grid(column=5, row = 2, sticky="NSEW")
         self.go_home.config(font=("Arial", 20))
@@ -631,6 +659,70 @@ class ScanFrame(tk.Frame):
         self.re_home = tk.Button(self, text = "RE HOME", command=lambda: self.terminal_frame.re_home())
         self.re_home.grid(column=5, row = 3, sticky="NSEW")
         self.re_home.config(font=("Arial", 20))
+
+
+    def set_home_finished(self):
+        self.terminal_frame.set_home("/")
+        self.w_key.destroy()
+        self.a_key.destroy()
+        self.s_key.destroy()
+        self.d_key.destroy()
+        self.set_home_button.destroy()
+        self.create_layout()
+
+    def set_home_interface(self):
+        #Clear or reset default values
+        self.start_azimuth_label.destroy()
+        self.start_azimuth_entry.destroy()
+        self.end_azimuth_label.destroy()
+        self.end_azimuth_entry.destroy()
+        self.start_elbeam_label.destroy()
+        self.start_elbeam_entry.destroy()
+        self.end_elbeam_label.destroy()
+        self.end_elbeam_entry.destroy()
+        self.speed_label.destroy()
+        self.speed_entry.destroy()
+        self.increment_label.destroy()
+        self.increment_entry.destroy()
+        self.repeat_label.destroy()
+        self.repeat_entry.destroy()
+        self.slipdetect_label.destroy()
+        self.slipdetect_entry.destroy()
+        self.rhi_scan.destroy()
+        self.rhi_squared_scan.destroy()
+        self.ppi_scan.destroy()
+        self.sector_scan.destroy()
+        self.spot_scan.destroy()
+        self.set_home.destroy()
+        self.go_home.destroy()
+        self.re_home.destroy()
+
+        self.w_key = tk.Button(self, text="W", command=lambda: self.terminal_frame.set_home("w"))
+        self.w_key.grid(column=1, row=0, sticky="NSEW")
+        self.w_key.config(font=("Arial", 20))
+
+        self.s_key = tk.Button(self, text="S", command=lambda: self.terminal_frame.set_home("s"))
+        self.s_key.grid(column=1, row=2, sticky="NSEW")
+        self.s_key.config(font=("Arial", 20))
+
+        self.a_key = tk.Button(self, text="A", command=lambda: self.terminal_frame.set_home("a"))
+        self.a_key.grid(column=0, row=1, sticky="NSEW")
+        self.a_key.config(font=("Arial", 20))
+
+        self.d_key = tk.Button(self, text="D", command=lambda: self.terminal_frame.set_home("d"))
+        self.d_key.grid(column=2, row=1, sticky="NSEW")
+        self.d_key.config(font=("Arial", 20))
+
+        self.set_home_button = tk.Button(self, text="Set Home", command=lambda: self.set_home_finished())
+        self.set_home_button.grid(column=4, row=0, sticky="NSEW")
+        self.set_home_button.config(font=("Arial", 20))
+
+        # self.space_bar_button = tk.Button(self, text="Space Bar", command=lambda: self.terminal_frame.set_home("space_bar"))
+        # self.set_home_button.grid(column=4, row=3, sticky="NSEW")
+        # self.set_home_button.config(font=("Arial", 20))
+        self.space_bar_button = tk.Button(self, text="Space Bar", command=lambda: self.terminal_frame.set_home(" "))
+        self.space_bar_button.grid(column=4, row=3, sticky="NSEW")
+        self.space_bar_button.config(font=("Arial", 20))
 
 
     def on_click_clear(self, event):
@@ -705,6 +797,9 @@ class ScanFrame(tk.Frame):
                 return None
             case "SPOT":
                 self.terminal_frame.spot_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
+                return None
+            case "SET HOME":
+                self.terminal_frame.set_home(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
                 return None
             case _:
                 return print("unknown")
@@ -889,6 +984,10 @@ class ButtonFrame(tk.Frame):
         self.get_position = tk.Button(self, text="Current Position", command=lambda: self.io_frame.input_frame.output_frame.terminal_frame.get_current_position())
         self.get_position.grid(column=0, row=2)
         self.get_position.config(width=15, font=("Arial", 20))
+
+        self.reset_positioner = tk.Button(self, text="Reset Positioner",command=lambda: self.io_frame.input_frame.output_frame.terminal_frame.reset_positioner())
+        self.reset_positioner.grid(column=0, row=4)
+        self.reset_positioner.config(width=15, font=("Arial", 20))
 
 
         self.submit_button = SubmitButton(self, self.radar_available_frame, self.io_frame)
