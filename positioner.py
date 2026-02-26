@@ -1,17 +1,12 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from tkinter.constants import DISABLED, NORMAL
-import serial
 import paramiko
 import nmap
 import os
 import time
 import queue
 import threading
-import signal
-import subprocess
-import io
-from contextlib import redirect_stdout
+
 from datetime import datetime
 
 from numpy.ma.extras import row_stack
@@ -21,7 +16,8 @@ client = paramiko.client.SSHClient()
 output_queue = queue.Queue()
 #GLOBAL VARIABLE POSITIONER CONNECTED
 selected_positioner_global = None
-channel_open = False
+home_set = False
+
 
 class PositionerFrame(tk.Frame):
     def __init__(self, parent):
@@ -66,13 +62,7 @@ class TerminalFrame(tk.Frame):
         self.positioner_selected_var.set("Positioner: ")
         self.terminal.config(_limit_backspace = 0)
         self.positioner_selected_for_use = None
-    # @property
-    # def scan_type(self):
-    #     return self._scan_type
-    #
-    # @scan_type.setter
-    # def scan_type(self, scan_type):
-    #     self._scan_type = scan_type
+
         self.status_text_box = tk.Text(self, font=("Arial", 16), bg="gray7", fg="white")
         self.status_text_box.grid(column=0, row=0, sticky="NSEW")
         self.status_text_box.config(height=30, width = 50)
@@ -112,22 +102,22 @@ class TerminalFrame(tk.Frame):
         return channel
 
     def get_positioner_status(self):
-        # client.load_system_host_keys()
-        # client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        # # client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
-        # #                password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
+                       password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
         print(f"{self.positioner_selected_for_use} inside status")
         print(f"{selected_positioner_global} GLOBAL status")
         # key_path = "/Users/alexanderbertotto/.ssh/id_ed25519"
         # client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         # client.connect(hostname="data.stormquant.com", username="alex", key_filename=key_path, look_for_keys=False, allow_agent=False)
         # time.sleep(1)
-        # transport = client.get_transport()
-        # channel = transport.open_session()
-        # channel.get_pty()
-        # channel = client.invoke_shell()
+        transport = client.get_transport()
+        channel = transport.open_session()
+        channel.get_pty()
+        channel = client.invoke_shell()
         self.status_text_box.delete("1.0", tk.END)
-        channel = self.alex_home_network_mode()
+        #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         channel.send(f"cat {ttyf} &\n")
@@ -190,16 +180,16 @@ class TerminalFrame(tk.Frame):
 
 
     def spot_scan(self, start_az, end_az, start_elbeam, end_elbeam, speed, inc, repeat, slipdetect):
-        # client.load_system_host_keys()
-        # client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",)
-        # client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-        # print("connected")
-        # transport = client.get_transport()
-        # channel = transport.open_session()
-        # channel.get_pty()
-        # channel.invoke_shell()
+        print(self.positioner_selected)
+        client.load_system_host_keys()
+        client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        print("connected")
+        transport = client.get_transport()
+        channel = transport.open_session()
+        channel.get_pty()
+        channel.invoke_shell()
         ttyf="/dev/ttyUSB1"
-        channel = self.alex_home_network_mode()
+        #channel = self.alex_home_network_mode()
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
                     echo scan mode spot > {ttyf}
@@ -214,8 +204,6 @@ class TerminalFrame(tk.Frame):
                     echo scan start > {ttyf}\n
                     """)
         time.sleep(0.5)
-        # output = channel.recv(4096).decode("iso-8859-1")
-        # print(output)
         self.get_positioner_status()
         channel.close()
         client.close()
@@ -224,15 +212,15 @@ class TerminalFrame(tk.Frame):
 
     def rhi_scan(self, start_az, end_az, start_ele, end_ele, speed, inc, repeat, slipdetect):
         self.scan_type_var.set(f"RHI Scan")
-        # client.load_system_host_keys()
-        # client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        client.load_system_host_keys()
+        client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
         print("connected")
-        # transport = client.get_transport()
-        # channel = transport.open_session()
-        # channel.get_pty()
-        # channel.invoke_shell()
+        transport = client.get_transport()
+        channel = transport.open_session()
+        channel.get_pty()
+        channel.invoke_shell()
         print(self.positioner_selected)
-        channel = self.alex_home_network_mode()
+        #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
@@ -248,23 +236,21 @@ class TerminalFrame(tk.Frame):
                     echo scan start > {ttyf}\n
                     """)
         time.sleep(0.5)
-        # output = channel.recv(4096).decode("iso-8859-1")
-        # print(output)
         self.get_positioner_status()
         channel.close()
         client.close()
 
     def rhi_square_scan(self, start_az, end_az, start_ele, end_ele, speed, inc, repeat, slipdetect):
         self.scan_type_var.set(f"RHI SQUARE Scan")
-        # client.load_system_host_keys()
-        # client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        client.load_system_host_keys()
+        client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
         print("RHI SQUARE Scan connected")
-        # transport = client.get_transport()
-        # channel = transport.open_session()
-        # channel.get_pty()
-        # channel.invoke_shell()
+        transport = client.get_transport()
+        channel = transport.open_session()
+        channel.get_pty()
+        channel.invoke_shell()
         print(self.positioner_selected)
-        channel = self.alex_home_network_mode()
+        #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
@@ -288,15 +274,15 @@ class TerminalFrame(tk.Frame):
 
     def ppi_scan(self, start_az, end_az, start_ele, end_ele, speed, inc, repeat, slipdetect):
         self.scan_type_var.set(f"PPI SCAN")
-        # client.load_system_host_keys()
-        # client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        client.load_system_host_keys()
+        client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
         print("connected")
-        # transport = client.get_transport()
-        # channel = transport.open_session()
-        # channel.get_pty()
-        # channel.invoke_shell()
+        transport = client.get_transport()
+        channel = transport.open_session()
+        channel.get_pty()
+        channel.invoke_shell()
         print(self.positioner_selected)
-        channel = self.alex_home_network_mode()
+        #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
@@ -312,23 +298,21 @@ class TerminalFrame(tk.Frame):
                     echo scan start > {ttyf}\n
                     """)
         time.sleep(0.5)
-        # output = channel.recv(4096).decode("iso-8859-1")
-        # print(output)
         self.get_positioner_status()
         channel.close()
         client.close()
 
     def sector_scan(self, start_az, end_az, start_ele, end_ele, speed, inc, repeat, slipdetect):
         self.scan_type_var.set(f"SECTOR SCAN")
-        # client.load_system_host_keys()
-        # client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        client.load_system_host_keys()
+        client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
         print("connected")
-        # transport = client.get_transport()
-        # channel = transport.open_session()
-        # channel.get_pty()
-        # channel.invoke_shell()
+        transport = client.get_transport()
+        channel = transport.open_session()
+        channel.get_pty()
+        channel.invoke_shell()
         print(self.positioner_selected)
-        channel = self.alex_home_network_mode()
+        #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
@@ -351,15 +335,15 @@ class TerminalFrame(tk.Frame):
         client.close()
 
     def stop_scan(self):
-        # client.load_system_host_keys()
-        # client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
-        #                password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-        # print("connected")
-        # transport = client.get_transport()
-        # channel = transport.open_session()
-        # channel.get_pty()
-        # channel.invoke_shell()
-        channel = self.alex_home_network_mode()
+        client.load_system_host_keys()
+        client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
+                       password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        print("connected")
+        transport = client.get_transport()
+        channel = transport.open_session()
+        channel.get_pty()
+        channel.invoke_shell()
+        #channel = self.alex_home_network_mode()
         time.sleep(1)
         ttyf="/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
@@ -380,26 +364,20 @@ class TerminalFrame(tk.Frame):
     #NEED TO CHECK
     def get_current_position(self):
         self.pos_text_box.delete("1.0", tk.END)
-        # print(self.positioner_selected)
-        # client.load_system_host_keys()
-        # client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
-        #                password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-        # print("connected")
-        # transport = client.get_transport()
-        # channel = transport.open_session()
-        # channel.get_pty()
-        # channel.invoke_shell()
-        # time.sleep(1)
-        channel = self.alex_home_network_mode()
+        print(self.positioner_selected)
+        client.load_system_host_keys()
+        client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
+                       password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        print("connected")
+        transport = client.get_transport()
+        channel = transport.open_session()
+        channel.get_pty()
+        channel.invoke_shell()
+        time.sleep(1)
+        #channel = self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         channel.send(f"cat {ttyf} &\n")
-        # channel.send(f"echo scan status > {ttyf}\n")
-        # ouptut = channel.recv(4096).decode("iso-8859-1")
-        # print(ouptut)
-        ## READ MOTORS
-        # channel.send(f"echo scan mode PPI > {ttyf}\n")
-        # channel.send(f"head -n 8 {ttyf} &\n")
         time.sleep(0.5)
         channel.send(f"echo pos > {ttyf}\n")
         time.sleep(0.5)
@@ -449,7 +427,7 @@ class TerminalFrame(tk.Frame):
         channel.invoke_shell()
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
-        channel.send(f"echo rehome\n")
+        channel.send(f"echo rehome  > {ttyf}\n")
         time.sleep(0.5)
         self.get_positioner_status()
         channel.close()
@@ -467,7 +445,7 @@ class TerminalFrame(tk.Frame):
         channel.invoke_shell()
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
-        channel.send(f"echo gohome\n")
+        channel.send(f"echo gohome  > {ttyf}\n")
         time.sleep(0.5)
         self.get_positioner_status()
         channel.close()
@@ -476,20 +454,23 @@ class TerminalFrame(tk.Frame):
     def set_home(self, key_stroke):
         self.scan_type_var.set(f"SET HOME")
         print(key_stroke)
-        # client.load_system_host_keys()
-        # client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        client.load_system_host_keys()
+        client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
         print("connected")
-        # transport = client.get_transport()
-        # channel = transport.open_session()
-        # channel.get_pty()
-        # channel.invoke_shell()
+        transport = client.get_transport()
+        channel = transport.open_session()
+        channel.get_pty()
+        channel.invoke_shell()
+        time.sleep(0.5)
         print(self.positioner_selected)
-        channel = self.alex_home_network_mode()
+        #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo")
         channel.sleep(0.1)
         channel.send(f"echo {key_stroke} > {ttyf}\n")
         time.sleep(0.5)
+
+        self.get_positioner_status()
         channel.close()
         client.close()
 
@@ -504,12 +485,13 @@ class TerminalFrame(tk.Frame):
         channel.get_pty()
         channel.invoke_shell()
         time.sleep(1)
-        channel = self.terminal_frame.alex_home_network_mode()
+        #channel = self.terminal_frame.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         time.sleep(0.5)
         channel.send(f"echo scan reset > {ttyf}\n")
-
+        time.sleep(0.5)
+        self.get_positioner_status()
         channel.close()
         client.close()
 
@@ -662,13 +644,14 @@ class ScanFrame(tk.Frame):
 
 
     def set_home_finished(self):
-        self.terminal_frame.set_home("/")
+
         self.w_key.destroy()
         self.a_key.destroy()
         self.s_key.destroy()
         self.d_key.destroy()
         self.set_home_button.destroy()
         self.create_layout()
+        self.terminal_frame.set_home("/")
 
     def set_home_interface(self):
         #Clear or reset default values
