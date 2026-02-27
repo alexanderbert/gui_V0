@@ -9,12 +9,10 @@ import threading
 
 from datetime import datetime
 
-from numpy.ma.extras import row_stack
 from tkterminal import Terminal
 
 client = paramiko.client.SSHClient()
 output_queue = queue.Queue()
-#GLOBAL VARIABLE POSITIONER CONNECTED
 selected_positioner_global = None
 home_set = False
 
@@ -46,13 +44,7 @@ class IOFrame(tk.Frame):
 
 class TerminalFrame(tk.Frame):
     def __init__(self, parent):
-        super().__init__(parent, background = "blue")
-        self.terminal = Terminal(self)
-        self.terminal.grid(column=0, row=0, sticky="NSEW")
-        self.terminal.config(height= 30,width= 40, background= "gray7", font= "Arial 20")
-        self.terminal.shell = True
-        self._limit_backspace = 0
-        self.terminal.config(state="disabled")
+        super().__init__(parent, background = "gold")
         self.positioner_selected = False
         self.current_position = None
         self.home_position = None
@@ -60,12 +52,11 @@ class TerminalFrame(tk.Frame):
         self.scan_type_var.set("Scan Type: ")
         self.positioner_selected_var = tk.StringVar()
         self.positioner_selected_var.set("Positioner: ")
-        self.terminal.config(_limit_backspace = 0)
         self.positioner_selected_for_use = None
 
         self.status_text_box = tk.Text(self, font=("Arial", 16), bg="gray7", fg="white")
         self.status_text_box.grid(column=0, row=0, sticky="NSEW")
-        self.status_text_box.config(height=30, width = 50)
+        self.status_text_box.config(height=30, width = 60)
 
         self.pos_text_box = tk.Text(self, font=("Arial", 20), bg="gray7", fg="white")
         self.pos_text_box.grid(column=1, row=0, sticky="NSEW")
@@ -78,6 +69,7 @@ class TerminalFrame(tk.Frame):
         print(self.positioner_selected_for_use)
         global selected_positioner_global
         selected_positioner_global = self.positioner_selected
+        self.get_positioner_status()
         return self.positioner_selected
 
     def fl_network_mode(self):
@@ -131,6 +123,7 @@ class TerminalFrame(tk.Frame):
         time.sleep(.5)
         run_status_variable = ""
         #output = channel.recv(4096).decode("iso-8859-1")
+        #(\n\n)
         try:
             output = channel.recv(8192).decode("iso-8859-1")
             time.sleep(1)
@@ -183,6 +176,7 @@ class TerminalFrame(tk.Frame):
     def spot_scan(self, start_az, end_az, start_elbeam, end_elbeam, speed, inc, repeat, slipdetect):
         #channel = self.fl_network_mode()
         channel = self.alex_home_network_mode()
+        ttyf = "/dev/ttyUSB1"
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
                     echo scan mode spot > {ttyf}
@@ -390,7 +384,7 @@ class TerminalFrame(tk.Frame):
         channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo")
-        channel.sleep(0.1)
+        time.sleep(0.1)
         channel.send(f"echo {key_stroke} > {ttyf}\n")
         time.sleep(0.5)
 
@@ -538,7 +532,7 @@ class ScanFrame(tk.Frame):
         self.sector_scan.config(font=("Arial", 20))
 
 
-        self.spot_scan = tk.Button(self, text="Spot_Scan", command=lambda: self.start_threading("SPOT"))
+        self.spot_scan = tk.Button(self, text="Spot Scan", command=lambda: self.start_threading("SPOT"))
         self.spot_scan.grid(column=5, row = 0, sticky="NSEW")
         self.spot_scan.config(font=("Arial", 20))
 
@@ -557,10 +551,14 @@ class ScanFrame(tk.Frame):
 
     def set_home_finished(self):
 
-        self.w_key.destroy()
-        self.a_key.destroy()
-        self.s_key.destroy()
-        self.d_key.destroy()
+        self.fine_w_key.destroy()
+        self.fine_a_key.destroy()
+        self.fine_s_key.destroy()
+        self.fine_d_key.destroy()
+        self.coarse_w_key.destroy()
+        self.coarse_a_key.destroy()
+        self.coarse_s_key.destroy()
+        self.coarse_d_key.destroy()
         self.set_home_button.destroy()
         self.create_layout()
         self.terminal_frame.set_home("/")
@@ -592,32 +590,57 @@ class ScanFrame(tk.Frame):
         self.go_home.destroy()
         self.re_home.destroy()
 
-        self.w_key = tk.Button(self, text="W", command=lambda: self.terminal_frame.set_home("w"))
-        self.w_key.grid(column=1, row=0, sticky="NSEW")
-        self.w_key.config(font=("Arial", 20))
+        self.fine_w_key = tk.Button(self, text="Fine W", command=lambda: self.terminal_frame.set_home("w"))
+        self.fine_w_key.grid(column=1, row=0, sticky="NSEW")
+        self.fine_w_key.config(font=("Arial", 20))
+        self.fine_w_key.config(width=10)
 
-        self.s_key = tk.Button(self, text="S", command=lambda: self.terminal_frame.set_home("s"))
-        self.s_key.grid(column=1, row=2, sticky="NSEW")
-        self.s_key.config(font=("Arial", 20))
+        self.fine_s_key = tk.Button(self, text="Fine S", command=lambda: self.terminal_frame.set_home("s"))
+        self.fine_s_key.grid(column=1, row=2, sticky="NSEW")
+        self.fine_s_key.config(font=("Arial", 20))
+        self.fine_s_key.config(width=10)
 
-        self.a_key = tk.Button(self, text="A", command=lambda: self.terminal_frame.set_home("a"))
-        self.a_key.grid(column=0, row=1, sticky="NSEW")
-        self.a_key.config(font=("Arial", 20))
+        self.fine_a_key = tk.Button(self, text="Fine A", command=lambda: self.terminal_frame.set_home("a"))
+        self.fine_a_key.grid(column=0, row=1, sticky="NSEW")
+        self.fine_a_key.config(font=("Arial", 20))
+        self.fine_a_key.config(width=10)
 
-        self.d_key = tk.Button(self, text="D", command=lambda: self.terminal_frame.set_home("d"))
-        self.d_key.grid(column=2, row=1, sticky="NSEW")
-        self.d_key.config(font=("Arial", 20))
+        self.fine_d_key = tk.Button(self, text="Fine D", command=lambda: self.terminal_frame.set_home("d"))
+        self.fine_d_key.grid(column=2, row=1, sticky="NSEW")
+        self.fine_d_key.config(font=("Arial", 20))
+        self.fine_d_key.config(width=10)
 
-        self.set_home_button = tk.Button(self, text="Set Home", command=lambda: self.set_home_finished())
-        self.set_home_button.grid(column=4, row=0, sticky="NSEW")
+        self.set_home_button = tk.Button(self, text="Save Home Position", command=lambda: self.set_home_finished())
+        self.set_home_button.grid(column=2, row=3, sticky="NSEW")
         self.set_home_button.config(font=("Arial", 20))
+
 
         # self.space_bar_button = tk.Button(self, text="Space Bar", command=lambda: self.terminal_frame.set_home("space_bar"))
         # self.set_home_button.grid(column=4, row=3, sticky="NSEW")
         # self.set_home_button.config(font=("Arial", 20))
-        self.space_bar_button = tk.Button(self, text="Space Bar", command=lambda: self.terminal_frame.set_home(" "))
-        self.space_bar_button.grid(column=4, row=3, sticky="NSEW")
+        self.space_bar_button = tk.Button(self, text="Last Saved Position", command=lambda: self.terminal_frame.set_home(" "))
+        self.space_bar_button.grid(column=3, row=3, sticky="NSEW")
         self.space_bar_button.config(font=("Arial", 20))
+
+        self.coarse_w_key = tk.Button(self, text="Coarse W", command=lambda: self.terminal_frame.set_home("W"))
+        self.coarse_w_key.grid(column=4, row=0, sticky="NSEW")
+        self.coarse_w_key.config(font=("Arial", 20))
+        self.coarse_w_key.config(width=10)
+
+        self.coarse_s_key = tk.Button(self, text="Coarse S", command=lambda: self.terminal_frame.set_home("S"))
+        self.coarse_s_key.grid(column=4, row=2, sticky="NSEW")
+        self.coarse_s_key.config(font=("Arial", 20))
+        self.coarse_s_key.config(width=10)
+
+        self.coarse_a_key = tk.Button(self, text="Coarse A", command=lambda: self.terminal_frame.set_home("A"))
+        self.coarse_a_key.grid(column=3, row=1, sticky="NSEW")
+        self.coarse_a_key.config(font=("Arial", 20))
+        self.coarse_a_key.config(width=10)
+
+        self.coarse_d_key = tk.Button(self, text="Coarse D", command=lambda: self.terminal_frame.set_home("D"))
+        self.coarse_d_key.grid(column=5, row=1, sticky="NSEW")
+        self.coarse_d_key.config(font=("Arial", 20))
+        self.coarse_d_key.config(width=10)
 
 
     def on_click_clear(self, event):
@@ -694,7 +717,7 @@ class ScanFrame(tk.Frame):
                 self.terminal_frame.spot_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
                 return None
             case "SET HOME":
-                self.terminal_frame.set_home(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
+                self.terminal_frame.set_home()
                 return None
             case _:
                 return print("unknown")
@@ -809,7 +832,7 @@ class RadarsAvailableFrame(tk.Frame):
 
 class ButtonFrame(tk.Frame):
     def __init__(self, parent, radar_available_frame, io_frame):
-        super().__init__(parent, background="gray20")
+        super().__init__(parent, background="firebrick3")
         self.radar_available_frame = radar_available_frame
         self.io_frame = io_frame
         self.columnconfigure(0, weight=1)
