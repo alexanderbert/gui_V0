@@ -36,14 +36,4 @@ class App(tk.Tk):
 
         self.mainloop()
 
-#     def open_second_window(self):
-#         self.second_window = SecondWindow(self)
-#
-# class SecondWindow(tk.Toplevel):
-#     def __init__(self, parent):
-#         super().__init__(parent)
-#         self.title("Charts")
-#         self.geometry("300x300")
-#         close_button = tk.Button(self, text="Close Window", command=self.destroy)
-#         close_button.pack(pady=10)
 App()

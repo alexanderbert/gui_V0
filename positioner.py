@@ -476,24 +476,29 @@ class TerminalFrame(tk.Frame):
 
     def reset_positioner(self):
         print(self.positioner_selected)
-        client.load_system_host_keys()
-        client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
-                       password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-        print("connected")
-        transport = client.get_transport()
-        channel = transport.open_session()
-        channel.get_pty()
-        channel.invoke_shell()
-        time.sleep(1)
-        #channel = self.terminal_frame.alex_home_network_mode()
-        ttyf = "/dev/ttyUSB1"
-        channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
-        time.sleep(0.5)
-        channel.send(f"echo scan reset > {ttyf}\n")
-        time.sleep(0.5)
-        self.get_positioner_status()
-        channel.close()
-        client.close()
+        answer = messagebox.askyesno("Reset Positioner", "Do you want to reset positioner?")
+        if answer:
+            print("reset positioner")
+            client.load_system_host_keys()
+            client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
+                           password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+            print("connected")
+            transport = client.get_transport()
+            channel = transport.open_session()
+            channel.get_pty()
+            channel.invoke_shell()
+            time.sleep(1)
+            #channel = self.terminal_frame.alex_home_network_mode()
+            ttyf = "/dev/ttyUSB1"
+            channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
+            time.sleep(0.5)
+            channel.send(f"echo reset > {ttyf}\n")
+            time.sleep(0.5)
+            self.get_positioner_status()
+            channel.close()
+            client.close()
+        else:
+            print("dont reset positioner")
 
     def start_threading(self):
         thread = threading.Thread(target=self.get_positioner_status())
@@ -532,7 +537,7 @@ class OutputFrame(tk.Frame):
 
 class ScanFrame(tk.Frame):
     def __init__(self, parent, terminal_frame):
-        super().__init__(parent)
+        super().__init__(parent, background='gray7')
         self.columnconfigure(list(range(7)), weight=1)
         self.rowconfigure(list(range(4)), weight=1)
         self.terminal_frame = terminal_frame
