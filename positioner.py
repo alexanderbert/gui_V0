@@ -196,6 +196,7 @@ class TerminalFrame(tk.Frame):
                     break
 
         scan_mode_variable = scan_mode_variable.strip().split(", ")[1]
+
         start_az_variable = f"Start Az: {float(start_az_variable.strip()):.2f}"
         end_az_variable = f"End Az: {float(end_az_variable.strip()):.2f}"
         el_axis_start_end_variable = el_axis_start_end_variable.strip().split(" ")
@@ -212,6 +213,12 @@ class TerminalFrame(tk.Frame):
         simplified_variables_list = [scan_mode_variable, start_az_variable, end_az_variable, el_axis_start, el_axis_end, el_beam_start, el_beam_end]
         #SET UP VARIABLE IN LIST, run loop through to insert and new line, change bg color to red or green depending on run status
         self.simplified_status.delete("1.0", tk.END)
+        if run_status_variable == 1:
+            self.simplified_status.insert(tk.END, "Running\n")
+        elif run_status_variable == 0:
+            self.simplified_status.insert(tk.END, "Stopped\n")
+        else:
+            self.simplified_status.insert(tk.END, "Status Issue\n")
         for varies in simplified_variables_list:
             self.simplified_status.insert(tk.END, f"{varies}\n")
         if run_status_variable == 1:
