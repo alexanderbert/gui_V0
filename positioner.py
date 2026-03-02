@@ -143,11 +143,9 @@ class TerminalFrame(tk.Frame):
         try:
             output = channel.recv(8192).decode("iso-8859-1")
             time.sleep(1)
-            print(output)
             output_status = output.split("sq@sq-radar-5:~$ scan status", 1)
             output_lines = output_status[1].split("\r")
             for index, line in enumerate(output_lines):
-                print(f"{index}: {line}")
                 if "Mode: " in line:
                     scan_mode_variable = line.split("Mode:")[1]
                 if "Run:" in line:
@@ -176,7 +174,6 @@ class TerminalFrame(tk.Frame):
             time.sleep(.5)
             output = channel.recv(8192).decode("iso-8859-1")
             time.sleep(1)
-            print(output)
             output_status = output.split("scan status", 1)
             output_lines = output_status[1].split("\r")
             for index, line in enumerate(output_lines):
@@ -361,6 +358,7 @@ class TerminalFrame(tk.Frame):
                 break
             time.sleep(1)
             self.stop_scan()
+        self.get_positioner_status()
 
         channel.close()
         client.close()
@@ -857,27 +855,6 @@ class InputFrame(tk.Frame):
         self.output_frame.grid(column=1, row = 0, sticky = "NSEW")
         self.scan_frame = ScanFrame(self, self.terminal_frame)
         self.scan_frame.grid(column=0, columnspan= 2, row = 1, rowspan=2, sticky = "NSEW")
-        '''
-        hide until connected but still running?
-        fpga click to hide or side by side to fit graphs
-        '''
-
-        #self.spot_scan = tk.Button(self, text = "Spot Scan", command= lambda: self.terminal.run_command("whoami"))
-        # self.spot_scan = tk.Button(self, text="Spot Scan", command=lambda: self.terminal_frame.start_threading("ping 8.8.8.8"))
-        # self.spot_scan.grid(column=0, row = 1, sticky = "NSEW")
-        # azimuth_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable="pass")
-        # elevation_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable="amaass")
-        # azimuth_entry.grid(column=1, row = 1, sticky = "NSEW")
-        # elevation_entry.grid(column=2, row = 1, sticky = "NSEW")
-        #
-        # self.rhi_scan = tk.Button(self, text = "RHI Scan", command= lambda: "pass")
-        # self.rhi_scan.grid(column=3, row = 1, sticky = "NSEW")
-        #
-        # self.rehome = tk.Button(self, text = "Re-Home", command= lambda: "pass")
-        # self.rehome.grid(column=4, row = 1, sticky = "NSEW")
-        # self.control_mode = tk.Button(self, text = "Control Mode", command= lambda: self.terminal_frame.terminal.config(state="normal"))
-        # self.control_mode.grid(column=5, row = 1, sticky = "NSEW")
-
 
 
 
