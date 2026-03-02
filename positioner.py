@@ -9,7 +9,6 @@ import threading
 
 from datetime import datetime
 
-from tkterminal import Terminal
 
 client = paramiko.client.SSHClient()
 output_queue = queue.Queue()
@@ -45,6 +44,11 @@ class IOFrame(tk.Frame):
 class TerminalFrame(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, background = "gold")
+        # self.columnconfigure(0, weight=1)
+        # self.columnconfigure(1, weight=1)
+        # self.rowconfigure(0, weight=1)
+        # self.rowconfigure(1, weight=1)
+        # self.grid_propagate(False)
         self.positioner_selected = False
         self.current_position = None
         self.home_position = None
@@ -55,11 +59,17 @@ class TerminalFrame(tk.Frame):
         self.positioner_selected_for_use = None
 
         self.status_text_box = tk.Text(self, font=("Arial", 16), bg="gray7", fg="white")
-        self.status_text_box.grid(column=0, row=0, sticky="NSEW")
+        self.status_text_box.grid(column=0, row=0, rowspan=2, sticky="NSEW")
         self.status_text_box.config(height=30, width = 60)
 
         self.pos_text_box = tk.Text(self, font=("Arial", 20), bg="gray7", fg="white")
-        self.pos_text_box.grid(column=1, row=0, sticky="NSEW")
+        self.pos_text_box.grid(column=1, row=0, sticky="NEW")
+        self.pos_text_box.config(height=13, width = 60)
+
+        self.simplified_status = tk.Text(self, font=("Arial", 20), bg="gray7", fg="white")
+        self.simplified_status.grid(column=1, row=1, sticky="SEW")
+        self.simplified_status.config(height=10, width = 60)
+        self.simplified_status.insert(tk.END, "Not Connected")
 
 
     def set_positioner(self, positioner):
@@ -121,7 +131,13 @@ class TerminalFrame(tk.Frame):
         time.sleep(0.5)
         channel.send(f"\x1a")
         time.sleep(.5)
+        scan_mode_variable = ""
         run_status_variable = ""
+        start_az_variable = ""
+        end_az_variable = ""
+        el_axis_start_end_variable = []
+        el_beam_start_end_variable = []
+
         #output = channel.recv(4096).decode("iso-8859-1")
         #(\n\n)
         try:
@@ -132,8 +148,18 @@ class TerminalFrame(tk.Frame):
             output_lines = output_status[1].split("\r")
             for index, line in enumerate(output_lines):
                 print(f"{index}: {line}")
+                if "Mode: " in line:
+                    scan_mode_variable = line.split("Mode:")[1]
                 if "Run:" in line:
                     run_status_variable = line.split("Run:")[1]
+                if "Start Az:" in line:
+                    start_az_variable = line.split("Start Az:")[1]
+                if "End Az:" in line:
+                    end_az_variable = line.split("End Az:")[1]
+                if "El (axis) Start:" in line:
+                    el_axis_start_end_variable = line.split("El (axis)")[1]
+                if "El (beam) Start:" in line:
+                    el_beam_start_end_variable = line.split("El (beam)")[1]
                 self.status_text_box.insert(tk.END, line)
                 if "Attenuations:" in line:
                     #self.status_text_box.insert(tk.END, "\r")
@@ -154,19 +180,49 @@ class TerminalFrame(tk.Frame):
             output_status = output.split("scan status", 1)
             output_lines = output_status[1].split("\r")
             for index, line in enumerate(output_lines):
-                print(f"{index}: {line}")
+                # print(f"{index}: {line}")
+                if "Mode: " in line:
+                    scan_mode_variable = line.split("Mode:")[1]
                 if "Run:" in line:
                     run_status_variable = line.split("Run:")[1]
+                if "Start Az:" in line:
+                    start_az_variable = line.split("Start Az: ")[1]
+                if "End Az:" in line:
+                    end_az_variable = line.split("End Az: ")[1]
+                if "El (axis) Start:" in line:
+                    el_axis_start_end_variable = line.split("El (axis)")[1]
+                if "El (beam) Start:" in line:
+                    el_beam_start_end_variable = line.split("El (beam)")[1]
                 self.status_text_box.insert(tk.END, line)
                 if "Attenuations:" in line:
                     # self.status_text_box.insert(tk.END, "\r")
                     break
 
+        scan_mode_variable = scan_mode_variable.strip().split(", ")[1]
+        start_az_variable = f"Start Az: {float(start_az_variable.strip()):.2f}"
+        end_az_variable = f"End Az: {float(end_az_variable.strip()):.2f}"
+        el_axis_start_end_variable = el_axis_start_end_variable.strip().split(" ")
+        el_axis_start = f"El (axis) Start: {float(el_axis_start_end_variable[1].split(",")[0]):.2f}"
+        el_axis_end = f"El (axis) End: {float(el_axis_start_end_variable[3]):.2f}"
+        el_beam_start_end_variable = el_beam_start_end_variable.strip().split(" ")
+        el_beam_start = f"El (beam) Start: {float(el_beam_start_end_variable[1].split(",")[0]):.2f}"
+        el_beam_end = f"El (beam) End: {float(el_beam_start_end_variable[3]):.2f}"
+
         channel.close()
         client.close()
+
         run_status_variable = int(run_status_variable.strip())
-        # print(f" RUN STATUS: {run_status_variable}")
-        # print((run_status_variable == 1))
+        simplified_variables_list = [scan_mode_variable, start_az_variable, end_az_variable, el_axis_start, el_axis_end, el_beam_start, el_beam_end]
+        #SET UP VARIABLE IN LIST, run loop through to insert and new line, change bg color to red or green depending on run status
+        self.simplified_status.delete("1.0", tk.END)
+        for varies in simplified_variables_list:
+            self.simplified_status.insert(tk.END, f"{varies}\n")
+        if run_status_variable == 1:
+            self.simplified_status.config(background="green4")
+            self.simplified_status.config(foreground="black")
+        else:
+            self.simplified_status.config(background="firebrick3")
+            self.simplified_status.config(foreground="black")
         print(f"RUN STATUS: {run_status_variable}")
         return run_status_variable
 
@@ -423,9 +479,9 @@ class OutputFrame(tk.Frame):
         self.terminal_frame = terminal_frame
 
         #self.pos_text_box = tk.Text(self, height=1, width=20, background="gray7")
-        self.pos_text_box = tk.Text(self, font=("Arial", 20), bg="gray7", fg="white")
-        self.pos_text_box.grid(column=0, row=0, sticky="NSEW")
-        self.pos_text_box.config(height=30, width = 70)
+        self.pos_text_box = tk.Text(self, font=("Arial", 20), background="orange", fg="white")
+        self.pos_text_box.grid(column=0, row=0, sticky="NEW")
+        self.pos_text_box.config(height=30, width = 30, bg="orange")
 
 
 class ScanFrame(tk.Frame):
@@ -647,17 +703,73 @@ class ScanFrame(tk.Frame):
         event.widget.delete(0, "end")
 
     def input_checker(self, start_azimuth_var, end_azimuth_var, start_elbeam_var, end_elbeam_var, speed_var, increment_var, repeat_var, slipdetect_var):
+        # entries = [start_azimuth_var, end_azimuth_var, start_elbeam_var, end_elbeam_var, speed, increment, repeat,
+        #            slipdetect]
+        #
+        # for entry in entries:
+        #     if not float(f"{entry.get()}"):
+
+        # try:
+        #     start_az = float(start_azimuth_var.get())
+        #     end_az = float(end_azimuth_var.get())
+        #     start_elbeam = float(start_elbeam_var.get())
+        #     end_elbeam = float(end_elbeam_var.get())
+        #     speed = float(speed_var.get())
+        #     increment = float(increment_var.get())
+        #     repeat = int(repeat_var.get())
+        #     slipdetect = int(slipdetect_var.get())
+        # except:
+        #     return messagebox.showerror("Error", "Entry Error")
+
+
         try:
             start_az = float(start_azimuth_var.get())
+        except:
+            self.start_azimuth_entry.delete(0, "end")
+            return messagebox.showerror("Error", "Starting Azimuth entry incorrect")
+
+        try:
             end_az = float(end_azimuth_var.get())
+        except:
+            self.end_azimuth_entry.delete(0, "end")
+            return messagebox.showerror("Error", "Ending Azimuth entry incorrect")
+
+        try:
             start_elbeam = float(start_elbeam_var.get())
+        except:
+            self.start_elbeam_entry.delete(0, "end")
+            return messagebox.showerror("Error", "Starting Elbeam entry incorrect")
+
+        try:
             end_elbeam = float(end_elbeam_var.get())
+        except:
+            self.end_elbeam_entry.delete(0, "end")
+            return messagebox.showerror("Error", "Ending Elbeam entry incorrect")
+
+        try:
             speed = float(speed_var.get())
+        except:
+            self.speed_entry.delete(0, "end")
+            return messagebox.showerror("Error", "Speed entry incorrect")
+
+        try:
             increment = float(increment_var.get())
+        except:
+            self.increment_entry.delete(0, "end")
+            return messagebox.showerror("Error", "Increment entry incorrect")
+
+        try:
             repeat = int(repeat_var.get())
+        except:
+            self.repeat_entry.delete(0, "end")
+            return messagebox.showerror("Error", "Repeat entry incorrect")
+
+        try:
             slipdetect = int(slipdetect_var.get())
         except:
-            return messagebox.showerror("Error", "Entry Error")
+            self.slipdetect_entry.delete(0, "end")
+            return messagebox.showerror("Error", "Slip detect entry incorrect")
+
 
         if start_az < 0 or start_az >= end_az or start_az > 360:
             self.start_azimuth_entry.delete(0, "end")
@@ -691,14 +803,18 @@ class ScanFrame(tk.Frame):
 
     def start_threading(self, scan_type):
         #DO I NEED THREADING?
-        if not self.input_checker:
-            return print("failed")
-        else:
-            try:
-                start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect = self.input_checker(self.start_azimuth_var, self.end_azimuth_var, self.start_elbeam_var, self.end_elbeam_var, self.speed_var, self.increment_var, self.repeat_var, self.slipdetect_var)
-                print(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
-            except:
-                return print("failed")
+        # if not self.input_checker:
+        #     return print("failed")
+        # else:
+        #     try:
+        #         start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect = self.input_checker(self.start_azimuth_var, self.end_azimuth_var, self.start_elbeam_var, self.end_elbeam_var, self.speed_var, self.increment_var, self.repeat_var, self.slipdetect_var)
+        #         print(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
+        #     except:
+        #         return print("failed")
+
+        start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect = self.input_checker(
+            self.start_azimuth_var, self.end_azimuth_var, self.start_elbeam_var, self.end_elbeam_var, self.speed_var,
+            self.increment_var, self.repeat_var, self.slipdetect_var)
 
         match scan_type:
             case "RHI":
@@ -841,6 +957,12 @@ class ButtonFrame(tk.Frame):
         self.button_reset = None
         self.network_check_button = None
         self.create_buttons()
+    #     self.after(200, self.change_background_color())
+    #
+    # def change_background_color(self):
+    #     global run_status_background_color
+    #     if run_status_background_color:
+    #         self.configure(bg="green")
 
     # def stop_order(self):
     #     global is_running
