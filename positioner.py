@@ -66,9 +66,9 @@ class TerminalFrame(tk.Frame):
         self.pos_text_box.grid(column=1, row=0, sticky="NEW")
         self.pos_text_box.config(height=13, width = 60)
 
-        self.simplified_status = tk.Text(self, font=("Arial", 20), bg="gray7", fg="white")
+        self.simplified_status = tk.Text(self, font=("Arial", 20), bg="gray7", fg="white", borderwidth=2)
         self.simplified_status.grid(column=1, row=1, sticky="SEW")
-        self.simplified_status.config(height=10, width = 60)
+        self.simplified_status.config(height=10, width = 10)
         self.simplified_status.insert(tk.END, "Not Connected")
 
 
@@ -932,7 +932,7 @@ class RadarsAvailableFrame(tk.Frame):
 
 class ButtonFrame(tk.Frame):
     def __init__(self, parent, radar_available_frame, io_frame):
-        super().__init__(parent, background="firebrick3")
+        super().__init__(parent, background="firebrick3", borderwidth=5, highlightbackground="black")
         self.radar_available_frame = radar_available_frame
         self.io_frame = io_frame
         self.columnconfigure(0, weight=1)
