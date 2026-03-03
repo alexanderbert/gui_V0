@@ -824,28 +824,46 @@ class ScanFrame(tk.Frame):
             self.start_azimuth_var, self.end_azimuth_var, self.start_elbeam_var, self.end_elbeam_var, self.speed_var,
             self.increment_var, self.repeat_var, self.slipdetect_var)
 
-        match scan_type:
-            case "RHI":
-                self.terminal_frame.rhi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
-                return None
-            case "RHI SQUARE":
-                self.terminal_frame.rhi_square_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
-                return None
-            case "PPI":
-                self.terminal_frame.ppi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
-                return None
-            case "SECTOR":
-                self.terminal_frame.sector_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
-                return None
-            case "SPOT":
-                self.terminal_frame.spot_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
-                return None
-            case "SET HOME":
-                self.terminal_frame.set_home()
-                return None
-            case _:
-                return print("unknown")
+        # match scan_type:
+        #     case "RHI":
+        #         self.terminal_frame.rhi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
+        #         return None
+        #     case "RHI SQUARE":
+        #         self.terminal_frame.rhi_square_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
+        #         return None
+        #     case "PPI":
+        #         self.terminal_frame.ppi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
+        #         return None
+        #     case "SECTOR":
+        #         self.terminal_frame.sector_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
+        #         return None
+        #     case "SPOT":
+        #         self.terminal_frame.spot_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
+        #         return None
+        #     case "SET HOME":
+        #         self.terminal_frame.set_home()
+        #         return None
+        #     case _:
+        #         return print("unknown")
 
+        if scan_type == "RHI":
+            self.terminal_frame.rhi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+                                         slipdetect)
+        elif scan_type == "RHI SQUARE":
+            self.terminal_frame.rhi_square_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
+        elif scan_type == "PPI":
+            self.terminal_frame.ppi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+                                         slipdetect)
+        elif scan_type == "SECTOR":
+            self.terminal_frame.sector_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+                                            slipdetect)
+        elif scan_type == "SPOT":
+            self.terminal_frame.spot_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+                                          slipdetect)
+        elif scan_type == "SET HOME":
+            self.terminal_frame.set_home()
+        else:
+            print("Unknown scan type")
 
 
 
