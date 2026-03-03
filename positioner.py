@@ -143,7 +143,8 @@ class TerminalFrame(tk.Frame):
         try:
             output = channel.recv(8192).decode("iso-8859-1")
             time.sleep(1)
-            output_status = output.split("sq@sq-radar-5:~$ scan status", 1)
+            #output_status = output.split("sq@sq-radar-5:~$ scan status", 1)
+            output_status = output.split(":~$ scan status", 1)
             output_lines = output_status[1].split("\r")
             for index, line in enumerate(output_lines):
                 if "Mode: " in line:
@@ -388,7 +389,7 @@ class TerminalFrame(tk.Frame):
         time.sleep(1)
         print(output)
         try:
-            output_status = output.split("sq@sq-radar-5:~$ pos", 1)
+            output_status = output.split(":~$ pos", 1)
             output_lines = output_status[1].split("\r")
             current_datetime = datetime.now()
             self.pos_text_box.insert(tk.END, f"Time of Position Check:\n")
