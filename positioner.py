@@ -83,6 +83,7 @@ class TerminalFrame(tk.Frame):
         return self.positioner_selected
 
     def fl_network_mode(self):
+        print(self.positioner_selected)
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
@@ -96,31 +97,32 @@ class TerminalFrame(tk.Frame):
         time.sleep(1)
         return channel
 
-    def alex_home_network_mode(self):
-        key_path = "/Users/alexanderbertotto/.ssh/id_ed25519"
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(hostname="data.stormquant.com", username="alex", key_filename=key_path, look_for_keys=False,
-                       allow_agent=False)
-        time.sleep(1)
-        transport = client.get_transport()
-        channel = transport.open_session()
-        channel.get_pty()
-        channel = client.invoke_shell()
-        time.sleep(.5)
-        channel.send("sudo su - radaraccess\n")
-        time.sleep(1)
-        #USE -t or not?
-        #channel.send("ssh -t Radar2-tunnel\n")
-        channel.send("ssh Radar5-tunnel\n")
-        output = channel.recv(4096).decode("iso-8859-1")
-        # print(output)
-        time.sleep(1)
-        return channel
+    # def alex_home_network_mode(self):
+    #     print(self.positioner_selected)
+    #     key_path = "/Users/alexanderbertotto/.ssh/id_ed25519"
+    #     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    #     client.connect(hostname="data.stormquant.com", username="alex", key_filename=key_path, look_for_keys=False,
+    #                    allow_agent=False)
+    #     time.sleep(1)
+    #     transport = client.get_transport()
+    #     channel = transport.open_session()
+    #     channel.get_pty()
+    #     channel = client.invoke_shell()
+    #     time.sleep(.5)
+    #     channel.send("sudo su - radaraccess\n")
+    #     time.sleep(1)
+    #     #USE -t or not?
+    #     #channel.send("ssh -t Radar2-tunnel\n")
+    #     channel.send("ssh Radar5-tunnel\n")
+    #     output = channel.recv(4096).decode("iso-8859-1")
+    #     # print(output)
+    #     time.sleep(1)
+    #     return channel
 
     def get_positioner_status(self):
-        #channel = self.fl_network_mode()
+        channel = self.fl_network_mode()
         self.status_text_box.delete("1.0", tk.END)
-        channel = self.alex_home_network_mode()
+        #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         channel.send(f"cat {ttyf} &\n")
@@ -235,8 +237,8 @@ class TerminalFrame(tk.Frame):
 
 
     def spot_scan(self, start_az, end_az, start_elbeam, end_elbeam, speed, inc, repeat, slipdetect):
-        #channel = self.fl_network_mode()
-        channel = self.alex_home_network_mode()
+        channel = self.fl_network_mode()
+        #channel = self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
@@ -259,8 +261,8 @@ class TerminalFrame(tk.Frame):
 
 
     def rhi_scan(self, start_az, end_az, start_ele, end_ele, speed, inc, repeat, slipdetect):
-        #channel = self.fl_network_mode()
-        channel = self.alex_home_network_mode()
+        channel = self.fl_network_mode()
+        #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
@@ -281,8 +283,8 @@ class TerminalFrame(tk.Frame):
         client.close()
 
     def rhi_square_scan(self, start_az, end_az, start_ele, end_ele, speed, inc, repeat, slipdetect):
-        #channel = self.fl_network_mode()
-        channel = self.alex_home_network_mode()
+        channel = self.fl_network_mode()
+        #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
@@ -305,8 +307,8 @@ class TerminalFrame(tk.Frame):
         #channel.send(f"echo scan status > {ttyf}\n")
 
     def ppi_scan(self, start_az, end_az, start_ele, end_ele, speed, inc, repeat, slipdetect):
-        #channel = self.fl_network_mode()
-        channel = self.alex_home_network_mode()
+        channel = self.fl_network_mode()
+        #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
@@ -327,8 +329,8 @@ class TerminalFrame(tk.Frame):
         client.close()
 
     def sector_scan(self, start_az, end_az, start_ele, end_ele, speed, inc, repeat, slipdetect):
-        #channel = self.fl_network_mode()
-        channel = self.alex_home_network_mode()
+        channel = self.fl_network_mode()
+        #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
@@ -351,8 +353,8 @@ class TerminalFrame(tk.Frame):
         client.close()
 
     def stop_scan(self):
-        #channel = self.fl_network_mode()
-        channel = self.alex_home_network_mode()
+        channel = self.fl_network_mode()
+        #channel = self.alex_home_network_mode()
         time.sleep(1)
         ttyf="/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
@@ -374,8 +376,8 @@ class TerminalFrame(tk.Frame):
     #NEED TO CHECK
     def get_current_position(self):
         self.pos_text_box.delete("1.0", tk.END)
-        #channel = self.fl_network_mode()
-        channel = self.alex_home_network_mode()
+        channel = self.fl_network_mode()
+        #channel = self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         channel.send(f"cat {ttyf} &\n")
@@ -417,8 +419,8 @@ class TerminalFrame(tk.Frame):
 
 
     def re_home(self):
-        #channel = self.fl_network_mode()
-        channel =self.alex_home_network_mode()
+        channel = self.fl_network_mode()
+        #channel =self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         channel.send(f"echo rehome  > {ttyf}\n")
@@ -429,8 +431,8 @@ class TerminalFrame(tk.Frame):
 
 
     def go_home(self):
-        #channel = self.fl_network_mode()
-        channel =self.alex_home_network_mode()
+        channel = self.fl_network_mode()
+        #channel =self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         channel.send(f"echo gohome  > {ttyf}\n")
@@ -442,8 +444,8 @@ class TerminalFrame(tk.Frame):
     def set_home(self, key_stroke):
         # self.scan_type_var.set(f"SET HOME")
         print(key_stroke)
-        #channel = self.fl_network_mode()
-        channel = self.alex_home_network_mode()
+        channel = self.fl_network_mode()
+        #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo")
         time.sleep(0.1)
@@ -459,8 +461,8 @@ class TerminalFrame(tk.Frame):
         answer = messagebox.askyesno("Reset Positioner", "Do you want to reset positioner?")
         if answer:
             print("reset positioner")
-            #channel = self.fl_network_mode()
-            channel = self.alex_home_network_mode()
+            channel = self.fl_network_mode()
+            #channel = self.alex_home_network_mode()
             ttyf = "/dev/ttyUSB1"
             channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
             time.sleep(0.5)
@@ -881,7 +883,7 @@ class ControlFrame(tk.Frame):
 
 
 class RadarsAvailableFrame(tk.Frame):
-    radar_dict = {"Select A Radar": "--------", "sq-radar-2": "192.192.192.192"}
+    radar_dict = {"Select A Radar": "--------"}
     def __init__(self, parent):
         super().__init__(parent, background = "steel blue")
         self.network_check_button = None
