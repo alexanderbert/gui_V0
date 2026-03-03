@@ -6,6 +6,7 @@ import os
 import time
 import queue
 import threading
+import sys
 
 from datetime import datetime
 
@@ -14,6 +15,15 @@ client = paramiko.client.SSHClient()
 output_queue = queue.Queue()
 selected_positioner_global = None
 home_set = False
+
+if getattr(sys, 'frozen', False):
+    # Running in a PyInstaller bundle
+    application_path = os.path.dirname(sys.executable)
+else:
+    # Running in a normal Python environment
+    application_path = os.path.dirname(os.path.abspath(__file__))
+
+dotenv_path = os.path.join(application_path, '.env')
 
 
 class PositionerFrame(tk.Frame):
@@ -368,6 +378,7 @@ class TerminalFrame(tk.Frame):
                 break
             time.sleep(1)
             self.stop_scan()
+        time.sleep(1)
         self.get_positioner_status()
 
         channel.close()
@@ -933,13 +944,14 @@ class RadarsAvailableFrame(tk.Frame):
             try:
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.load_system_host_keys()
-                client.connect(hostname=f"{host}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=3)
+                client.connect(hostname=f"{host}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=3, auth_timeout=5)
                 stdin, stdout, stderr = client.exec_command("hostname")
                 radar_hostname = stdout.read().decode("utf-8")
                 client.close()
                 self.update_radar_pulldown(host, radar_hostname.strip())
             except:
                 print(f"No connection to {host}")
+        print("Finished Scanning\n")
 
     def update_radar_pulldown(self, ip_address, hostname):
         try:
