@@ -203,10 +203,10 @@ class TerminalFrame(tk.Frame):
         start_az_variable = f"Start Az: {float(start_az_variable.strip()):.2f}"
         end_az_variable = f"End Az: {float(end_az_variable.strip()):.2f}"
         el_axis_start_end_variable = el_axis_start_end_variable.strip().split(" ")
-        el_axis_start = f"El (axis) Start: {float(el_axis_start_end_variable[1].split(",")[0]):.2f}"
+        el_axis_start = f"El (axis) Start: {float(el_axis_start_end_variable[1].split(',')[0]):.2f}"
         el_axis_end = f"El (axis) End: {float(el_axis_start_end_variable[3]):.2f}"
         el_beam_start_end_variable = el_beam_start_end_variable.strip().split(" ")
-        el_beam_start = f"El (beam) Start: {float(el_beam_start_end_variable[1].split(",")[0]):.2f}"
+        el_beam_start = f"El (beam) Start: {float(el_beam_start_end_variable[1].split(',')[0]):.2f}"
         el_beam_end = f"El (beam) End: {float(el_beam_start_end_variable[3]):.2f}"
 
         channel.close()
