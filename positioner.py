@@ -75,6 +75,7 @@ class TerminalFrame(tk.Frame):
         self.pos_text_box = tk.Text(self, font=("Arial", 20), bg="gray7", fg="white")
         self.pos_text_box.grid(column=1, row=0, sticky="NEW")
         self.pos_text_box.config(height=13, width = 60)
+        self.pos_text_box.insert(tk.END, "Not Connected")
 
         self.simplified_status = tk.Text(self, font=("Arial", 20), bg="gray7", fg="white", borderwidth=2)
         self.simplified_status.grid(column=1, row=1, sticky="SEW")
@@ -904,7 +905,7 @@ class ControlFrame(tk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
-        self.radars_available_frame = RadarsAvailableFrame(self)
+        self.radars_available_frame = RadarsAvailableFrame(self, io_frame)
         self.radars_available_frame.grid(column=0, row = 0, sticky = "NSEW")
 
         self.button_frame = ButtonFrame(self, self.radars_available_frame, self.io_frame)
@@ -913,11 +914,12 @@ class ControlFrame(tk.Frame):
 
 class RadarsAvailableFrame(tk.Frame):
     radar_dict = {"Select A Radar": "--------"}
-    def __init__(self, parent):
+    def __init__(self, parent, io_frame):
         super().__init__(parent, background = "steel blue")
         self.network_check_button = None
         self.radar_selected = None
         self.radars_available = None
+        self.io_frame = io_frame
         self.columnconfigure(0, weight=1)
         self.rowconfigure(list(range(2)), weight=1)
 
@@ -951,12 +953,14 @@ class RadarsAvailableFrame(tk.Frame):
                 self.update_radar_pulldown(host, radar_hostname.strip())
             except:
                 print(f"No connection to {host}")
-        print("Finished Scanning\n")
+        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
+        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, "Finished Scanning")
 
     def update_radar_pulldown(self, ip_address, hostname):
         try:
             if ip_address not in self.radar_dict.values():
                 self.radar_dict[hostname] = ip_address
+                self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, f"Found: {ip_address}")
         except:
             print("ERROR")
         self.radar_drop()
