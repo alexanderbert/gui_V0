@@ -946,6 +946,8 @@ class RadarsAvailableFrame(tk.Frame):
             try:
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.load_system_host_keys()
+                self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
+                self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, host)
                 client.connect(hostname=f"{host}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=3, auth_timeout=5)
                 stdin, stdout, stderr = client.exec_command("hostname")
                 radar_hostname = stdout.read().decode("utf-8")
