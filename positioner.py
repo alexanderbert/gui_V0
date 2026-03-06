@@ -366,7 +366,7 @@ class TerminalFrame(tk.Frame):
     def stop_scan(self):
         channel = self.fl_network_mode()
         self.pos_text_box.delete("1.0", tk.END)
-        self.pos_text_box.insert("1.0", "Executing Stop Command\n Please Standby\n")
+        self.pos_text_box.insert(tk.END, "Executing Stop Command\n Please Standby\n")
         self.pos_text_box.config(font=("Arial", 24), foreground="red")
         #channel = self.alex_home_network_mode()
         time.sleep(1)
@@ -374,16 +374,29 @@ class TerminalFrame(tk.Frame):
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         channel.send(f"echo scan stop > {ttyf}\n")
         time.sleep(1)
-        run_status_variable = self.get_positioner_status()
+
+        #
+        # for i in range(300):
+        #     if run_status_variable != 1:
+        #         print("SCAN STOPPED")
+        #         break
+        #     time.sleep(1)
+        #     self.stop_scan()
 
         for i in range(300):
+            run_status_variable = self.get_positioner_status()
             if run_status_variable != 1:
-                print("SCAN STOPPED")
                 break
-            time.sleep(1)
-            self.stop_scan()
+            else:
+                channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
+                channel.send(f"echo scan stop > {ttyf}\n")
+                time.sleep(.5)
+                self.pos_text_box.delete("1.0", tk.END)
+                self.pos_text_box.insert(tk.END, f"Executing Stop Command #{i}\n Please Standby\n")
+                self.pos_text_box.config(font=("Arial", 20), foreground="red")
+
         time.sleep(1)
-        self.get_positioner_status()
+        #self.get_positioner_status()
         self.pos_text_box.delete("1.0", tk.END)
         self.pos_text_box.config(font=("Arial", 16), foreground="white")
         self.pos_text_box.insert("1.0", "Scan stopped\n")
