@@ -16,6 +16,8 @@ output_queue = queue.Queue()
 selected_positioner_global = None
 home_set = False
 
+run_status_global = False
+
 if getattr(sys, 'frozen', False):
     # Running in a PyInstaller bundle
     application_path = os.path.dirname(sys.executable)
@@ -242,6 +244,8 @@ class TerminalFrame(tk.Frame):
             self.simplified_status.config(background="firebrick3")
             self.simplified_status.config(foreground="black")
         print(f"RUN STATUS: {run_status_variable}")
+        global run_status_global
+        run_status_global = run_status_variable
         return run_status_variable
 
 
@@ -383,7 +387,7 @@ class TerminalFrame(tk.Frame):
         #     time.sleep(1)
         #     self.stop_scan()
 
-        for i in range(300):
+        for i in range(1, 301):
             run_status_variable = self.get_positioner_status()
             if run_status_variable != 1:
                 break
@@ -392,14 +396,26 @@ class TerminalFrame(tk.Frame):
                 channel.send(f"echo scan stop > {ttyf}\n")
                 time.sleep(.5)
                 self.pos_text_box.delete("1.0", tk.END)
-                self.pos_text_box.insert(tk.END, f"Executing Stop Command #{i}\n Please Standby\n")
+                self.pos_text_box.insert(tk.END, f"Executing Stop Command Attempt #{i}\n Please Standby, max 300 attempts\n")
                 self.pos_text_box.config(font=("Arial", 24), foreground="red")
 
-        time.sleep(1)
-        #self.get_positioner_status()
-        self.pos_text_box.delete("1.0", tk.END)
-        self.pos_text_box.config(font=("Arial", 16), foreground="white")
-        self.pos_text_box.insert("1.0", "Scan stopped\n")
+
+        run_status_variable = self.get_positioner_status()
+        if run_status_variable == 1:
+            self.pos_text_box.delete("1.0", tk.END)
+            self.pos_text_box.insert(tk.END, f"Stop Command fail, retry")
+            self.pos_text_box.config(font=("Arial", 24), foreground="red")
+        else:
+            self.pos_text_box.delete("1.0", tk.END)
+            self.pos_text_box.config(font=("Arial", 16), foreground="white")
+            self.pos_text_box.insert("1.0", "Scan stopped\n")
+
+
+        # time.sleep(1)
+        # #self.get_positioner_status()
+        # self.pos_text_box.delete("1.0", tk.END)
+        # self.pos_text_box.config(font=("Arial", 16), foreground="white")
+        # self.pos_text_box.insert("1.0", "Scan stopped\n")
 
         channel.close()
         client.close()
