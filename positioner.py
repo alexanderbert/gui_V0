@@ -393,7 +393,7 @@ class TerminalFrame(tk.Frame):
                 time.sleep(.5)
                 self.pos_text_box.delete("1.0", tk.END)
                 self.pos_text_box.insert(tk.END, f"Executing Stop Command #{i}\n Please Standby\n")
-                self.pos_text_box.config(font=("Arial", 20), foreground="red")
+                self.pos_text_box.config(font=("Arial", 24), foreground="red")
 
         time.sleep(1)
         #self.get_positioner_status()
@@ -765,79 +765,79 @@ class ScanFrame(tk.Frame):
             start_az = float(start_azimuth_var.get())
         except:
             self.start_azimuth_entry.delete(0, "end")
-            return messagebox.showerror("Error", "Starting Azimuth entry incorrect")
+            return messagebox.showerror("Error", "Starting Azimuth must be between 0 and 360")
 
         try:
             end_az = float(end_azimuth_var.get())
         except:
             self.end_azimuth_entry.delete(0, "end")
-            return messagebox.showerror("Error", "Ending Azimuth entry incorrect")
+            return messagebox.showerror("Error", "Ending Azimuth must be between 0 and 360")
 
         try:
             start_elbeam = float(start_elbeam_var.get())
         except:
             self.start_elbeam_entry.delete(0, "end")
-            return messagebox.showerror("Error", "Starting Elbeam entry incorrect")
+            return messagebox.showerror("Error", "Starting Elbeam must be between -6 and 45")
 
         try:
             end_elbeam = float(end_elbeam_var.get())
         except:
             self.end_elbeam_entry.delete(0, "end")
-            return messagebox.showerror("Error", "Ending Elbeam entry incorrect")
+            return messagebox.showerror("Error", "Ending Elbeam must be between -6 and 45")
 
         try:
             speed = float(speed_var.get())
         except:
             self.speed_entry.delete(0, "end")
-            return messagebox.showerror("Error", "Speed entry incorrect")
+            return messagebox.showerror("Error", "Speed must be between 2 and 300")
 
         try:
             increment = float(increment_var.get())
         except:
             self.increment_entry.delete(0, "end")
-            return messagebox.showerror("Error", "Increment entry incorrect")
+            return messagebox.showerror("Error", "Increment must be between 1.5 and 5")
 
         try:
             repeat = int(repeat_var.get())
         except:
             self.repeat_entry.delete(0, "end")
-            return messagebox.showerror("Error", "Repeat entry incorrect")
+            return messagebox.showerror("Error", "Repeat: 1 for yes, 0 for no")
 
         try:
             slipdetect = int(slipdetect_var.get())
         except:
             self.slipdetect_entry.delete(0, "end")
-            return messagebox.showerror("Error", "Slip detect entry incorrect")
+            return messagebox.showerror("Error", "Slip detect: 1 for yes, 0 for no")
 
 
         if start_az < 0 or start_az >= end_az or start_az > 360:
             self.start_azimuth_entry.delete(0, "end")
-            return messagebox.showerror("Error", "Starting Azimuth entry incorrect")
+            return messagebox.showerror("Error", "Starting Azimuth must be between 0 and 360")
         if end_az < 0 or end_az > 360:
             self.end_azimuth_entry.delete(0, "end")
-            return messagebox.showerror("Error", "Ending Azimuth entry incorrect")
+            return messagebox.showerror("Error", "Ending Azimuth must be between 0 and 360")
         if start_elbeam < -7 or start_elbeam > 45 or start_elbeam >= end_elbeam:
             self.start_elbeam_entry.delete(0, "end")
-            return messagebox.showerror("Error", "Starting Elbeam entry incorrect")
+            return messagebox.showerror("Error", "Starting Elbeam must be between -6 and 45")
         if end_elbeam < -5 or end_elbeam > 45:
             self.end_elbeam_entry.delete(0, "end")
-            return messagebox.showerror("Error", "Ending Elbeam entry incorrect")
+            return messagebox.showerror("Error", "Ending Elbeam must be between -6 and 45")
         if speed < 2 or speed > 300:
             self.speed_entry.delete(0, "end")
             self.speed_entry.insert("0", "20.0")
-            return messagebox.showerror("Error", "Speed entry incorrect")
+            return messagebox.showerror("Error", "Speed must be between 2 and 300")
         if increment < 1.5 or increment > 5:
             self.increment_entry.delete(0, "end")
             self.increment_entry.insert("0", "1.5")
-            return messagebox.showerror("Error", "Increment entry incorrect")
+            return messagebox.showerror("Error", "Increment must be between 1.5 and 5")
         if repeat not in [0, 1]:
             self.repeat_entry.delete(0, "end")
             self.repeat_entry.insert("0", "1")
-            return messagebox.showerror("Error", "Repeat entry incorrect")
+            return messagebox.showerror("Error", "Repeat: 1 for yes, 0 for no")
         if slipdetect not in [0, 1]:
             self.slipdetect_entry.delete(0, "end")
             self.slipdetect_entry.insert("0", "1")
-            return messagebox.showerror("Error", "Slip detect entry incorrect")
+            return messagebox.showerror("Error", "Slip detect: 1 for yes, 0 for no")
         return start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect
 
     def start_threading(self, scan_type):
