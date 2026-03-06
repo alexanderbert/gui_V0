@@ -365,6 +365,9 @@ class TerminalFrame(tk.Frame):
 
     def stop_scan(self):
         channel = self.fl_network_mode()
+        self.pos_text_box.delete("1.0", tk.END)
+        self.pos_text_box.insert("1.0", "Executing Stop Command\n Please Standby\n")
+        self.pos_text_box.config(font=("Arial", 24), foreground="red")
         #channel = self.alex_home_network_mode()
         time.sleep(1)
         ttyf="/dev/ttyUSB1"
@@ -381,6 +384,9 @@ class TerminalFrame(tk.Frame):
             self.stop_scan()
         time.sleep(1)
         self.get_positioner_status()
+        self.pos_text_box.delete("1.0", tk.END)
+        self.pos_text_box.config(font=("Arial", 16), foreground="white")
+        self.pos_text_box.insert("1.0", "Scan stopped\n")
 
         channel.close()
         client.close()
