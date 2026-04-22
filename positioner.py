@@ -720,7 +720,7 @@ class ScanFrame(tk.Frame):
         self.fine_d_key.config(font=("Arial", 20))
         self.fine_d_key.config(width=10)
 
-        self.set_home_button = tk.Button(self, text="Save Home Position", command=lambda: self.set_home_finished())
+        self.set_home_button = tk.Button(self, text="Save Home /", command=lambda: self.set_home_finished())
         self.set_home_button.grid(column=2, row=3, sticky="NSEW")
         self.set_home_button.config(font=("Arial", 20))
 
@@ -728,7 +728,7 @@ class ScanFrame(tk.Frame):
         # self.space_bar_button = tk.Button(self, text="Space Bar", command=lambda: self.terminal_frame.set_home("space_bar"))
         # self.set_home_button.grid(column=4, row=3, sticky="NSEW")
         # self.set_home_button.config(font=("Arial", 20))
-        self.space_bar_button = tk.Button(self, text="Last Saved Position", command=lambda: self.terminal_frame.set_home(" "))
+        self.space_bar_button = tk.Button(self, text="Last Saved-spacebar", command=lambda: self.terminal_frame.set_home(" "))
         self.space_bar_button.grid(column=3, row=3, sticky="NSEW")
         self.space_bar_button.config(font=("Arial", 20))
 
