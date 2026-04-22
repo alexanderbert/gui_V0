@@ -496,10 +496,9 @@ class TerminalFrame(tk.Frame):
         ttyf="/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo")
         time.sleep(0.1)
-        channel.send(f"echo {key_stroke} > {ttyf}\n")
+        #no keystrokes
+        channel.send(f"echo -n {key_stroke} > {ttyf}\n")
         time.sleep(0.5)
-
-        self.get_positioner_status()
         channel.close()
         client.close()
 
@@ -515,9 +514,9 @@ class TerminalFrame(tk.Frame):
             time.sleep(0.5)
             channel.send(f"echo reset > {ttyf}\n")
             time.sleep(0.5)
-            self.get_positioner_status()
             channel.close()
             client.close()
+            self.homing_mode
         else:
             print("dont reset positioner")
 
@@ -1056,6 +1055,10 @@ class ButtonFrame(tk.Frame):
     #     channel.send("^C\n")
     #     client.close()
 
+    def start_homing_mode_and_reset(self):
+        self.io_frame.input_frame.output_frame.terminal_frame.reset_positioner()
+        self.io_frame.input_frame.scan_frame.homing_mode_interface()
+
 
 
     def create_buttons(self):
@@ -1083,7 +1086,10 @@ class ButtonFrame(tk.Frame):
         self.get_position.grid(column=0, row=2)
         self.get_position.config(width=15, font=("Arial", 20))
 
-        self.reset_positioner = tk.Button(self, text="Reset Positioner",command=lambda: self.io_frame.input_frame.output_frame.terminal_frame.reset_positioner())
+        #self.reset_positioner = tk.Button(self, text="Reset Positioner",command=lambda: self.io_frame.input_frame.output_frame.terminal_frame.reset_positioner())
+        #CHANGE RESET BUTTON TO ALSO CHANGE BUTTON LAYOUT
+        self.reset_positioner = tk.Button(self, text="Reset Positioner",
+                                          command=lambda: self.start_homing_mode_and_reset())
         self.reset_positioner.grid(column=0, row=4)
         self.reset_positioner.config(width=15, font=("Arial", 20))
 
