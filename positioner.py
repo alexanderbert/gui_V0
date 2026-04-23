@@ -490,7 +490,7 @@ class TerminalFrame(tk.Frame):
 
     def set_home(self, key_stroke):
         # self.scan_type_var.set(f"SET HOME")
-        print(key_stroke)
+        print(f"{key_stroke}")
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
@@ -516,7 +516,6 @@ class TerminalFrame(tk.Frame):
             time.sleep(0.5)
             channel.close()
             client.close()
-            self.homing_mode
         else:
             print("dont reset positioner")
 
