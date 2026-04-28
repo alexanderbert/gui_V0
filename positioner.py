@@ -92,8 +92,29 @@ class TerminalFrame(tk.Frame):
         print(self.positioner_selected_for_use)
         global selected_positioner_global
         selected_positioner_global = self.positioner_selected
-        self.get_positioner_status()
-        return self.positioner_selected
+
+        #Do i need to return this?
+        #return self.positioner_selected
+        initial_status = self.initial_positioner_status()
+        return initial_status
+
+    def initial_positioner_status(self):
+        channel = self.fl_network_mode()
+        #SEND ENTER TO CONFIRM POS or homing mode status
+        ttyf = "/dev/ttyUSB1"
+        channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
+        channel.send(f"echo \n ")
+        output = channel.recv(1024).decode("iso-8859-1")
+        if "POS>" in output:
+            print(output)
+            #set continue to normal mode
+            self.get_positioner_status()
+            return True
+        else:
+            print(output)
+            return False
+
+
 
     def fl_network_mode(self):
         print(self.positioner_selected)
@@ -498,13 +519,14 @@ class TerminalFrame(tk.Frame):
         time.sleep(0.1)
         #no keystrokes
         channel.send(f"echo -n {key_stroke} > {ttyf}\n")
-        time.sleep(0.5)
+        time.sleep(0.1)
         channel.close()
         client.close()
 
     def reset_positioner(self):
-        print(self.positioner_selected)
+        print(f"positioner selected: {self.positioner_selected}")
         answer = messagebox.askyesno("Reset Positioner", "Do you want to reset positioner?")
+        print(answer)
         if answer:
             print("reset positioner")
             channel = self.fl_network_mode()
@@ -1058,10 +1080,16 @@ class ButtonFrame(tk.Frame):
         self.io_frame.input_frame.output_frame.terminal_frame.reset_positioner()
         self.io_frame.input_frame.scan_frame.homing_mode_interface()
 
+    def connect_positioner_initial_state(self):
+        initial_state = self.io_frame.input_frame.output_frame.terminal_frame.set_positioner(self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get()))
+        if not initial_state:
+            self.io_frame.input_frame.scan_frame.homing_mode_interface()
+
 
 
     def create_buttons(self):
-        self.button_end = tk.Button(self, text="Connect Positioner", command=lambda: self.io_frame.input_frame.output_frame.terminal_frame.set_positioner(self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get())))
+        #self.button_end = tk.Button(self, text="Connect Positioner", command=lambda: self.io_frame.input_frame.output_frame.terminal_frame.set_positioner(self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get())))
+        self.button_end = tk.Button(self, text="Connect Positioner", command = lambda: self.connect_positioner_initial_state())
         self.button_end.grid(column=0,  row=0)
         self.button_end.config(width=15, font=("Arial", 20))
 
