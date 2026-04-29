@@ -96,18 +96,20 @@ class TerminalFrame(tk.Frame):
         #Do i need to return this?
         #return self.positioner_selected
         initial_status = self.initial_positioner_status()
+        print(self.positioner_selected)
         return initial_status
 
     def initial_positioner_status(self):
         channel = self.fl_network_mode()
-        #SEND ENTER TO CONFIRM POS or homing mode status
+        #channel = self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
-        channel.send(f"echo \n ")
+        time.sleep(.1)
+        channel.send(f"echo > {ttyf}\n")
+        time.sleep(.1)
         output = channel.recv(1024).decode("iso-8859-1")
         if "POS>" in output:
             print(output)
-            #set continue to normal mode
             self.get_positioner_status()
             return True
         else:
