@@ -7,9 +7,11 @@ import time
 import queue
 import threading
 import sys
+import logging
 
 from datetime import datetime
 
+logging.basicConfig(filename="log.txt", filemode='a', level=logging.INFO, format="%(asctime)s - %(message)s")
 
 client = paramiko.client.SSHClient()
 output_queue = queue.Queue()
@@ -92,10 +94,11 @@ class TerminalFrame(tk.Frame):
         print(self.positioner_selected_for_use)
         global selected_positioner_global
         selected_positioner_global = self.positioner_selected
-
+        logging.info(f"selected_positioner_global: {selected_positioner_global}")
         #Do i need to return this?
         #return self.positioner_selected
         initial_status = self.initial_positioner_status()
+        logging.info(f"positioner_selected {self.positioner_selected}")
         print(self.positioner_selected)
         return initial_status
 
@@ -104,16 +107,22 @@ class TerminalFrame(tk.Frame):
         #channel = self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
+        logging.info('channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")')
         time.sleep(.1)
         channel.send(f"echo > {ttyf}\n")
+        logging.info('channel.send(f"echo > {ttyf}\n")')
         time.sleep(.1)
         output = channel.recv(1024).decode("iso-8859-1")
+        logging.info(f"output: {output}")
         if "POS>" in output:
             print(output)
             self.get_positioner_status()
+            logging.info("POS> IN output")
+            logging.info("RUNNING POSITIONER STATUS")
             return True
         else:
             print(output)
+            logging.info("NO 'POS>' in output")
             return False
 
 
@@ -131,6 +140,7 @@ class TerminalFrame(tk.Frame):
         channel.get_pty()
         channel = client.invoke_shell()
         time.sleep(1)
+        logging.info("CONNECTED TO FLORIDA NETWORK")
         return channel
 
     # def alex_home_network_mode(self):
@@ -161,13 +171,18 @@ class TerminalFrame(tk.Frame):
         #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
+        logging.info(f'get_positioner_status:  channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")')
         channel.send(f"cat {ttyf} &\n")
+        logging.info(f'get_positioner_status:  channel.send(f"cat {ttyf} &\n")')
         time.sleep(.5)
         channel.send(f"echo scan status > {ttyf}\n")
+        logging.info(f'get_positioner_status:  channel.send(f"echo scan status > {ttyf}\n")')
         time.sleep(.5)
         channel.send("fg\n")
+        logging.info('get_positioner_status: channel.send("fg\n")')
         time.sleep(0.5)
         channel.send(f"\x1a")
+        logging.info('get_positioner_status: channel.send(f"\x1a")')
         time.sleep(.5)
         scan_mode_variable = ""
         run_status_variable = ""
@@ -180,6 +195,7 @@ class TerminalFrame(tk.Frame):
         #(\n\n)
         try:
             output = channel.recv(8192).decode("iso-8859-1")
+            logging.info(f"get_positioner_status try block: output: {output}")
             time.sleep(1)
             #output_status = output.split("sq@sq-radar-5:~$ scan status", 1)
             output_status = output.split(":~$ scan status", 1)
@@ -361,6 +377,17 @@ class TerminalFrame(tk.Frame):
                     echo scan set slipdetect {slipdetect} > {ttyf}
                     echo scan start > {ttyf}\n
                     """)
+        logging.info(f'stty -F {ttyf} 115200 raw -hupcl -onlcr -echo')
+        logging.info(f'echo scan mode ppi > {ttyf}')
+        logging.info(f'echo scan set startaz {start_az} > {ttyf}')
+        logging.info(f'echo scan set endaz {end_az} > {ttyf}')
+        logging.info(f'echo scan set startelbeam {start_ele} > {ttyf}')
+        logging.info(f'echo scan set endelbeam {end_ele} > {ttyf}')
+        logging.info(f'echo scan set speed {speed} > {ttyf}')
+        logging.info(f'echo scan set inc {inc} > {ttyf}')
+        logging.info(f'echo scan set repeat {repeat} > {ttyf}')
+        logging.info(f'echo scan set slipdetect {slipdetect} > {ttyf}')
+        logging.info(f'echo scan start > {ttyf}')
         time.sleep(0.5)
         self.get_positioner_status()
         channel.close()
@@ -392,6 +419,7 @@ class TerminalFrame(tk.Frame):
 
     def stop_scan(self):
         channel = self.fl_network_mode()
+        logging.info("STOPPING SCAN")
         self.pos_text_box.delete("1.0", tk.END)
         self.pos_text_box.insert(tk.END, "Executing Stop Command\n Please Standby\n")
         self.pos_text_box.config(font=("Arial", 24), foreground="red")
@@ -446,6 +474,7 @@ class TerminalFrame(tk.Frame):
     #NEED TO CHECK
     def get_current_position(self):
         self.pos_text_box.delete("1.0", tk.END)
+        logging.info("Getting Current Position")
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
@@ -460,6 +489,7 @@ class TerminalFrame(tk.Frame):
         output = channel.recv(8192).decode("iso-8859-1")
         time.sleep(1)
         print(output)
+        logging.info(f"OUTPUT FROM get_current_position: {output}")
         try:
             output_status = output.split(":~$ pos", 1)
             output_lines = output_status[1].split("\r")
@@ -521,12 +551,14 @@ class TerminalFrame(tk.Frame):
         time.sleep(0.1)
         #no keystrokes
         channel.send(f"echo -n {key_stroke} > {ttyf}\n")
+        logging.info(f'channel.send(f"echo -n {key_stroke} > {ttyf}\n")')
         time.sleep(0.1)
         channel.close()
         client.close()
 
     def reset_positioner(self):
         print(f"positioner selected: {self.positioner_selected}")
+        logging.info("RESET POSITIONER CALLED")
         answer = messagebox.askyesno("Reset Positioner", "Do you want to reset positioner?")
         print(answer)
         if answer:
@@ -535,8 +567,10 @@ class TerminalFrame(tk.Frame):
             #channel = self.alex_home_network_mode()
             ttyf = "/dev/ttyUSB1"
             channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
+            logging.info(f'channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")')
             time.sleep(0.5)
             channel.send(f"echo reset > {ttyf}\n")
+            logging.info(f'channel.send(f"echo reset > {ttyf}\n")')
             time.sleep(0.5)
             channel.close()
             client.close()
@@ -695,9 +729,11 @@ class ScanFrame(tk.Frame):
         self.set_home_button.destroy()
         self.create_layout()
         self.terminal_frame.set_home("/")
+        logging.info("NORMAL MODE ACTIVATED")
 
     def homing_mode_interface(self):
         #Clear or reset default values
+        logging.info("HOMING MODE ACTIVATED")
         self.start_azimuth_label.destroy()
         self.start_azimuth_entry.destroy()
         self.end_azimuth_label.destroy()
@@ -1001,6 +1037,7 @@ class RadarsAvailableFrame(tk.Frame):
         nm.scan(hosts = "192.168.0.*", arguments = "-sn")
         for host in nm.all_hosts():
             try:
+                logging.info(f"TRYING HOST: {host}")
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.load_system_host_keys()
                 self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
@@ -1079,12 +1116,16 @@ class ButtonFrame(tk.Frame):
     #     client.close()
 
     def start_homing_mode_and_reset(self):
+        logging.info(f"STARTING HOMING MODE AND RESET")
         self.io_frame.input_frame.output_frame.terminal_frame.reset_positioner()
         self.io_frame.input_frame.scan_frame.homing_mode_interface()
 
     def connect_positioner_initial_state(self):
+        logging.info(f"CONNECT POSITIONER INITIAL STATE CHECK")
         initial_state = self.io_frame.input_frame.output_frame.terminal_frame.set_positioner(self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get()))
+        logging.info(f"CONNECT POSITIONER INITIAL STATE: {initial_state}, false should activate homing mode interface")
         if not initial_state:
+            logging.info("INITIAL STATE WAS FALSEY")
             self.io_frame.input_frame.scan_frame.homing_mode_interface()
 
 
