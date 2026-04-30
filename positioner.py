@@ -563,6 +563,7 @@ class TerminalFrame(tk.Frame):
         # time.sleep(0.1)
         # channel.close()
         # client.close()
+        logging.info(f"channel within set home: {channel}")
         ttyf = "/dev/ttyUSB1"
         if channel.recv_read():
             output = channel.recv(1024)
