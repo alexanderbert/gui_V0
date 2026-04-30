@@ -18,6 +18,15 @@ output_queue = queue.Queue()
 selected_positioner_global = None
 home_set = False
 
+#Check for tracking error
+'''
+save home / - to set valid home
+scan rehome -puts you in homing mode
+then moved 22.5 S to spin properly
+save home / 
+contact it
+'''
+
 run_status_global = False
 
 if getattr(sys, 'frozen', False):
@@ -106,13 +115,24 @@ class TerminalFrame(tk.Frame):
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
-        channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
-        logging.info('channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")')
+        channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo \n")
+        logging.info('channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo \n")')
+        #testing time
+        channel.settimeout(2)
+        output = channel.recv(1024).decode("iso-8859-1")
         time.sleep(.1)
         channel.send(f"echo > {ttyf}\n")
         logging.info('channel.send(f"echo > {ttyf}\n")')
         time.sleep(.1)
-        output = channel.recv(1024).decode("iso-8859-1")
+
+        time.sleep(.1)
+        # channel.send(f'''
+        #             cat /dev/ttyUSB1 & sleep 2
+        #             kill % 1; & sleep 0.1
+        #             echo -en '\n' > /dev/ttyUSB1; wait
+        #             ''')
+
+
         logging.info(f"output: {output}")
         if "POS>" in output:
             print(output)
