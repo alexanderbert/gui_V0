@@ -103,45 +103,39 @@ class TerminalFrame(tk.Frame):
         print(self.positioner_selected_for_use)
         global selected_positioner_global
         selected_positioner_global = self.positioner_selected
-        logging.info(f"selected_positioner_global: {selected_positioner_global}")
         #Do i need to return this?
         #return self.positioner_selected
         initial_status = self.initial_positioner_status()
-        logging.info(f"positioner_selected {self.positioner_selected}")
+        logging.info(f"positioner_selected within set_positioner: {self.positioner_selected}")
         print(self.positioner_selected)
         return initial_status
 
     def initial_positioner_status(self):
         channel = self.fl_network_mode()
+        logging.info("within initial_positioner_status")
         #channel = self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo \n")
         logging.info('channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo \n")')
         #testing time
-        channel.settimeout(2)
+        channel.settimeout(1)
         output = channel.recv(1024).decode("iso-8859-1")
         time.sleep(.1)
         channel.send(f"echo > {ttyf}\n")
         logging.info('channel.send(f"echo > {ttyf}\n")')
-        time.sleep(.1)
-
-        time.sleep(.1)
         # channel.send(f'''
         #             cat /dev/ttyUSB1 & sleep 2
         #             kill % 1; & sleep 0.1
         #             echo -en '\n' > /dev/ttyUSB1; wait
         #             ''')
-
-
-        logging.info(f"output: {output}")
+        logging.info(f"output from initial_positioner_status: {output}")
         if "POS>" in output:
             print(output)
+            #logging.info("POS> IN output")
             self.get_positioner_status()
-            logging.info("POS> IN output")
-            logging.info("RUNNING POSITIONER STATUS")
             return True
         else:
-            print(output)
+            #print(output)
             logging.info("NO 'POS>' in output")
             return False
 
@@ -189,20 +183,16 @@ class TerminalFrame(tk.Frame):
         channel = self.fl_network_mode()
         self.status_text_box.delete("1.0", tk.END)
         #channel = self.alex_home_network_mode()
+        logging.info("within get_positioner_status")
         ttyf="/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
-        logging.info(f'get_positioner_status:  channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")')
         channel.send(f"cat {ttyf} &\n")
-        logging.info(f'get_positioner_status:  channel.send(f"cat {ttyf} &\n")')
         time.sleep(.5)
         channel.send(f"echo scan status > {ttyf}\n")
-        logging.info(f'get_positioner_status:  channel.send(f"echo scan status > {ttyf}\n")')
         time.sleep(.5)
         channel.send("fg\n")
-        logging.info('get_positioner_status: channel.send("fg\n")')
         time.sleep(0.5)
         channel.send(f"\x1a")
-        logging.info('get_positioner_status: channel.send(f"\x1a")')
         time.sleep(.5)
         scan_mode_variable = ""
         run_status_variable = ""
@@ -215,7 +205,7 @@ class TerminalFrame(tk.Frame):
         #(\n\n)
         try:
             output = channel.recv(8192).decode("iso-8859-1")
-            logging.info(f"get_positioner_status try block: output: {output}")
+
             time.sleep(1)
             #output_status = output.split("sq@sq-radar-5:~$ scan status", 1)
             output_status = output.split(":~$ scan status", 1)
@@ -509,7 +499,6 @@ class TerminalFrame(tk.Frame):
         output = channel.recv(8192).decode("iso-8859-1")
         time.sleep(1)
         print(output)
-        logging.info(f"OUTPUT FROM get_current_position: {output}")
         try:
             output_status = output.split(":~$ pos", 1)
             output_lines = output_status[1].split("\r")
@@ -562,7 +551,6 @@ class TerminalFrame(tk.Frame):
         client.close()
 
     def set_home(self, key_stroke, channel):
-        # self.scan_type_var.set(f"SET HOME")
         # print(f"{key_stroke}")
         # channel = self.fl_network_mode()
         # #channel = self.alex_home_network_mode()
@@ -579,7 +567,7 @@ class TerminalFrame(tk.Frame):
         if channel.recv_read():
             output = channel.recv(1024)
             logging.info(f"OUTPUT FROM Keystroke '{key_stroke}': {output}")
-
+        time.sleep(0.1)
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo")
         time.sleep(0.1)
         channel.send(f"echo -n {key_stroke} > {ttyf}\n")
@@ -1074,7 +1062,6 @@ class RadarsAvailableFrame(tk.Frame):
         nm.scan(hosts = "192.168.0.*", arguments = "-sn")
         for host in nm.all_hosts():
             try:
-                logging.info(f"TRYING HOST: {host}")
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.load_system_host_keys()
                 self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
@@ -1086,6 +1073,7 @@ class RadarsAvailableFrame(tk.Frame):
                 self.update_radar_pulldown(host, radar_hostname.strip())
             except:
                 print(f"No connection to {host}")
+        logging.info("RUNNING find_other_radars")
         self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
         self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, "Finished Scanning")
 
@@ -1158,20 +1146,22 @@ class ButtonFrame(tk.Frame):
         self.io_frame.input_frame.scan_frame.homing_mode_interface()
 
     def connect_positioner_initial_state(self):
-        logging.info(f"CONNECT POSITIONER INITIAL STATE CHECK")
+        logging.info(f"running connect_positioner_initial_state")
         initial_state = self.io_frame.input_frame.output_frame.terminal_frame.set_positioner(self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get()))
         logging.info(f"CONNECT POSITIONER INITIAL STATE: {initial_state}, false should activate homing mode interface")
         if not initial_state:
             logging.info("INITIAL STATE WAS FALSEY")
             self.io_frame.input_frame.scan_frame.homing_mode_interface()
+        else:
+            logging.info("INITIAL STATE: NORMAL MODE")
 
 
 
     def create_buttons(self):
-        #self.button_end = tk.Button(self, text="Connect Positioner", command=lambda: self.io_frame.input_frame.output_frame.terminal_frame.set_positioner(self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get())))
-        self.button_end = tk.Button(self, text="Connect Positioner", command = lambda: self.connect_positioner_initial_state())
-        self.button_end.grid(column=0,  row=0)
-        self.button_end.config(width=15, font=("Arial", 20))
+        #self.connect_positioner_button = tk.Button(self, text="Connect Positioner", command=lambda: self.io_frame.input_frame.output_frame.terminal_frame.set_positioner(self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get())))
+        self.connect_positioner_button = tk.Button(self, text="Connect Positioner", command = lambda: self.connect_positioner_initial_state())
+        self.connect_positioner_button.grid(column=0,  row=0)
+        self.connect_positioner_button.config(width=15, font=("Arial", 20))
 
         # self.button_reset = tk.Button(self, text="Home", command = lambda: RadarsAvailableFrame.run_reset_radar(self.radar_available_frame,
         #                               command = "-r; sudo rmmod xdma; sudo modprobe xdma",
