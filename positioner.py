@@ -558,9 +558,12 @@ class TerminalFrame(tk.Frame):
         time.sleep(0.1)
         #no keystrokes
         channel.send(f"echo -n {key_stroke} > {ttyf}\n")
-        channel.recv(8192).decode("iso-8859-1")
-        channel.settimeout(2)
         logging.info(f'channel.send(f"echo -n {key_stroke} > {ttyf}\n")')
+        channel.settimeout(2)
+        output = channel.recv(12288).decode("iso-8859-1")
+        for line in output.split("\n"):
+            logging.info(line)
+            self.status_text_box.insert(tk.END, line)
         time.sleep(0.1)
         channel.close()
         client.close()
@@ -595,10 +598,11 @@ class TerminalFrame(tk.Frame):
             time.sleep(0.5)
             channel.send(f"echo reset > {ttyf}\n")
             logging.info(f'channel.send(f"echo reset > {ttyf}\n")')
-            time.sleep(2)
-            channel.recv(8192).decode("iso-8859-1")
             channel.settimeout(2)
-
+            output = channel.recv(12288).decode("iso-8859-1")
+            for line in output.split("\n"):
+                logging.info(line)
+                self.status_text_box.insert(tk.END, line)
             channel.close()
             client.close()
         else:
