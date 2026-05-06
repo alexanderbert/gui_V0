@@ -123,15 +123,12 @@ class TerminalFrame(tk.Frame):
         time.sleep(.1)
         channel.send(f"echo > {ttyf}\n")
         logging.info('channel.send(f"echo > {ttyf}\n")')
-        # channel.send(f'''
-        #             cat /dev/ttyUSB1 & sleep 2
-        #             kill % 1; & sleep 0.1
-        #             echo -en '\n' > /dev/ttyUSB1; wait
-        #             ''')
-        logging.info(f"output from initial_positioner_status: {output}")
+
+        # logging.info(f"output from initial_positioner_status: {output}")
         if "POS>" in output:
             print(output)
-            #logging.info("POS> IN output")
+
+            logging.info("POS> IN output")
             self.get_positioner_status()
             return True
         else:
@@ -172,12 +169,14 @@ class TerminalFrame(tk.Frame):
     #     channel.send("sudo su - radaraccess\n")
     #     time.sleep(1)
     #     #USE -t or not?
-    #     #channel.send("ssh -t Radar2-tunnel\n")
-    #     channel.send("ssh Radar5-tunnel\n")
+    #     channel.send("ssh -t Radar2-tunnel\n")
+    #     #channel.send("ssh Radar5-tunnel\n")
     #     output = channel.recv(4096).decode("iso-8859-1")
     #     # print(output)
     #     time.sleep(1)
     #     return channel
+
+        #"ssh Bat-5" will be sent to radar 5
 
     def get_positioner_status(self):
         channel = self.fl_network_mode()
@@ -532,7 +531,7 @@ class TerminalFrame(tk.Frame):
         #channel =self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
-        channel.send(f"echo rehome  > {ttyf}\n")
+        channel.send(f"echo rehome > {ttyf}\n")
         time.sleep(0.5)
         self.get_positioner_status()
         channel.close()
@@ -544,39 +543,39 @@ class TerminalFrame(tk.Frame):
         #channel =self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
-        channel.send(f"echo gohome  > {ttyf}\n")
+        channel.send(f"echo gohome > {ttyf}\n")
         time.sleep(0.5)
         self.get_positioner_status()
         channel.close()
         client.close()
 
     def set_home(self, key_stroke, channel):
-        # print(f"{key_stroke}")
-        # channel = self.fl_network_mode()
-        # #channel = self.alex_home_network_mode()
-        # ttyf="/dev/ttyUSB1"
-        # channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo")
-        # time.sleep(0.1)
-        # #no keystrokes
-        # channel.send(f"echo -n {key_stroke} > {ttyf}\n")
-        # logging.info(f'channel.send(f"echo -n {key_stroke} > {ttyf}\n")')
-        # time.sleep(0.1)
-        # channel.close()
-        # client.close()
-        logging.info(f"channel within set home: {channel}")
-        ttyf = "/dev/ttyUSB1"
-        if channel.recv_read():
-            output = channel.recv(1024)
-            logging.info(f"OUTPUT FROM Keystroke '{key_stroke}': {output}")
-        time.sleep(0.1)
+        logging.info(f"key stroke pressed: {key_stroke}")
+        channel = self.fl_network_mode()
+        #channel = self.alex_home_network_mode()
+        ttyf="/dev/ttyUSB1"
         channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo")
         time.sleep(0.1)
+        #no keystrokes
         channel.send(f"echo -n {key_stroke} > {ttyf}\n")
-        logging.info(f"Keystroke sent: '{key_stroke}'")
-
-        if key_stroke == "/" or key_stroke == " ":
-            channel.close()
-            client.close()
+        logging.info(f'channel.send(f"echo -n {key_stroke} > {ttyf}\n")')
+        time.sleep(0.1)
+        channel.close()
+        client.close()
+        # logging.info(f"channel within set home: {channel}")
+        # ttyf = "/dev/ttyUSB1"
+        # if channel.recv_read():
+        #     output = channel.recv(1024)
+        #     logging.info(f"OUTPUT FROM Keystroke '{key_stroke}': {output}")
+        # time.sleep(0.1)
+        # channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo")
+        # time.sleep(0.1)
+        # channel.send(f"echo -n {key_stroke} > {ttyf}\n")
+        # logging.info(f"Keystroke sent: '{key_stroke}'")
+        #
+        # if key_stroke == "/" or key_stroke == " ":
+        #     channel.close()
+        #     client.close()
 
 
     def reset_positioner(self):
@@ -780,8 +779,6 @@ class ScanFrame(tk.Frame):
         self.go_home.destroy()
         self.re_home.destroy()
 
-        channel = self.terminal_frame.fl_network_mode()
-        channel.setblocking(0)
 
         self.fine_w_key = tk.Button(self, text="Fine W", command=lambda: self.terminal_frame.set_home("w", channel))
         self.fine_w_key.grid(column=1, row=0, sticky="NSEW")
@@ -1150,6 +1147,7 @@ class ButtonFrame(tk.Frame):
         logging.info(f"running connect_positioner_initial_state")
         initial_state = self.io_frame.input_frame.output_frame.terminal_frame.set_positioner(self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get()))
         logging.info(f"CONNECT POSITIONER INITIAL STATE: {initial_state}, false should activate homing mode interface")
+        self.io_frame.input_frame.scan_frame.homing_mode_interface()
         if not initial_state:
             logging.info("INITIAL STATE WAS FALSEY")
             self.io_frame.input_frame.scan_frame.homing_mode_interface()
