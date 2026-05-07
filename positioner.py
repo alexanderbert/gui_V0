@@ -554,7 +554,7 @@ class TerminalFrame(tk.Frame):
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
-        channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo cbreak")
+        channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo cbreak\n")
         time.sleep(0.1)
         #no keystrokes
         channel.send(f"echo -n {key_stroke} > {ttyf}\n")
