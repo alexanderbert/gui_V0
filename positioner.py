@@ -18,7 +18,9 @@ output_queue = queue.Queue()
 selected_positioner_global = None
 home_set = False
 
-#Check for tracking error
+#todo Check for tracking error
+#todo check for USB0/1/2 initially
+#todo tty to global
 '''
 save home / - to set valid home
 scan rehome -puts you in homing mode
@@ -103,8 +105,6 @@ class TerminalFrame(tk.Frame):
         print(self.positioner_selected_for_use)
         global selected_positioner_global
         selected_positioner_global = self.positioner_selected
-        #Do i need to return this?
-        #return self.positioner_selected
         initial_status = self.initial_positioner_status()
         logging.info(f"positioner_selected within set_positioner: {self.positioner_selected}")
         print(self.positioner_selected)
@@ -124,15 +124,13 @@ class TerminalFrame(tk.Frame):
         channel.send(f"echo > {ttyf}\n")
         logging.info('channel.send(f"echo > {ttyf}\n")')
 
-        # logging.info(f"output from initial_positioner_status: {output}")
+        #todo make sure initial check reads correctly
+        logging.info(f"output from initial_positioner_status: {output}")
         if "POS>" in output:
-            print(output)
-
             logging.info("POS> IN output")
             self.get_positioner_status()
             return True
         else:
-            #print(output)
             logging.info("NO 'POS>' in output")
             return False
 
@@ -155,28 +153,8 @@ class TerminalFrame(tk.Frame):
         return channel
 
     # def alex_home_network_mode(self):
-    #     print(self.positioner_selected)
-    #     key_path = "/Users/alexanderbertotto/.ssh/id_ed25519"
-    #     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    #     client.connect(hostname="data.stormquant.com", username="alex", key_filename=key_path, look_for_keys=False,
-    #                    allow_agent=False)
-    #     time.sleep(1)
-    #     transport = client.get_transport()
-    #     channel = transport.open_session()
-    #     channel.get_pty()
-    #     channel = client.invoke_shell()
-    #     time.sleep(.5)
-    #     channel.send("sudo su - radaraccess\n")
-    #     time.sleep(1)
-    #     #USE -t or not?
-    #     channel.send("ssh -t Radar2-tunnel\n")
-    #     #channel.send("ssh Radar5-tunnel\n")
-    #     output = channel.recv(4096).decode("iso-8859-1")
-    #     # print(output)
-    #     time.sleep(1)
-    #     return channel
+        #moved to test file
 
-        #"ssh Bat-5" will be sent to radar 5
 
     def get_positioner_status(self):
         channel = self.fl_network_mode()
@@ -200,13 +178,10 @@ class TerminalFrame(tk.Frame):
         el_axis_start_end_variable = []
         el_beam_start_end_variable = []
 
-        #output = channel.recv(4096).decode("iso-8859-1")
-        #(\n\n)
         try:
             output = channel.recv(8192).decode("iso-8859-1")
 
             time.sleep(1)
-            #output_status = output.split("sq@sq-radar-5:~$ scan status", 1)
             output_status = output.split(":~$ scan status", 1)
             output_lines = output_status[1].split("\r")
             for index, line in enumerate(output_lines):
@@ -241,7 +216,6 @@ class TerminalFrame(tk.Frame):
             output_status = output.split("scan status", 1)
             output_lines = output_status[1].split("\r")
             for index, line in enumerate(output_lines):
-                # print(f"{index}: {line}")
                 if "Mode: " in line:
                     scan_mode_variable = line.split("Mode:")[1]
                 if "Run:" in line:
@@ -275,7 +249,6 @@ class TerminalFrame(tk.Frame):
 
         run_status_variable = int(run_status_variable.strip())
         simplified_variables_list = [scan_mode_variable, start_az_variable, end_az_variable, el_axis_start, el_axis_end, el_beam_start, el_beam_end]
-        #SET UP VARIABLE IN LIST, run loop through to insert and new line, change bg color to red or green depending on run status
         self.simplified_status.delete("1.0", tk.END)
         if run_status_variable == 1:
             self.simplified_status.insert(tk.END, "Running\n")
@@ -291,7 +264,6 @@ class TerminalFrame(tk.Frame):
         else:
             self.simplified_status.config(background="firebrick3")
             self.simplified_status.config(foreground="black")
-        print(f"RUN STATUS: {run_status_variable}")
         global run_status_global
         run_status_global = run_status_variable
         return run_status_variable
@@ -439,14 +411,6 @@ class TerminalFrame(tk.Frame):
         channel.send(f"echo scan stop > {ttyf}\n")
         time.sleep(1)
 
-        #
-        # for i in range(300):
-        #     if run_status_variable != 1:
-        #         print("SCAN STOPPED")
-        #         break
-        #     time.sleep(1)
-        #     self.stop_scan()
-
         for i in range(1, 301):
             run_status_variable = self.get_positioner_status()
             if run_status_variable != 1:
@@ -471,12 +435,6 @@ class TerminalFrame(tk.Frame):
             self.pos_text_box.insert("1.0", "Scan stopped\n")
 
 
-        # time.sleep(1)
-        # #self.get_positioner_status()
-        # self.pos_text_box.delete("1.0", tk.END)
-        # self.pos_text_box.config(font=("Arial", 16), foreground="white")
-        # self.pos_text_box.insert("1.0", "Scan stopped\n")
-
         channel.close()
         client.close()
 
@@ -497,7 +455,6 @@ class TerminalFrame(tk.Frame):
         channel.send(f"\x1a")
         output = channel.recv(8192).decode("iso-8859-1")
         time.sleep(1)
-        print(output)
         try:
             output_status = output.split(":~$ pos", 1)
             output_lines = output_status[1].split("\r")
@@ -505,7 +462,6 @@ class TerminalFrame(tk.Frame):
             self.pos_text_box.insert(tk.END, f"Time of Position Check:\n")
             self.pos_text_box.insert(tk.END, current_datetime)
             for line in output_lines:
-                print(line)
                 self.pos_text_box.insert(tk.END, line)
                 if "AZ/EL From Encoders:" in line:
                     #self.status_text_box.insert(tk.END, "\r")
@@ -516,7 +472,6 @@ class TerminalFrame(tk.Frame):
             current_datetime = datetime.now()
             self.pos_text_box.insert(tk.END, f"Time of Position Check:\r {current_datetime}\r")
             for line in output_lines:
-                print(line)
                 self.pos_text_box.insert(tk.END, line)
                 if "AZ/EL From Encoders:" in line:
                     # self.status_text_box.insert(tk.END, "\r")
@@ -567,20 +522,6 @@ class TerminalFrame(tk.Frame):
         time.sleep(0.1)
         channel.close()
         client.close()
-        # logging.info(f"channel within set home: {channel}")
-        # ttyf = "/dev/ttyUSB1"
-        # if channel.recv_read():
-        #     output = channel.recv(1024)
-        #     logging.info(f"OUTPUT FROM Keystroke '{key_stroke}': {output}")
-        # time.sleep(0.1)
-        # channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo")
-        # time.sleep(0.1)
-        # channel.send(f"echo -n {key_stroke} > {ttyf}\n")
-        # logging.info(f"Keystroke sent: '{key_stroke}'")
-        #
-        # if key_stroke == "/" or key_stroke == " ":
-        #     channel.close()
-        #     client.close()
 
 
     def reset_positioner(self):
@@ -847,24 +788,6 @@ class ScanFrame(tk.Frame):
         event.widget.delete(0, "end")
 
     def input_checker(self, start_azimuth_var, end_azimuth_var, start_elbeam_var, end_elbeam_var, speed_var, increment_var, repeat_var, slipdetect_var):
-        # entries = [start_azimuth_var, end_azimuth_var, start_elbeam_var, end_elbeam_var, speed, increment, repeat,
-        #            slipdetect]
-        #
-        # for entry in entries:
-        #     if not float(f"{entry.get()}"):
-
-        # try:
-        #     start_az = float(start_azimuth_var.get())
-        #     end_az = float(end_azimuth_var.get())
-        #     start_elbeam = float(start_elbeam_var.get())
-        #     end_elbeam = float(end_elbeam_var.get())
-        #     speed = float(speed_var.get())
-        #     increment = float(increment_var.get())
-        #     repeat = int(repeat_var.get())
-        #     slipdetect = int(slipdetect_var.get())
-        # except:
-        #     return messagebox.showerror("Error", "Entry Error")
-
 
         try:
             start_az = float(start_azimuth_var.get())
@@ -946,20 +869,10 @@ class ScanFrame(tk.Frame):
         return start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect
 
     def start_threading(self, scan_type):
-        #DO I NEED THREADING?
-        # if not self.input_checker:
-        #     return print("failed")
-        # else:
-        #     try:
-        #         start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect = self.input_checker(self.start_azimuth_var, self.end_azimuth_var, self.start_elbeam_var, self.end_elbeam_var, self.speed_var, self.increment_var, self.repeat_var, self.slipdetect_var)
-        #         print(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
-        #     except:
-        #         return print("failed")
-
         start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect = self.input_checker(
             self.start_azimuth_var, self.end_azimuth_var, self.start_elbeam_var, self.end_elbeam_var, self.speed_var,
             self.increment_var, self.repeat_var, self.slipdetect_var)
-
+        #todo match not available in this version of python
         # match scan_type:
         #     case "RHI":
         #         self.terminal_frame.rhi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
@@ -1105,46 +1018,6 @@ class ButtonFrame(tk.Frame):
         self.button_reset = None
         self.network_check_button = None
         self.create_buttons()
-    #     self.after(200, self.change_background_color())
-    #
-    # def change_background_color(self):
-    #     global run_status_background_color
-    #     if run_status_background_color:
-    #         self.configure(bg="green")
-
-    # def stop_order(self):
-    #     global is_running
-    #     is_running = False
-    #     self.io_frame.show_input_frame_hide_output_frame()
-    #
-    # def run_command_connect(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}"):
-    #     global is_running
-    #     is_running = True
-    #     self.io_frame.hide_input_frame_show_output_frame()
-    #     self.io_frame.output_frame.display_settings(command)
-    #     client.load_system_host_keys()
-    #     client.connect(hostname=hostname, username=username, password=password, look_for_keys=False, allow_agent=False)
-    #     print("connected")
-    #     transport = client.get_transport()
-    #     channel = transport.open_session()
-    #     channel.get_pty()
-    #     channel.invoke_shell()
-    #     channel.send(f"cd {os.environ['FPGAPATH']}\n")
-    #     time.sleep(1)
-    #     channel.send(f"./fpgaStream {command}\n")
-    #     time.sleep(2)
-    #
-    #     max_duration = 2000
-    #     start_time = time.time()
-    #     output = ""
-    #     # while channel.recv_ready() and is_running:
-    #     while channel.active and is_running:
-    #         chunk = channel.recv(1024).decode("iso-8859-1")
-    #         output += chunk
-    #
-    #     channel.send("^S\n")
-    #     channel.send("^C\n")
-    #     client.close()
 
     def start_homing_mode_and_reset(self):
         logging.info(f"STARTING HOMING MODE AND RESET")
@@ -1215,40 +1088,8 @@ class Button(tk.Button):
 
 class SubmitButton(tk.Button):
     def __init__(self, parent, radar_available_frame, io_frame):
-        super().__init__(parent, text="Connectfix", command=lambda: self.run_command())
+        super().__init__(parent)
         self.radar_available_frame = radar_available_frame
         self.io_frame = io_frame
 
-    def run_queue(self):
-        #print(f"OPQ: {output_queue.get()}")
-        # while output_queue.qsize() > 10 and is_running:
-        #     self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
-        print(output_queue.qsize())
-        try:
-            if not output_queue.empty():
-                self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
-        except:
-            print("Error occured")
 
-    def run_command(self, received_commands, received_units):
-        cmd_str = ""
-        unit_list = []
-
-        for unit in self.received_units:
-            unit_list.append(unit)
-
-        for i, value in enumerate(self.received_commands.values()):
-            if value.get() == "True":
-                cmd_str += f"{unit_list[i]} "
-            else:
-                cmd_str += f"{unit_list[i]} {value.get()} "
-
-        input_check_return = self.input_check(cmd_str)
-        if input_check_return == False:
-            self.io_frame.input_frame.create_entries()
-            return
-
-        radar_key = self.radar_available_frame.radar_selected.get()
-        radar_value = RadarsAvailableFrame.radar_dict.get(radar_key)
-        thread = threading.Thread(target=ButtonFrame.run_command_connect, args=(self, cmd_str.strip(), radar_value))
-        thread.start()
