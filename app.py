@@ -1,6 +1,7 @@
 from fpga_layout import *
 from header import *
 from positioner import PositionerFrame
+from visualization import *
 
 
 class App(tk.Tk):
@@ -29,8 +30,11 @@ class App(tk.Tk):
         self.positioner_frame = PositionerFrame(self.my_notebook)
         self.positioner_frame.control_frame.radars_available_frame.radar_drop()
 
+        self.visualization_frame = MainFrameV(self.my_notebook)
+
         self.my_notebook.add(self.main_frame, text = "FPGA")
         self.my_notebook.add(self.positioner_frame, text = "Positioner")
+        self.my_notebook.add(self.visualization_frame, text = "Visualization")
 
 
 
