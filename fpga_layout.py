@@ -279,7 +279,7 @@ class ButtonFrame(tk.Frame):
         self.radar_available_frame = radar_available_frame
         self.io_frame = io_frame
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(list(range(4)), weight=1)
+        self.rowconfigure(list(range(5)), weight=1)
         self.command_dict = command_dict
         self.entry_dict = entry_dict
         self.button_end = None
@@ -348,7 +348,7 @@ class ButtonFrame(tk.Frame):
 
     def create_buttons(self):
         self.button_end = tk.Button(self, text="End Run", command= lambda: self.stop_order())
-        self.button_end.grid(column=0,  row=1)
+        self.button_end.grid(column=0,  row=3)
         self.button_end.config(width=10, font=("Arial", 20))
 
         self.button_reset = tk.Button(self, text="Reset", command = lambda: RadarsAvailableFrame.run_reset_radar(self.radar_available_frame,
@@ -357,12 +357,16 @@ class ButtonFrame(tk.Frame):
         self.button_reset.grid(column=0, row=2)
         self.button_reset.config(width=10, font=("Arial", 20))
 
-        self.submit_button = SubmitButton(self, self.command_dict, self.entry_dict, self.radar_available_frame, self.io_frame)
+        self.submit_button = SubmitButton(self, self.command_dict, self.entry_dict, self.radar_available_frame, self.io_frame, False)
         self.submit_button.grid(column=0, row=0)
         self.submit_button.config(width=10, font=("Arial", 20))
 
+        self.capture_button = SubmitButton(self, self.command_dict, self.entry_dict, self.radar_available_frame, self.io_frame, True)
+        self.capture_button.grid(column=0, row=1)
+        self.capture_button.config(text= "Capture", width=10, font=("Arial", 20))
+
         self.network_check_button = tk.Button(self, text="Network Check" , command= lambda: RadarsAvailableFrame.find_other_radars(self.radar_available_frame))
-        self.network_check_button.grid(column=0, row=3)
+        self.network_check_button.grid(column=0, row=4)
         self.network_check_button.config(width=10, font=("Arial", 20))
 
 
@@ -401,23 +405,26 @@ class Button(tk.Button):
         super().__init__(parent)
 
 class SubmitButton(tk.Button):
-    def __init__(self, parent, received_commands, received_units, radar_available_frame, io_frame):
+    def __init__(self, parent, received_commands, received_units, radar_available_frame, io_frame, capture_output = False):
         super().__init__(parent, text="Run FPGA", command=lambda: self.run_command(self.received_commands, self.received_units))
         self.radar_available_frame = radar_available_frame
         self.io_frame = io_frame
         self.received_commands = received_commands
         self.received_units = received_units
+        self.capture_output = capture_output
 
-    def run_queue(self):
-        #print(f"OPQ: {output_queue.get()}")
-        # while output_queue.qsize() > 10 and is_running:
-        #     self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
-        print(output_queue.qsize())
-        try:
-            if not output_queue.empty():
-                self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
-        except:
-            print("Error occured")
+    # def run_queue(self):
+    #     #print(f"OPQ: {output_queue.get()}")
+    #     # while output_queue.qsize() > 10 and is_running:
+    #     #     self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
+    #     print(output_queue.qsize())
+    #     try:
+    #         if not output_queue.empty():
+    #             self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
+    #     except:
+    #         print("Error occured")
+
+
 
     def run_command(self, received_commands, received_units):
         cmd_str = ""
@@ -436,6 +443,12 @@ class SubmitButton(tk.Button):
         if input_check_return == False:
             self.io_frame.input_frame.create_entries()
             return
+
+        # FLAG FOR CAPTURING OUTPUT
+        if self.capture_output:
+            cmd_str += "-c"
+
+        print(cmd_str)
 
         radar_key = self.radar_available_frame.radar_selected.get()
         radar_value = RadarsAvailableFrame.radar_dict.get(radar_key)
