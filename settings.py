@@ -17,6 +17,8 @@ COMMAND_UPDATE = {
     "-Q": {"title": "Pulses to read", "text": "Pulses to read before exiting", "unit": "µS","default_value": "0", "col": 0, 'row': 0},
     "-u": {"title": "Reverse Trigger", "text": "Reverse trigger to sig gen. REQUIRED on R1/R2", "unit": None, "default_value": "True", 'col': 0, 'row': 0, "shorthand": "Reverse trigger"},
     "-z": {"title": "Pulse Offset", "text": "Pulse pps offset", "unit": "µS","default_value": "0", "col": 0, 'row': 0, "shorthand": "Pulse offset"},
+    ###ADD CAPTURE FLAG
+    "-c": {"title": "Capture", "text": "Capture output", "unit": None, "default_value": "False", 'col': 0, 'row': 0, "shorthand": "Capture"}
 }
 SHUTOFF_COMMANDS = {
     "-1": {"text": "Gate off transmitter (no test mode)", 'col': 0, 'row': 0},
