@@ -4,12 +4,14 @@ from settings import *
 import threading
 import queue
 import paramiko
+from scp import SCPClient
 import time
 from dotenv import load_dotenv
 import os
 import sys
 import subprocess
 import nmap
+from datetime import datetime
 
 # Determine the correct path to the .env file
 if getattr(sys, 'frozen', False):
@@ -294,7 +296,7 @@ class ButtonFrame(tk.Frame):
         self.io_frame.show_input_frame_hide_output_frame()
         global capture_output_flag
         if capture_output_flag:
-            print(f"HELLO ${capture_output_flag}")
+            self.get_bin_file()
 
 
     def run_command_connect(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}"):
@@ -349,6 +351,24 @@ class ButtonFrame(tk.Frame):
         channel.send("^C\n")
         client.close()
 
+
+    def get_bin_file(self):
+        now = datetime.now()
+        formatted_time = now.strftime("%m-%d %H:%M:%S")
+        ## GET ACTUAL LOCATIONS HERE
+        print("GETTING BINS")
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            client.connect("sq", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}")
+
+            with SCPCLIENT(client.get_transport()) as scp:
+                scp.get("daq000000.bin", f"{formatted_time} LOCAL_FILE.BIN")
+        except Exception as e:
+            print(f"An error has occured: {e}")
+
+        finally:
+            client.close()
 
 
     def create_buttons(self):
