@@ -26,7 +26,7 @@ load_dotenv(dotenv_path=dotenv_path)
 is_running = False
 client = paramiko.client.SSHClient()
 output_queue = queue.Queue()
-
+capture_output_flag = False
 
 class MainFrame(tk.Frame):
     def __init__(self, parent):
@@ -286,11 +286,16 @@ class ButtonFrame(tk.Frame):
         self.button_reset = None
         self.network_check_button = None
         self.create_buttons()
+        #self.io_frame.hide_input_frame_hide_output_frame()
 
     def stop_order(self):
         global is_running
         is_running = False
         self.io_frame.show_input_frame_hide_output_frame()
+        global capture_output_flag
+        if capture_output_flag:
+            print(f"HELLO ${capture_output_flag}")
+
 
     def run_command_connect(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}"):
         global is_running
@@ -446,6 +451,9 @@ class SubmitButton(tk.Button):
 
         # FLAG FOR CAPTURING OUTPUT
         if self.capture_output:
+            global capture_output_flag
+            capture_output_flag = True
+            self.capture_output = True
             cmd_str += "-c"
 
         print(cmd_str)
