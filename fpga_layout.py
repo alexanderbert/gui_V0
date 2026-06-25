@@ -354,6 +354,7 @@ class ButtonFrame(tk.Frame):
 
     def get_bin_files(self):
         #todo see if scp works with multiple files ala scp daq00601*.bin {to local}
+        #todo or try this: scp.get('/remote/folder_path', local_path='./local_dir/', recursive=True)
         #todo delete all bin on radars
         #todo set files in new folder
 
@@ -482,7 +483,6 @@ class SubmitButton(tk.Button):
             self.capture_output = True
             #todo clarify -c or -n
             cmd_str += "-n -Q 10000"
-            #todo add -Q 10000
 
         print(cmd_str)
 
