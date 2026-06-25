@@ -4,7 +4,7 @@ from settings import *
 import threading
 import queue
 import paramiko
-from scp import SCPClient
+#from scp import SCPClient
 import time
 from dotenv import load_dotenv
 import os
@@ -296,7 +296,7 @@ class ButtonFrame(tk.Frame):
         self.io_frame.show_input_frame_hide_output_frame()
         global capture_output_flag
         if capture_output_flag:
-            self.get_bin_file()
+            self.get_bin_files()
 
 
     def run_command_connect(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}"):
@@ -352,23 +352,29 @@ class ButtonFrame(tk.Frame):
         client.close()
 
 
-    def get_bin_file(self):
+    def get_bin_files(self):
+        #todo see if scp works with multiple files ala scp daq00601*.bin {to local}
+        #todo delete all bin on radars
+        #todo set files in new folder
+
+
+        #
         now = datetime.now()
-        formatted_time = now.strftime("%m-%d %H:%M:%S")
-        ## GET ACTUAL LOCATIONS HERE
-        print("GETTING BINS")
-        client.load_system_host_keys()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        try:
-            client.connect("sq", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}")
-
-            with SCPCLIENT(client.get_transport()) as scp:
-                scp.get("daq000000.bin", f"{formatted_time} LOCAL_FILE.BIN")
-        except Exception as e:
-            print(f"An error has occured: {e}")
-
-        finally:
-            client.close()
+        # formatted_time = now.strftime("%m-%d %H:%M:%S")
+        # ## GET ACTUAL LOCATIONS HERE
+        # print("GETTING BINS")
+        # client.load_system_host_keys()
+        # client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        # try:
+        #     client.connect("sq", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}")
+        #
+        #     with SCPCLIENT(client.get_transport()) as scp:
+        #         scp.get("daq000000.bin", f"{formatted_time} LOCAL_FILE.BIN")
+        # except Exception as e:
+        #     print(f"An error has occurred: {e}")
+        #
+        # finally:
+        #     client.close()
 
 
     def create_buttons(self):
@@ -474,14 +480,16 @@ class SubmitButton(tk.Button):
             global capture_output_flag
             capture_output_flag = True
             self.capture_output = True
-            cmd_str += "-c"
+            #todo clarify -c or -n
+            cmd_str += "-n -Q 10000"
+            #todo add -Q 10000
 
         print(cmd_str)
 
-        radar_key = self.radar_available_frame.radar_selected.get()
-        radar_value = RadarsAvailableFrame.radar_dict.get(radar_key)
-        thread = threading.Thread(target=ButtonFrame.run_command_connect, args=(self, cmd_str.strip(), radar_value))
-        thread.start()
+        # radar_key = self.radar_available_frame.radar_selected.get()
+        # radar_value = RadarsAvailableFrame.radar_dict.get(radar_key)
+        # thread = threading.Thread(target=ButtonFrame.run_command_connect, args=(self, cmd_str.strip(), radar_value))
+        # thread.start()
 
     def input_check(self, cmd_str):
         cmd_list = cmd_str.split(" ")
