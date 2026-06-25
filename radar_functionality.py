@@ -26,7 +26,7 @@ class RadarFunctionality(tk.Frame):
         super().__init__(parent, background = "Gray63")
         self.columnconfigure(list(range(4)), weight=1)
         self.rowconfigure(list(range(4)), weight=1)
-        self.radar_dict = {"Select A Radar": "---------", "Dummy Radar": "123123123123"}
+        self.radar_dict = {"Select A Radar": "---------"}
         #self.radar_selected = None
         self.radars_available = None
         self.radar_drop()
@@ -42,7 +42,7 @@ class RadarFunctionality(tk.Frame):
 
 
         self.find_other_radars_button = tk.Button(self, text="Find other radars", command=lambda:self.find_other_radars())
-        self.find_other_radars_button.grid(row=0, column=1)
+        self.find_other_radars_button.grid(row=2, column=2)
         self.find_other_radars_button.config(width=20, font=("Arial", 20))
 
     def enable_autostart(self):
@@ -80,8 +80,8 @@ class RadarFunctionality(tk.Frame):
         self.radar_selected = tk.StringVar()
         self.radar_selected.set(self.radars_available[0])
         combo_drop = ttk.Combobox(self, textvariable=self.radar_selected, values = self.radars_available, state="readonly")
-        combo_drop.grid(column=2, row=0, sticky="EW")
-        combo_drop.config(width=10)
+        combo_drop.grid(column=2, row=0)
+        combo_drop.config(width=20)
         combo_drop.config(font = ("Arial", 20))
         return self.radar_selected
 

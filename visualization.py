@@ -74,9 +74,8 @@ class VisualizeFrame(tk.Frame):
 
     def create_images(self):
         def convertRawFile(folder, filename):
-            # bashCommand = "/home/jake/Documents/stormquant-beta/cmake-build-debug/common/raytestingutils/convertRawToCleartext "
+            # todo find correct location on target computer
             bashCommand = "/home/sq/sq/stormquant-beta/build_old/common/raytestingutils/convertRawToCleartext "
-            # bashCommand = "/home/sq/Desktop/pythonAppImprovements/testingFiles/binFiles "
             bashCommand = bashCommand + "-d " + folder + " -f " + filename
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
             output, error = process.communicate()
