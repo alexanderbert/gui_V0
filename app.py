@@ -1,6 +1,7 @@
 from fpga_layout import *
 from header import *
 from positioner import PositionerFrame
+from radar_functionality import RadarFunctionality
 from visualization import *
 
 
@@ -32,9 +33,12 @@ class App(tk.Tk):
 
         self.visualization_frame = MainFrameV(self.my_notebook)
 
+        self.radar_functionality_frame = RadarFunctionality(self.my_notebook)
+
         self.my_notebook.add(self.main_frame, text = "FPGA")
         self.my_notebook.add(self.positioner_frame, text = "Positioner")
         self.my_notebook.add(self.visualization_frame, text = "Visualization")
+        self.my_notebook.add(self.radar_functionality_frame, text = "Radar Functionality")
 
 
 
