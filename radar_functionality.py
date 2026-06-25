@@ -26,8 +26,8 @@ class RadarFunctionality(tk.Frame):
         super().__init__(parent, background = "Gray63")
         self.columnconfigure(list(range(4)), weight=1)
         self.rowconfigure(list(range(4)), weight=1)
-        self.radar_dict = {"Select A Radar": "---------"}
-        self.radar_selected = None
+        self.radar_dict = {"Select A Radar": "---------", "Dummy Radar": "123123123123"}
+        #self.radar_selected = None
         self.radars_available = None
         self.radar_drop()
 
@@ -47,27 +47,32 @@ class RadarFunctionality(tk.Frame):
 
     def enable_autostart(self):
         print("ENABLE AUTOSTART")
-        self.paramiko_connection("DUMMY HOSTNAME", "enable")
+        radar_key = self.radar_selected.get()
+        radar_value = self.radar_dict.get(radar_key)
+        self.paramiko_connection(radar_value, "enable")
 
 
     def disable_autostart(self):
         print("DISABLE AUTOSTART")
-        self.paramiko_connection("DUMMY HOSTNAME", "disable")
+        radar_key = self.radar_selected.get()
+        radar_value = self.radar_dict.get(radar_key)
+        self.paramiko_connection(radar_value, "disable")
 
     def paramiko_connection(self, hostname, chosen_command):
-        client.load_system_host_keys()
-        client.connect(hostname=hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-        transport = client.get_transport()
-        channel=transport.open_session()
-        channel.get_pty()
-        channel.invoke_shell()
-        #channel.send(f"sudo -S systemctl {chosen_command} radar.service\n")
-        command = f"sudo -S systemctl {chosen_command} radar.service\n"
-        stdin, stdout, stderr = client.exec_command(command, get_pty=True)
-
-        stdin.write(f"{os.environ.get('CONNECTION_PASSWORD')} \n")
-        stdin.flush()
-        client.close()
+        print("CONNECTING TO HOSTNAME", hostname)
+        # client.load_system_host_keys()
+        # client.connect(hostname=hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        # transport = client.get_transport()
+        # channel=transport.open_session()
+        # channel.get_pty()
+        # channel.invoke_shell()
+        # #channel.send(f"sudo -S systemctl {chosen_command} radar.service\n")
+        # command = f"sudo -S systemctl {chosen_command} radar.service\n"
+        # stdin, stdout, stderr = client.exec_command(command, get_pty=True)
+        #
+        # stdin.write(f"{os.environ.get('CONNECTION_PASSWORD')} \n")
+        # stdin.flush()
+        # client.close()
 
 
     def radar_drop(self):
