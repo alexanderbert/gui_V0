@@ -60,19 +60,19 @@ class RadarFunctionality(tk.Frame):
 
     def paramiko_connection(self, hostname, chosen_command):
         print("CONNECTING TO HOSTNAME", hostname)
-        # client.load_system_host_keys()
-        # client.connect(hostname=hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-        # transport = client.get_transport()
-        # channel=transport.open_session()
-        # channel.get_pty()
-        # channel.invoke_shell()
-        # #channel.send(f"sudo -S systemctl {chosen_command} radar.service\n")
-        # command = f"sudo -S systemctl {chosen_command} radar.service\n"
-        # stdin, stdout, stderr = client.exec_command(command, get_pty=True)
-        #
-        # stdin.write(f"{os.environ.get('CONNECTION_PASSWORD')} \n")
-        # stdin.flush()
-        # client.close()
+        client.load_system_host_keys()
+        client.connect(hostname=hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+        transport = client.get_transport()
+        channel=transport.open_session()
+        channel.get_pty()
+        channel.invoke_shell()
+        #channel.send(f"sudo -S systemctl {chosen_command} radar.service\n")
+        command = f"sudo -S systemctl {chosen_command} radar.service\n"
+        stdin, stdout, stderr = client.exec_command(command, get_pty=True)
+
+        stdin.write(f"{os.environ.get('CONNECTION_PASSWORD')} \n")
+        stdin.flush()
+        client.close()
 
 
     def radar_drop(self):
