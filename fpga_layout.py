@@ -12,6 +12,8 @@ import sys
 import subprocess
 import nmap
 from datetime import datetime
+from pathlib import Path
+import shutil
 
 # Determine the correct path to the .env file
 if getattr(sys, 'frozen', False):
@@ -353,29 +355,53 @@ class ButtonFrame(tk.Frame):
 
 
     def get_bin_files(self):
-        #todo see if scp works with multiple files ala scp daq00601*.bin {to local}
-        #todo or try this: scp.get('/remote/folder_path', local_path='./local_dir/', recursive=True)
-        #todo delete all bin on radars
-        #todo set files in new folder
 
-
-        #
         now = datetime.now()
-        # formatted_time = now.strftime("%m-%d %H:%M:%S")
-        # ## GET ACTUAL LOCATIONS HERE
-        # print("GETTING BINS")
-        # client.load_system_host_keys()
-        # client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        # try:
-        #     client.connect("sq", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}")
-        #
-        #     with SCPCLIENT(client.get_transport()) as scp:
-        #         scp.get("daq000000.bin", f"{formatted_time} LOCAL_FILE.BIN")
-        # except Exception as e:
-        #     print(f"An error has occurred: {e}")
-        #
-        # finally:
-        #     client.close()
+        formatted_time = now.strftime("%m-%d %H:%M:%S")
+        ## GET ACTUAL LOCATIONS HERE
+        print("GETTING BINS")
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            #TODO GET THE RADAR
+            client.connect("RADAR", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}")
+
+            #Move all bin files into a new folder called generatedBinFiles
+            transport = client.get_transport()
+            channel = transport.open_session()
+            channel.get_pty()
+            channel.invoke_shell()
+            channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
+            target_dir = 'generatedBinFiles'
+            mkdir_command = f"mkdir -p {target_dir}"
+            stdin, stdout,stderr = client.exec_command(mkdir_command)
+
+            dir_errors = stderr.read().decode("iso-8859-1")
+            if dir_errors:
+                print(f"Directory creation error: {dir_errors}")
+
+            mv_command = f"mv ./*.bin ./generatedBinFiles"
+            stdin, stdout,stderr = client.exec_command(mv_command)
+            mv_errors = stderr.read().decode("iso-8859-1")
+            if mv_errors:
+                if "No such file" in mv_errors:
+                    print("No .bin files were found in the source directory.")
+                else:
+                    print(f"Error moving files: {mv_errors}")
+            else:
+                print(f"Successfully moved all .bin files to {target_dir}")
+
+
+            with SCPCLIENT(client.get_transport()) as scp:
+                scp.get(f"{target_dir}", recursive=True)
+        except Exception as e:
+            print(f"An error has occurred: {e}")
+
+        finally:
+            #todo remove target_dir
+            rm_dir_command = "rm -rf"
+            stdin, stdout,stderr = client.exec_command(rm_dir_command)
+            client.close()
 
 
     def create_buttons(self):
