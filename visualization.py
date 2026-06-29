@@ -80,7 +80,16 @@ class VisualizeFrame(tk.Frame):
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
             output, error = process.communicate()
 
-        folders = ["./scripts"]
+        #folders = ["./scripts/practice_bin_files"]
+        folder_chosen = filedialog.askdirectory(
+            initialdir="./scripts/practice_bin_files",
+            title="Choose a folder"
+        )
+
+        folders = [f"./scripts/practice_bin_files + {folder_chosen}"]
+        print(folders)
+        # folders = folder_chosen
+        folders = [folder_chosen]
 
         for mainfolder in folders:
             output = []
@@ -142,28 +151,37 @@ class VisualizeFrame(tk.Frame):
 
 
                         plt.close(fig)
-                        os.system('rm ' + csvFile)
+                        #os.system('rm ' + csvFile)
         print("HELLO WORLD")
-        os.system('rm *.csv')
+        #os.system('rm *.csv')
 
     def create_plot(self):
-       # script_path = Path("./scripts/testingviz.py")
-       # script_dir = script_path.parent
-       # subprocess.run([sys.executable, script_path.name],
-       #                cwd=script_dir,
-       #                capture_output=True,
-       #                text=True
-       #                )
+
+        #TODO this opens a file
+       # file_chosen = filedialog.askopenfilename(
+       #     title="Choose a file",
+       #     initialdir="./scripts/practice_bin_files",
+       #     filetypes=[("Bin Files", "*.bin ")]
+       # )
+       # print(f"File chosen: {file_chosen}")
+        #TODO this opens a directory must select directory to open picture
+       folder_chosen = filedialog.askdirectory(
+           initialdir="./scripts/practice_bin_files",
+           title="Choose a folder"
+       )
 
        def convertRawFile(folder, filename):
-           #todo find correct location on target computer
+           #todo find correct location on target computer DOESNT WORK DUE TO FILE VS FOLDER
            bashCommand = "/home/sq/sq/stormquant-beta/build_old/common/raytestingutils/convertRawToCleartext "
            # bashCommand = "/home/sq/Desktop/pythonAppImprovements/testingFiles/binFiles "
            bashCommand = bashCommand + "-d " + folder + " -f " + filename
            process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
            output, error = process.communicate()
 
-       folders = ["./scripts"]
+       folders = [f"./scripts/practice_bin_files + {folder_chosen}"]
+       print(folders)
+       #folders = folder_chosen
+       folders = [folder_chosen]
 
        for mainfolder in folders:
            output = []
@@ -259,94 +277,7 @@ class VisualizeFrame(tk.Frame):
 
 
 
-#
-# class ControlFrame(tk.Frame):
-#     def __init__(self, parent):
-#         super().__init__(parent, background = 'blue')
-#         self.grid_propagate(False)
-#         self.create_plot_button = tk.Button(self, text="Plot", command= lambda: self.create_plot())
-#         self.create_plot_button.grid(column=0, row=0, sticky="nsew")
-#
-#         self.images_button = tk.Button(self, text="IMAGES", command=lambda: parent.visualization_frame.open_image())
-#         self.images_button.grid(column=0, row=1, sticky="nsew")
 
-    # def create_plot(self):
-    #    # script_path = Path("./scripts/testingviz.py")
-    #    # script_dir = script_path.parent
-    #    # subprocess.run([sys.executable, script_path.name],
-    #    #                cwd=script_dir,
-    #    #                capture_output=True,
-    #    #                text=True
-    #    #                )
-    #
-    #    def convertRawFile(folder, filename):
-    #        # bashCommand = "/home/jake/Documents/stormquant-beta/cmake-build-debug/common/raytestingutils/convertRawToCleartext "
-    #        bashCommand = "/home/sq/sq/stormquant-beta/build_old/common/raytestingutils/convertRawToCleartext "
-    #        # bashCommand = "/home/sq/Desktop/pythonAppImprovements/testingFiles/binFiles "
-    #        bashCommand = bashCommand + "-d " + folder + " -f " + filename
-    #        process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-    #        output, error = process.communicate()
-    #
-    #    folders = ["./scripts"]
-    #
-    #    for mainfolder in folders:
-    #        output = []
-    #        for folder in np.sort(glob.glob(mainfolder)):
-    #            for index, file in enumerate(np.sort(glob.glob(folder + "/*.bin"))[:]):
-    #                print(folder, '/' + file.split('/')[-1])
-    #                convertRawFile(folder, '/' + file.split('/')[-1])
-    #
-    #        legenedArr = []
-    #        freq = np.fft.fftfreq(6000, d=1.0 / 25e6)
-    #        for folder in np.sort(glob.glob(mainfolder)):
-    #            for index, file in enumerate(np.sort(glob.glob(folder + "/*_x.csv"))):
-    #                metaFile = file.split('_x')[0] + "_meta.txt"
-    #                xfile = file
-    #                yfile = file.split('_x')[0] + "_y.csv"
-    #                with open(metaFile, 'r') as fid:
-    #                    lines = fid.readlines()
-    #                data = lines[0].split(',')
-    #                el = float(data[0])
-    #                az = float(data[1])
-    #                az = 0.0
-    #                el = 0.0
-    #                folderName = os.getcwd().split('/')[-1]
-    #                for csvI, csvFile in enumerate([xfile, yfile]):
-    #                    fig, ax = plt.subplots(3, 1)
-    #                    df = pd.read_csv(csvFile, header=None).transpose()
-    #                    ax[0].plot(df[0])
-    #                    for i in range(50):
-    #                        ax[0].plot([i * 50, i * 50], [-20000, 20000], 'k--')
-    #                    ax[0].set_xlim([100, 800])
-    #                    ax[0].set_ylim([-5000, 5000])
-    #                    ax[1].plot(df[0])
-    #                    ax[1].set_ylim(-2500, 2500)
-    #                    # cutOutIndex = [1790, 1830]
-    #                    # cutOutDifference = cutOutIndex[1] - cutOutIndex[0]
-    #                    # freq2 = np.fft.fftfreq(cutOutDifference, d=1.0 / 25e6)
-    #                    # ax3 = ax[2].twinx()
-    #                    ax[2].plot(freq, np.fft.fft(df[0]))
-    #                    # ax3.plot(freq2, np.fft.fft(df[0][cutOutIndex[0]:cutOutIndex[1]]), 'r--')
-    #                    # legenedArr.append(file)
-    #                    # ax[0].legend(legenedArr)
-    #                    fig.suptitle(folderName + csvFile + " az: " + str(az) + " el: " + str(el))
-    #                    fig.set_size_inches([15, 15])
-    #                    if csvI == 0:
-    #                        extension = 'x'
-    #                    else:
-    #                        extension = 'y'
-    #                    outputFilename = folder + f'%03d' % index + extension + '.png'
-    #                    print(outputFilename)
-    #                    fig.savefig(outputFilename)
-    #
-    #                    canvas = FigureCanvasTkAgg(fig, master=self.parent.visualization_frame)
-    #                    canvas.draw()
-    #                    canvas.get_tk_widget().grid(row=0, column=index, sticky="nsew")
-    #
-    #                    #plt.close(fig)
-    #                    os.system('rm ' + csvFile)
-    #    print("HELLO WORLD")
-    #    os.system('rm *.csv')
 
 
 
