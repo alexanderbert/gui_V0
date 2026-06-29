@@ -4,7 +4,7 @@ from settings import *
 import threading
 import queue
 import paramiko
-#from scp import SCPClient
+from scp import SCPClient
 import time
 from dotenv import load_dotenv
 import os
@@ -292,13 +292,13 @@ class ButtonFrame(tk.Frame):
         self.create_buttons()
         #self.io_frame.hide_input_frame_hide_output_frame()
 
-    def stop_order(self):
+    def stop_order(self, radar_selected):
         global is_running
         is_running = False
         self.io_frame.show_input_frame_hide_output_frame()
         global capture_output_flag
         if capture_output_flag:
-            self.get_bin_files()
+            self.get_bin_files(radar_selected)
 
 
     def run_command_connect(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}"):
@@ -354,7 +354,7 @@ class ButtonFrame(tk.Frame):
         client.close()
 
 
-    def get_bin_files(self):
+    def get_bin_files(self, radar_selected):
 
         now = datetime.now()
         formatted_time = now.strftime("%m-%d %H:%M:%S")
@@ -364,7 +364,7 @@ class ButtonFrame(tk.Frame):
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
             #TODO GET THE RADAR
-            client.connect("RADAR", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}")
+            client.connect(hostname=radar_selected, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}")
 
             #Move all bin files into a new folder called generatedBinFiles
             transport = client.get_transport()
@@ -391,8 +391,20 @@ class ButtonFrame(tk.Frame):
             else:
                 print(f"Successfully moved all .bin files to {target_dir}")
 
+            #Put files in individual folders
+            target_dir = Path("./generatedBinFiles")
+            for file_path in target_dir.iterdir():
+                if file_path.is_file():
+                    individual_folder = file_path.stem
+                    new_folder_path = target_dir / individual_folder
 
-            with SCPCLIENT(client.get_transport()) as scp:
+                    new_folder_path.mkdir(parents=True, exist_ok=True)
+                    destination = new_folder_path / file_path.name
+                    file_path.rename(destination)
+
+
+
+            with SCPClient(client.get_transport()) as scp:
                 scp.get(f"{target_dir}", recursive=True)
         except Exception as e:
             print(f"An error has occurred: {e}")
@@ -405,7 +417,7 @@ class ButtonFrame(tk.Frame):
 
 
     def create_buttons(self):
-        self.button_end = tk.Button(self, text="End Run", command= lambda: self.stop_order())
+        self.button_end = tk.Button(self, text="End Run", command= lambda: self.stop_order(self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get())))
         self.button_end.grid(column=0,  row=3)
         self.button_end.config(width=10, font=("Arial", 20))
 
