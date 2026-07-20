@@ -19,7 +19,7 @@ button will take them to the homing mode interface
 1. Set up a virtual environment using Python3
 2. Ensure tkinter is installed with the command `python -m tkinter`
 3. If Tkinter is installed, continue below. Otherwise, run `sudo apt-get install python3-tk`
-4. Install Paramiko, python-dotenv, python-nmap, and pyinstaller with pip. This will be corrected to a requirements.txt file in a later version
+4. Install Paramiko, python-dotenv, python-nmap, pyinstaller, numpy, pandas, matplotlib, and SCPClient with pip. This will be corrected to a requirements.txt file in a later version
 5. Clone the repo
 6. Set up your .env file
 7. Run `pyinstaller --onefile --add-data ".env:." app.py`
