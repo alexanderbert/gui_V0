@@ -81,12 +81,21 @@ class VisualizeFrame(tk.Frame):
             output, error = process.communicate()
 
         #folders = ["./scripts/practice_bin_files"]
+        #for me working
+        # folder_chosen = filedialog.askdirectory(
+        #     initialdir="./scripts/practice_bin_files",
+        #     title="Choose a folder"
+        # )
+        # folders = [f"./scripts/practice_bin_files + {folder_chosen}"]
+
+
         folder_chosen = filedialog.askdirectory(
-            initialdir="./scripts/practice_bin_files",
+            initialdir="./generatedBinFiles",
             title="Choose a folder"
         )
 
-        folders = [f"./scripts/practice_bin_files + {folder_chosen}"]
+
+        folders = [f"./ + {folder_chosen}"]
         print(folders)
         # folders = folder_chosen
         folders = [folder_chosen]
@@ -165,10 +174,10 @@ class VisualizeFrame(tk.Frame):
        # )
        # print(f"File chosen: {file_chosen}")
         #TODO this opens a directory must select directory to open picture
-       folder_chosen = filedialog.askdirectory(
-           initialdir="./scripts/practice_bin_files",
-           title="Choose a folder"
-       )
+       # folder_chosen = filedialog.askdirectory(
+       #     initialdir="./scripts/practice_bin_files",
+       #     title="Choose a folder"
+       # )
 
        def convertRawFile(folder, filename):
            #todo find correct location on target computer DOESNT WORK DUE TO FILE VS FOLDER
@@ -178,7 +187,14 @@ class VisualizeFrame(tk.Frame):
            process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
            output, error = process.communicate()
 
+       folder_chosen = filedialog.askdirectory(
+               #initialdir="./scripts/practice_bin_files",
+               initialdir='./generatedBinFiles',
+               title="Choose a folder"
+           )
        folders = [f"./scripts/practice_bin_files + {folder_chosen}"]
+
+
        print(folders)
        #folders = folder_chosen
        folders = [folder_chosen]
