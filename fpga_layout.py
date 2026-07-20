@@ -217,7 +217,7 @@ class RadarsAvailableFrame(tk.Frame):
         nm = nmap.PortScanner()
         #f"{os.environ.get('CONNECTION_USERNAME')}"
         #nm.scan(hosts = "192.168.0.*", arguments = "-sn")
-        nm.scan(hosts = f"{os.environ.get('CONNECTION_USERNAME')}", arguments = "-sn")
+        nm.scan(hosts = f"{os.environ.get('HOST_IP')}", arguments = "-sn")
         for host in nm.all_hosts():
             try:
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
