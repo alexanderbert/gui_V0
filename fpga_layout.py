@@ -85,7 +85,6 @@ class InputFrame(tk.Frame):
         self.tf_list = ["True", "False"]
         self.tf_selected = None
 
-
     def create_entries(self):
         for index, entry in enumerate(FPGA_COMMAND_ALPHA):
             labels = CommandLabels(parent = self,command_selected= entry, unit=COMMAND_UPDATE[entry]['unit'], text = COMMAND_UPDATE[entry]['title'], col=1, row = index)
@@ -201,6 +200,8 @@ class RadarsAvailableFrame(tk.Frame):
         self.radar_selected = None
         self.radars_available = None
         self.columnconfigure(list(range(3)), weight=1)
+        self.rowconfigure(list(range(3)), weight=1)
+        self.grid_propagate(False)
 
 
     def radar_drop(self):
@@ -217,9 +218,11 @@ class RadarsAvailableFrame(tk.Frame):
     def find_other_radars(self):
         nm = nmap.PortScanner()
         #f"{os.environ.get('CONNECTION_USERNAME')}"
-        nm.scan(hosts = f"{os.environ.get('HOST_IP')}", arguments = "-sn")
-        self.config(background="red")
+        #nm.scan(hosts = f"{os.environ.get('HOST_IP')}", arguments = "-sn")
+        nm.scan(hosts='192.168.0.*', arguments="-sn")
         for host in nm.all_hosts():
+            self.messagebox.delete("1.0", tk.END)
+            self.messagebox.insert(tk.END, f"Radar: {host}")
             try:
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.load_system_host_keys()
@@ -229,10 +232,11 @@ class RadarsAvailableFrame(tk.Frame):
                 radar_hostname = stdout.read().decode("utf-8")
                 client.close()
                 self.update_radar_pulldown(host, radar_hostname.strip())
+
             except:
                 print(f"No connection to {host}")
-        #TODO TEST
-        self.config(background="green")
+        self.messagebox.delete("1.0", tk.END)
+        self.messagebox.insert("1.0", f"Network scan finished")
 
     def start_network_scan(self):
         thread = threading.Thread(
@@ -240,6 +244,11 @@ class RadarsAvailableFrame(tk.Frame):
             daemon = True
         )
         thread.start()
+        self.messagebox=tk.Text(self, width=20, height=1, background="white")
+        self.messagebox.config(font=("Arial", 20))
+        self.messagebox.grid(column=1, row=3, sticky="s")
+        self.messagebox.insert(tk.END, "Starting network scan...")
+
 
     def update_radar_pulldown(self, ip_address, hostname):
         try:
