@@ -221,8 +221,10 @@ class RadarsAvailableFrame(tk.Frame):
         #nm.scan(hosts = f"{os.environ.get('HOST_IP')}", arguments = "-sn")
         nm.scan(hosts='192.168.0.*', arguments="-sn")
         for host in nm.all_hosts():
+            self.messagebox.config(state="normal")
             self.messagebox.delete("1.0", tk.END)
-            self.messagebox.insert(tk.END, f"Radar: {host}")
+            self.messagebox.insert(tk.END, f"Scanning: {host}")
+            self.messagebox.config(state="disabled")
             try:
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.load_system_host_keys()
@@ -235,8 +237,10 @@ class RadarsAvailableFrame(tk.Frame):
 
             except:
                 print(f"No connection to {host}")
+        self.messagebox.config(state="normal")
         self.messagebox.delete("1.0", tk.END)
         self.messagebox.insert("1.0", f"Network scan finished")
+        self.messagebox.config(state="disabled")
 
     def start_network_scan(self):
         thread = threading.Thread(
@@ -244,10 +248,11 @@ class RadarsAvailableFrame(tk.Frame):
             daemon = True
         )
         thread.start()
-        self.messagebox=tk.Text(self, width=20, height=1, background="white")
+        self.messagebox=tk.Text(self, width=20, height=1, background="steel blue", borderwidth=0, relief="flat", highlightthickness=0)
         self.messagebox.config(font=("Arial", 20))
         self.messagebox.grid(column=1, row=3, sticky="s")
         self.messagebox.insert(tk.END, "Starting network scan...")
+        self.messagebox.config(state="disabled")
 
 
     def update_radar_pulldown(self, ip_address, hostname):
