@@ -241,7 +241,7 @@ class RadarsAvailableFrame(tk.Frame):
         self.datetime =datetime.now().strftime("%H:%M:%S")
         self.messagebox.config(state="normal")
         self.messagebox.delete("1.0", tk.END)
-        self.messagebox.insert("1.0", f"scan finished at {self.datetime}")
+        self.messagebox.insert("1.0", f"Scan finished at {self.datetime}")
         self.messagebox.config(state="disabled")
 
     def start_network_scan(self):
