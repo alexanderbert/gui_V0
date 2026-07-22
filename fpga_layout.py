@@ -13,6 +13,7 @@ import subprocess
 import nmap
 from datetime import datetime
 from pathlib import Path
+from datetime import datetime
 import shutil
 
 # Determine the correct path to the .env file
@@ -237,9 +238,10 @@ class RadarsAvailableFrame(tk.Frame):
 
             except:
                 print(f"No connection to {host}")
+        self.datetime =datetime.now().strftime("%H:%M:%S")
         self.messagebox.config(state="normal")
         self.messagebox.delete("1.0", tk.END)
-        self.messagebox.insert("1.0", f"Network scan finished")
+        self.messagebox.insert("1.0", f"scan finished at {self.datetime}")
         self.messagebox.config(state="disabled")
 
     def start_network_scan(self):
