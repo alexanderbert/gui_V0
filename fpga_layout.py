@@ -234,7 +234,7 @@ class RadarsAvailableFrame(tk.Frame):
         #TODO TEST
         self.config(background="green")
 
-    def start_scan(self):
+    def start_network_scan(self):
         thread = threading.Thread(
             target = self.find_other_radars,
             daemon = True
@@ -452,7 +452,7 @@ class ButtonFrame(tk.Frame):
 
         #self.network_check_button = tk.Button(self, text="Network Check" , command= lambda: RadarsAvailableFrame.find_other_radars(self.radar_available_frame))
         self.network_check_button = tk.Button(self, text="Network Check",
-                                              command=lambda: RadarsAvailableFrame.start_scan(
+                                              command=lambda: RadarsAvailableFrame.start_network_scan(
                                                   self.radar_available_frame))
         self.network_check_button.grid(column=0, row=4)
         self.network_check_button.config(width=10, font=("Arial", 20))
