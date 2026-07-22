@@ -961,7 +961,7 @@ class RadarsAvailableFrame(tk.Frame):
         self.rowconfigure(list(range(2)), weight=1)
 
 
-        self.network_check_button = tk.Button(self, text="Network Check" , command= lambda: RadarsAvailableFrame.find_other_radars(self))
+        self.network_check_button = tk.Button(self, text="Network Check" , command= lambda: RadarsAvailableFrame.start_network_scan(self))
         self.network_check_button.grid(column=0, row=1, sticky="SEW")
         self.network_check_button.config(width=10, font=("Arial", 20))
 
@@ -978,7 +978,6 @@ class RadarsAvailableFrame(tk.Frame):
 
     def find_other_radars(self):
         nm = nmap.PortScanner()
-        #nm.scan(hosts = "192.168.0.*", arguments = "-sn")
         nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
         for host in nm.all_hosts():
             try:
@@ -996,6 +995,13 @@ class RadarsAvailableFrame(tk.Frame):
         logging.info("RUNNING find_other_radars")
         self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
         self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, "Finished Scanning")
+
+    def start_network_scan(self):
+        thread = threading.Thread(
+            target = self.find_other_radars,
+            daemon = True
+        )
+        thread.start()
 
     def update_radar_pulldown(self, ip_address, hostname):
         try:
