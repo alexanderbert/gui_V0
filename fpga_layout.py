@@ -78,6 +78,7 @@ class IOFrame(tk.Frame):
 class InputFrame(tk.Frame):
     def __init__(self, parent, entry_dict, command_dict):
         super().__init__(parent, background="gray7")
+        #todo ADD COLUMNS TO HAVE TEXT OUTPUT
         self.rowconfigure(list(range(11)), weight=1)
         self.entry_dict = entry_dict
         self.command_dict = command_dict
@@ -216,19 +217,29 @@ class RadarsAvailableFrame(tk.Frame):
     def find_other_radars(self):
         nm = nmap.PortScanner()
         #f"{os.environ.get('CONNECTION_USERNAME')}"
-        #nm.scan(hosts = "192.168.0.*", arguments = "-sn")
         nm.scan(hosts = f"{os.environ.get('HOST_IP')}", arguments = "-sn")
+        self.config(background="red")
         for host in nm.all_hosts():
             try:
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.load_system_host_keys()
                 client.connect(hostname=f"{host}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=3)
                 stdin, stdout, stderr = client.exec_command("hostname")
+                print(stdout.read().decode())
                 radar_hostname = stdout.read().decode("utf-8")
                 client.close()
                 self.update_radar_pulldown(host, radar_hostname.strip())
             except:
                 print(f"No connection to {host}")
+        #TODO TEST
+        self.config(background="green")
+
+    def start_scan(self):
+        thread = threading.Thread(
+            target = self.find_other_radars,
+            daemon = True
+        )
+        thread.start()
 
     def update_radar_pulldown(self, ip_address, hostname):
         try:
@@ -439,7 +450,10 @@ class ButtonFrame(tk.Frame):
         self.capture_button.grid(column=0, row=1)
         self.capture_button.config(text= "Capture", width=10, font=("Arial", 20))
 
-        self.network_check_button = tk.Button(self, text="Network Check" , command= lambda: RadarsAvailableFrame.find_other_radars(self.radar_available_frame))
+        #self.network_check_button = tk.Button(self, text="Network Check" , command= lambda: RadarsAvailableFrame.find_other_radars(self.radar_available_frame))
+        self.network_check_button = tk.Button(self, text="Network Check",
+                                              command=lambda: RadarsAvailableFrame.start_scan(
+                                                  self.radar_available_frame))
         self.network_check_button.grid(column=0, row=4)
         self.network_check_button.config(width=10, font=("Arial", 20))
 
