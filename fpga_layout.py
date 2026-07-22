@@ -219,8 +219,8 @@ class RadarsAvailableFrame(tk.Frame):
     def find_other_radars(self):
         nm = nmap.PortScanner()
         #f"{os.environ.get('CONNECTION_USERNAME')}"
-        #nm.scan(hosts = f"{os.environ.get('HOST_IP')}", arguments = "-sn")
-        nm.scan(hosts='192.168.0.*', arguments="-sn")
+        nm.scan(hosts = f"{os.environ.get('HOST_IP')}", arguments = "-sn")
+
         for host in nm.all_hosts():
             self.messagebox.config(state="normal")
             self.messagebox.delete("1.0", tk.END)
