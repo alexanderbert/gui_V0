@@ -19,6 +19,12 @@ import nmap
 from pathlib import Path
 from PIL import Image, ImageTk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from pathlib import Path
+
+dir_path = Path("./generatedBinFiles")
+dir_path.mkdir(parents=True, exist_ok=True)
+
+
 
 class MainFrameV(tk.Frame):
     def __init__(self, parent):
