@@ -14,6 +14,7 @@ import nmap
 from datetime import datetime
 from pathlib import Path
 from datetime import datetime
+import glob
 import shutil
 
 # Determine the correct path to the .env file
@@ -385,8 +386,6 @@ class ButtonFrame(tk.Frame):
 
     def get_bin_files(self, radar_selected):
 
-        now = datetime.now()
-        formatted_time = now.strftime("%m-%d %H:%M:%S")
         ## GET ACTUAL LOCATIONS HERE
         print("GETTING BINS")
 
@@ -402,40 +401,60 @@ class ButtonFrame(tk.Frame):
             channel.get_pty()
             channel.invoke_shell()
             channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
-            target_dir = 'generatedBinFiles'
-            mkdir_command = f"mkdir -p {target_dir}"
-            stdin, stdout,stderr = client.exec_command(mkdir_command)
+            # target_dir = 'generatedBinFiles'
+            # mkdir_command = f"mkdir -p {target_dir}"
+            # stdin, stdout,stderr = client.exec_command(mkdir_command)
+            #
+            # dir_errors = stderr.read().decode("iso-8859-1")
+            # if dir_errors:
+            #     print(f"Directory creation error: {dir_errors}")
+            #
+            # mv_command = f"mv ./*.bin ./generatedBinFiles"
+            # stdin, stdout,stderr = client.exec_command(mv_command)
+            # mv_errors = stderr.read().decode("iso-8859-1")
+            # if mv_errors:
+            #     if "No such file" in mv_errors:
+            #         print("No .bin files were found in the source directory.")
+            #     else:
+            #         print(f"Error moving files: {mv_errors}")
+            # else:
+            #     print(f"Successfully moved all .bin files to {target_dir}")
+            #
+            # #Put files in individual folders
+            # target_dir = Path("./generatedBinFiles")
+            # for file_path in target_dir.iterdir():
+            #     if file_path.is_file():
+            #         individual_folder = file_path.stem
+            #         new_folder_path = target_dir / individual_folder
+            #
+            #         new_folder_path.mkdir(parents=True, exist_ok=True)
+            #         destination = new_folder_path / file_path.name
+            #         file_path.rename(destination)
 
-            dir_errors = stderr.read().decode("iso-8859-1")
-            if dir_errors:
-                print(f"Directory creation error: {dir_errors}")
+            now = datetime.now()
+            formatted_time = now.strftime("%m-%d-%h:%M")
+            bin_files = glob.glob("*.bin")
+            if bin_files:
+                stdin, stdout, stderr = client.exec_command(f"tar -czvf raw-bin-{formatted_time}.tgz daq0080*.bin")
+                exit_status = stdout.channel.recv_exit_status()
+                print(f"{exit_status}")
 
-            mv_command = f"mv ./*.bin ./generatedBinFiles"
-            stdin, stdout,stderr = client.exec_command(mv_command)
-            mv_errors = stderr.read().decode("iso-8859-1")
-            if mv_errors:
-                if "No such file" in mv_errors:
-                    print("No .bin files were found in the source directory.")
-                else:
-                    print(f"Error moving files: {mv_errors}")
-            else:
-                print(f"Successfully moved all .bin files to {target_dir}")
+            elif not bin_files:
+                time.sleep(1)
+                stdin, stdout, stderr = client.exec_command(f"tar -czvf raw-bin-{formatted_time}.tgz daq0080*.bin")
+                exit_status = stdout.channel.recv_exit_status()
+                print(f"{exit_status}")
 
-            #Put files in individual folders
-            target_dir = Path("./generatedBinFiles")
-            for file_path in target_dir.iterdir():
-                if file_path.is_file():
-                    individual_folder = file_path.stem
-                    new_folder_path = target_dir / individual_folder
 
-                    new_folder_path.mkdir(parents=True, exist_ok=True)
-                    destination = new_folder_path / file_path.name
-                    file_path.rename(destination)
+            stdin, stdout, stderr = client.exec_command("rm *.bin")
+            exit_status = stdout.channel.recv_exit_status()
+            print(f"{exit_status}")
+
 
 
 
             with SCPClient(client.get_transport()) as scp:
-                scp.get(f"{target_dir}","./", recursive=True)
+                scp.get(f"raw-bin-{formatted_time}.tgz", "./generatedBinFiles")
         except Exception as e:
             print(f"An error has occurred: {e}")
 
@@ -444,7 +463,7 @@ class ButtonFrame(tk.Frame):
             # rm_dir_command = "rm -rf generatedBinFiles"
             # stdin, stdout,stderr = client.exec_command(rm_dir_command)
             # client.close()
-            pass
+            client.close()
 
 
     def create_buttons(self):
