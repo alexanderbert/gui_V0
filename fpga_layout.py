@@ -462,10 +462,7 @@ class ButtonFrame(tk.Frame):
             print(f"An error has occurred: {e}")
 
         finally:
-            #todo remove target_dir
-            # rm_dir_command = "rm -rf generatedBinFiles"
-            # stdin, stdout,stderr = client.exec_command(rm_dir_command)
-            # client.close()
+            #todo add threading if this works
             client.close()
 
 
