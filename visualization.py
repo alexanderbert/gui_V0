@@ -20,8 +20,12 @@ from pathlib import Path
 from PIL import Image, ImageTk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from pathlib import Path
+import tarfile
 
 dir_path = Path("./generatedBinFiles")
+dir_path.mkdir(parents=True, exist_ok=True)
+
+dir_path = Path("./generatedImages")
 dir_path.mkdir(parents=True, exist_ok=True)
 
 
@@ -65,6 +69,9 @@ class VisualizeFrame(tk.Frame):
         self.create_plot_button.grid(column=2, sticky="new")
         self.create_images_button = tk.Button(self.button_frame, text="Create Images", command= lambda: self.create_images())
         self.create_images_button.grid(column=2, sticky="new")
+
+        self.choose_tar_button = tk.Button(self.button_frame, text="Choose Run", command=lambda:self.unpack_compressed_files())
+        self.choose_tar_button.grid(column=2, sticky="new")
     #
     # def open_image(self):
     #     file_path = filedialog.askopenfilename(title="Open Image files", filetypes = (("PNG File","*.png"),))
@@ -77,6 +84,30 @@ class VisualizeFrame(tk.Frame):
     #     photo = ImageTk.PhotoImage(image_resized)
     #     self.image_label.config(image = photo)
     #     self.image_label.photo = photo
+
+    def unpack_compressed_files(self):
+        file_chosen = filedialog.askopenfilename(
+            initialdir="./generatedBinFiles",
+            title="Choose a folder",
+            filetypes=[
+                ("Compressed files", "*.tgz *tar.gz"),
+                ("All Files", "*.*")
+            ]
+        )
+
+        print(file_chosen)
+        try:
+            with tarfile.open(f"{file_chosen}", "r:gz") as tar:
+                for member in tar.getmembers():
+                    if member.isfile():
+                        new_file = os.path.basename(member.name)
+                        folder_name = os.path.join("./generatedBinFiles", f"{file_chosen}_{new_file}_extracted")
+
+                        os.makedirs(folder_name, exist_ok=True)
+                        member.name = new_file
+                        tar.extract(member, folder_name)
+        except:
+            print("ERROR extracting file")
 
     def create_images(self):
         def convertRawFile(folder, filename):
@@ -163,7 +194,7 @@ class VisualizeFrame(tk.Frame):
                         ## CUT FOR SAVING FILE
                         outputFilename = formatted_time + f'%03d' % index + extension + '.png'
                         # print(outputFilename)
-                        fig.savefig(outputFilename)
+                        fig.savefig(f"./generatedImages/{outputFilename}")
 
 
                         plt.close(fig)
