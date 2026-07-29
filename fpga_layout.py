@@ -444,12 +444,15 @@ class ButtonFrame(tk.Frame):
                 stdin, stdout, stderr = client.exec_command(f"tar -czvf raw-bin-{formatted_time}.tgz daq0080*.bin")
                 exit_status = stdout.channel.recv_exit_status()
                 print(f"{exit_status}")
+            else:
+                print("No bins found")
+                client.close()
+                return 1
 
 
             stdin, stdout, stderr = client.exec_command("rm *.bin")
             exit_status = stdout.channel.recv_exit_status()
             print(f"{exit_status}")
-
 
 
 
