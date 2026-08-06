@@ -981,6 +981,7 @@ class RadarsAvailableFrame(tk.Frame):
         nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
         for host in nm.all_hosts():
             try:
+                logging.info(f"Scanning {host}")
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.load_system_host_keys()
                 self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
