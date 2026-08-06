@@ -978,7 +978,9 @@ class RadarsAvailableFrame(tk.Frame):
 
     def find_other_radars(self):
         nm = nmap.PortScanner()
+        host_ip = os.environ.get("HOST_IP")
         nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
+        logging.info(f"running on {host_ip}")
         for host in nm.all_hosts():
             try:
                 logging.info(f"Scanning {host}")
