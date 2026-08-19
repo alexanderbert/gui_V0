@@ -536,16 +536,16 @@ class SubmitButton(tk.Button):
         self.received_units = received_units
         self.capture_output = capture_output
 
-    # def run_queue(self):
-    #     #print(f"OPQ: {output_queue.get()}")
-    #     # while output_queue.qsize() > 10 and is_running:
-    #     #     self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
-    #     print(output_queue.qsize())
-    #     try:
-    #         if not output_queue.empty():
-    #             self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
-    #     except:
-    #         print("Error occured")
+    def run_queue(self):
+        #print(f"OPQ: {output_queue.get()}")
+        # while output_queue.qsize() > 10 and is_running:
+        #     self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
+        print(output_queue.qsize())
+        try:
+            if not output_queue.empty():
+                self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
+        except:
+            print("Error occured")
 
 
 
