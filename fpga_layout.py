@@ -453,14 +453,21 @@ class ButtonFrame(tk.Frame):
             new_directory = f"raw-bin-{formatted_time}"
             stdin, stdout, stderr = client.exec_command(f"mkdir -p '{os.environ['FPGAPATH']}/{new_directory}/'")
             print(f"{new_directory} CREATED")
+            stdin, stdout, stderr = client.exec_command(f"mv daq0080*.bin '{os.environ['FPGAPATH']}/{new_directory}/'")
+            stdin, stdout, stderr = client.exec_command(
+                f"tar -czvf '{os.environ['FPGAPATH']}/{new_directory}.tgz' '{os.environ['FPGAPATH']}/{new_directory}/'")
+            exit_status = stdout.channel.recv_exit_status()
+            print(f"{exit_status}")
             if bin_files:
                 # new_directory = f"raw-bin-{formatted_time}"
                 # stdin, stdout, stderr = client.exec_command(f"mkdir -p '{os.environ['FPGAPATH']}/{new_directory}/'")
                 # print(f"{new_directory} CREATED")
-                stdin, stdout, stderr = client.exec_command(f"mv daq0080*.bin '{os.environ['FPGAPATH']}/{new_directory}/'")
-                stdin, stdout, stderr = client.exec_command(f"tar -czvf '{os.environ['FPGAPATH']}/{new_directory}.tgz' '{os.environ['FPGAPATH']}/{new_directory}/'")
-                exit_status = stdout.channel.recv_exit_status()
-                print(f"{exit_status}")
+                # stdin, stdout, stderr = client.exec_command(f"mv daq0080*.bin '{os.environ['FPGAPATH']}/{new_directory}/'")
+                # stdin, stdout, stderr = client.exec_command(f"tar -czvf '{os.environ['FPGAPATH']}/{new_directory}.tgz' '{os.environ['FPGAPATH']}/{new_directory}/'")
+                # exit_status = stdout.channel.recv_exit_status()
+                # print(f"{exit_status}")
+                pass
+
 
             elif not bin_files:
                 time.sleep(1)
@@ -473,7 +480,7 @@ class ButtonFrame(tk.Frame):
                 return 1
 
 
-            stdin, stdout, stderr = client.exec_command("rm *.bin")
+            stdin, stdout, stderr = client.exec_command(f"rm {os.environ['FPGAPATH']}/*.bin")
             exit_status = stdout.channel.recv_exit_status()
             print(f"{exit_status}")
 
