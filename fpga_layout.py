@@ -453,7 +453,7 @@ class ButtonFrame(tk.Frame):
             new_directory = f"raw-bin-{formatted_time}"
             stdin, stdout, stderr = client.exec_command(f"mkdir -p '{os.environ['FPGAPATH']}/{new_directory}/'")
             print(f"{new_directory} CREATED")
-            stdin, stdout, stderr = client.exec_command(f"mv daq0080*.bin '{os.environ['FPGAPATH']}/{new_directory}/'")
+            stdin, stdout, stderr = client.exec_command(f"cp daq0080*.bin '{os.environ['FPGAPATH']}/{new_directory}/'")
             stdin, stdout, stderr = client.exec_command(
                 f"tar -czvf '{os.environ['FPGAPATH']}/{new_directory}.tgz' '{os.environ['FPGAPATH']}/{new_directory}/'")
             exit_status = stdout.channel.recv_exit_status()
@@ -487,7 +487,7 @@ class ButtonFrame(tk.Frame):
 
 
             with SCPClient(client.get_transport()) as scp:
-                scp.get(f"raw-bin-{formatted_time}.tgz", "./generatedBinFiles/")
+                scp.get(f"{os.environ['FPGAPATH']}/raw-bin-{formatted_time}.tgz", "./generatedBinFiles/")
         except Exception as e:
             print(f"An error has occurred: {e}")
 
