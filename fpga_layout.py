@@ -447,7 +447,7 @@ class ButtonFrame(tk.Frame):
             stdin, stdout, stderr = client.exec_command("pwd")
             print(f"{stdout.read().decode()}")
             now = datetime.now()
-            formatted_time = now.strftime("%m-%d-%H:%M")
+            formatted_time = now.strftime("%m-%d-%H-%M")
             bin_files = glob.glob(f"{os.environ['FPGAPATH']}/*.bin")
             print(f"{bin_files} BIN FILES")
             new_directory = f"raw-bin-{formatted_time}"
