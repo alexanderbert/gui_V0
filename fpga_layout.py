@@ -408,7 +408,9 @@ class ButtonFrame(tk.Frame):
             channel.get_pty()
             channel.invoke_shell()
             #channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
-            channel.send(f"cd {os.environ['FPGAPATH']}\n")
+            #channel.send(f"cd {os.environ['FPGAPATH']}\n")
+            stdin, stdout, stderr = client.exec_command(f"cd {os.environ['FPGAPATH']} && pwd")
+            print(stdout.read().decode())
             time.sleep(0.5)
 
 
@@ -445,7 +447,7 @@ class ButtonFrame(tk.Frame):
             stdin, stdout, stderr = client.exec_command("pwd")
             print(f"{stdout.read().decode()}")
             now = datetime.now()
-            formatted_time = now.strftime("%m-%d-%h:%M")
+            formatted_time = now.strftime("%m-%d-%H:%M")
             bin_files = glob.glob("*.bin")
             print(f"{bin_files} BIN FILES")
             if bin_files:
