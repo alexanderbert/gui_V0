@@ -409,6 +409,7 @@ class ButtonFrame(tk.Frame):
             channel.invoke_shell()
             #channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
             channel.send(f"cd {os.environ['FPGAPATH']}\n")
+            time.sleep(0.5)
 
 
             ### PRE BAD CODE
