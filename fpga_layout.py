@@ -232,8 +232,8 @@ class RadarsAvailableFrame(tk.Frame):
                 client.load_system_host_keys()
                 client.connect(hostname=f"{host}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=3)
                 stdin, stdout, stderr = client.exec_command("hostname")
-                print(stdout.read().decode())
                 radar_hostname = stdout.read().decode("utf-8")
+                print(radar_hostname)
                 client.close()
                 self.update_radar_pulldown(host, radar_hostname.strip())
 
