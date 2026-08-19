@@ -450,10 +450,13 @@ class ButtonFrame(tk.Frame):
             formatted_time = now.strftime("%m-%d-%H:%M")
             bin_files = glob.glob(f"{os.environ['FPGAPATH']}/*.bin")
             print(f"{bin_files} BIN FILES")
+            new_directory = f"raw-bin-{formatted_time}"
+            stdin, stdout, stderr = client.exec_command(f"mkdir -p '{os.environ['FPGAPATH']}/{new_directory}/'")
+            print(f"{new_directory} CREATED")
             if bin_files:
-                new_directory = f"raw-bin-{formatted_time}"
-                stdin, stdout, stderr = client.exec_command(f"mkdir -p '{os.environ['FPGAPATH']}/{new_directory}/'")
-                print(f"{new_directory} CREATED")
+                # new_directory = f"raw-bin-{formatted_time}"
+                # stdin, stdout, stderr = client.exec_command(f"mkdir -p '{os.environ['FPGAPATH']}/{new_directory}/'")
+                # print(f"{new_directory} CREATED")
                 stdin, stdout, stderr = client.exec_command(f"mv daq0080*.bin '{os.environ['FPGAPATH']}/{new_directory}/'")
                 stdin, stdout, stderr = client.exec_command(f"tar -czvf '{os.environ['FPGAPATH']}/{new_directory}.tgz' '{os.environ['FPGAPATH']}/{new_directory}/'")
                 exit_status = stdout.channel.recv_exit_status()
