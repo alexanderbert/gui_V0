@@ -407,7 +407,8 @@ class ButtonFrame(tk.Frame):
             channel = transport.open_session()
             channel.get_pty()
             channel.invoke_shell()
-            channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
+            #channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
+            channel.send(f"cd {os.environ['FPGAPATH']}\n")
 
 
             ### PRE BAD CODE
