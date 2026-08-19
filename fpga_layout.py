@@ -440,13 +440,16 @@ class ButtonFrame(tk.Frame):
             #         new_folder_path.mkdir(parents=True, exist_ok=True)
             #         destination = new_folder_path / file_path.name
             #         file_path.rename(destination)
-
+            stdin, stdout, stderr = client.exec_command("pwd")
+            print(f"{stdout.read().decode()}")
             now = datetime.now()
             formatted_time = now.strftime("%m-%d-%h:%M")
             bin_files = glob.glob("*.bin")
+            print(f"{bin_files} BIN FILES")
             if bin_files:
                 new_directory = f"raw-bin-{formatted_time}"
-                stdin, stdout, stderr = client.exec_command(f"mkdir '{new_directory}/'")
+                stdin, stdout, stderr = client.exec_command(f"mkdir -p '{new_directory}/'")
+                print(f"{new_directory} CREATED")
                 stdin, stdout, stderr = client.exec_command(f"mv daq0080*.bin '{new_directory}/'")
                 stdin, stdout, stderr = client.exec_command(f"tar -czvf '{new_directory}.tgz' '{new_directory}/'")
                 exit_status = stdout.channel.recv_exit_status()
