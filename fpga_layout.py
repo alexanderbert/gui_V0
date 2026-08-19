@@ -329,6 +329,7 @@ class ButtonFrame(tk.Frame):
         global capture_output_flag
         if capture_output_flag:
             self.get_bin_files(radar_selected)
+            capture_output_flag = False
 
 
     def run_command_connect(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}"):
