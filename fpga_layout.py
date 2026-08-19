@@ -394,14 +394,14 @@ class ButtonFrame(tk.Frame):
     def get_bin_files(self, radar_selected):
 
         ## GET ACTUAL LOCATIONS HERE
-        print("GETTING BINS")
+        print(f"GETTING BINS from {radar_selected}")
+
 
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
             #TODO GET THE RADAR I DONT THINK I HAVE TO
             client.connect(hostname=radar_selected, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}")
-
             #Move all bin files into a new folder called generatedBinFiles
             transport = client.get_transport()
             channel = transport.open_session()
