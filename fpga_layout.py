@@ -439,7 +439,10 @@ class ButtonFrame(tk.Frame):
             formatted_time = now.strftime("%m-%d-%h:%M")
             bin_files = glob.glob("*.bin")
             if bin_files:
-                stdin, stdout, stderr = client.exec_command(f"tar -czvf raw-bin-{formatted_time}.tgz daq0080*.bin")
+                new_directory = f"raw-bin-{formatted_time}"
+                stdin, stdout, stderr = client.exec_command(f"mkdir {new_directory}")
+                stdin, stdout, stderr = client.exec_command(f"mv daq0080*.bin {new_directory}/")
+                stdin, stdout, stderr = client.exec_command(f"tar -czvf {new_directory}.tgz {new_directory}/")
                 exit_status = stdout.channel.recv_exit_status()
                 print(f"{exit_status}")
 
