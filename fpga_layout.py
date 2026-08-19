@@ -337,52 +337,58 @@ class ButtonFrame(tk.Frame):
         is_running = True
         self.io_frame.hide_input_frame_show_output_frame()
         self.io_frame.output_frame.display_settings(command)
-        client.load_system_host_keys()
-        client.connect(hostname=hostname, username=username, password=password, look_for_keys=False, allow_agent=False)
-        print("connected")
-        transport = client.get_transport()
-        channel = transport.open_session()
-        channel.get_pty()
-        channel.invoke_shell()
-        channel.send(f"cd {os.environ['FPGAPATH']}\n")
-        time.sleep(1)
-        channel.send(f"./fpgaStream {command}\n")
-        time.sleep(2)
+        try:
+            client.load_system_host_keys()
+            client.connect(hostname=hostname, username=username, password=password, look_for_keys=False, allow_agent=False)
+            print("connected")
+            transport = client.get_transport()
+            channel = transport.open_session()
+            channel.get_pty()
+            channel.invoke_shell()
+            channel.send(f"cd {os.environ['FPGAPATH']}\n")
+            time.sleep(1)
+            channel.send(f"./fpgaStream {command}\n")
+            time.sleep(2)
 
-        max_duration = 2000
-        start_time = time.time()
-        output = ""
-        # while channel.recv_ready() and is_running:
-        while channel.active and is_running:
-            chunk = channel.recv(1024).decode("iso-8859-1")
-            output += chunk
-            current_time = time.time()
-            if current_time - start_time < 2:
-                time.sleep(3)
-            if "<5>" in output:
-                after = output.split("<5>", 1)
-                if "[1;1H$<5>" in after[1]:
-                    new_output = after[1].replace("[1;1H$<5>", "\n")
-                    new_output = new_output.split("\n")
-                    for line in new_output:
-                        print(line)
-                        splits = line.split(",")
-                        desired_fields = []
-                        for index, split in enumerate(splits):
-                            if len(splits) == 11:
-                                if index < 6 or index == 9:
-                                    desired_fields.append(split)
-                        print(desired_fields)
-                        output_queue.put(desired_fields)
-                        self.run_queue()
+            max_duration = 2000
+            start_time = time.time()
             output = ""
-            time.sleep(.5)
-            if current_time - start_time > max_duration:
-                break
+            # while channel.recv_ready() and is_running:
+            while channel.active and is_running:
+                chunk = channel.recv(1024).decode("iso-8859-1")
+                output += chunk
+                current_time = time.time()
+                if current_time - start_time < 2:
+                    time.sleep(3)
+                if "<5>" in output:
+                    after = output.split("<5>", 1)
+                    if "[1;1H$<5>" in after[1]:
+                        new_output = after[1].replace("[1;1H$<5>", "\n")
+                        new_output = new_output.split("\n")
+                        for line in new_output:
+                            print(line)
+                            splits = line.split(",")
+                            desired_fields = []
+                            for index, split in enumerate(splits):
+                                if len(splits) == 11:
+                                    if index < 6 or index == 9:
+                                        desired_fields.append(split)
+                            print(desired_fields)
+                            output_queue.put(desired_fields)
+                            self.run_queue()
+                output = ""
+                time.sleep(.5)
+                if current_time - start_time > max_duration:
+                    break
 
-        channel.send("^S\n")
-        channel.send("^C\n")
-        client.close()
+            channel.send("^S\n")
+            channel.send("^C\n")
+            client.close()
+        except:
+            channel.send("^S\n")
+            channel.send("^C\n")
+            client.close()
+
 
 
     def get_bin_files(self, radar_selected):
@@ -390,18 +396,18 @@ class ButtonFrame(tk.Frame):
         ## GET ACTUAL LOCATIONS HERE
         print("GETTING BINS")
 
-        # client.load_system_host_keys()
-        # client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
             #TODO GET THE RADAR I DONT THINK I HAVE TO
-            # client.connect(hostname=radar_selected, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}")
-            #
-            # #Move all bin files into a new folder called generatedBinFiles
-            # transport = client.get_transport()
-            # channel = transport.open_session()
-            # channel.get_pty()
-            # channel.invoke_shell()
-            # channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
+            client.connect(hostname=radar_selected, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}")
+
+            #Move all bin files into a new folder called generatedBinFiles
+            transport = client.get_transport()
+            channel = transport.open_session()
+            channel.get_pty()
+            channel.invoke_shell()
+            channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
 
 
             ### PRE BAD CODE
@@ -440,9 +446,9 @@ class ButtonFrame(tk.Frame):
             bin_files = glob.glob("*.bin")
             if bin_files:
                 new_directory = f"raw-bin-{formatted_time}"
-                stdin, stdout, stderr = client.exec_command(f"mkdir {new_directory}")
-                stdin, stdout, stderr = client.exec_command(f"mv daq0080*.bin {new_directory}/")
-                stdin, stdout, stderr = client.exec_command(f"tar -czvf {new_directory}.tgz {new_directory}/")
+                stdin, stdout, stderr = client.exec_command(f"mkdir '{new_directory}/'")
+                stdin, stdout, stderr = client.exec_command(f"mv daq0080*.bin '{new_directory}/'")
+                stdin, stdout, stderr = client.exec_command(f"tar -czvf '{new_directory}.tgz' '{new_directory}/'")
                 exit_status = stdout.channel.recv_exit_status()
                 print(f"{exit_status}")
 
