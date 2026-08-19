@@ -14,7 +14,7 @@ COMMAND_UPDATE = {
     "-C": {"title": "FIR Parks width", "text": "FIR: Parks Width of ratio of Nyquist Frequency", "unit": "pwNyq","default_value": "0.05", 'col': "0.05", 'row': 0, "shorthand": "FIR Parks W"},
     "-b": {"title": "RX start", "text": "RX pretrigger offset start (from tx)", "unit": "µS","default_value": "2.0", "col": 0, 'row': 0, "shorthand": "RX start", "lowerbound": 0.0, "upperbound": 10.0},
     "-g": {"title": "RX Stop", "text": "RX pretrigger offset stop (from tx)", "unit": "µS","default_value": "0.8", "col": 0, 'row': 0, "shorthand": "RX stop", "lowerbound": -10.0, "upperbound": 10.0},
-    "-Q": {"title": "Pulses to read", "text": "Pulses to read before exiting", "unit": "µS","default_value": "0", "col": 0, 'row': 0},
+    "-Q": {"title": "Pulses to read", "text": "Pulses to read before exiting", "unit": "µS","default_value": "0", "col": 0, 'row': 0, "shorthand": "capture"},
     "-u": {"title": "Reverse Trigger", "text": "Reverse trigger to sig gen. REQUIRED on R1/R2", "unit": None, "default_value": "True", 'col': 0, 'row': 0, "shorthand": "Reverse trigger"},
     "-z": {"title": "Pulse Offset", "text": "Pulse pps offset", "unit": "µS","default_value": "0", "col": 0, 'row': 0, "shorthand": "Pulse offset"},
     ###ADD CAPTURE FLAG
