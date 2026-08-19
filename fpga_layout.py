@@ -390,18 +390,21 @@ class ButtonFrame(tk.Frame):
         ## GET ACTUAL LOCATIONS HERE
         print("GETTING BINS")
 
-        client.load_system_host_keys()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        # client.load_system_host_keys()
+        # client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
-            #TODO GET THE RADAR
-            client.connect(hostname=radar_selected, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}")
+            #TODO GET THE RADAR I DONT THINK I HAVE TO
+            # client.connect(hostname=radar_selected, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}")
+            #
+            # #Move all bin files into a new folder called generatedBinFiles
+            # transport = client.get_transport()
+            # channel = transport.open_session()
+            # channel.get_pty()
+            # channel.invoke_shell()
+            # channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
 
-            #Move all bin files into a new folder called generatedBinFiles
-            transport = client.get_transport()
-            channel = transport.open_session()
-            channel.get_pty()
-            channel.invoke_shell()
-            channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
+
+            ### PRE BAD CODE
             # target_dir = 'generatedBinFiles'
             # mkdir_command = f"mkdir -p {target_dir}"
             # stdin, stdout,stderr = client.exec_command(mkdir_command)
