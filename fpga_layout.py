@@ -34,6 +34,9 @@ client = paramiko.client.SSHClient()
 output_queue = queue.Queue()
 capture_output_flag = False
 
+dir_path = Path("../ClearText")
+dir_path.mkdir(parents=True, exist_ok=True)
+
 class MainFrame(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, background = "Gray")
