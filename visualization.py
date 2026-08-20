@@ -22,6 +22,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from pathlib import Path
 import tarfile
 
+#Pybind crap
+#import cpp_module
+
 dir_path = Path("./generatedBinFiles")
 dir_path.mkdir(parents=True, exist_ok=True)
 
@@ -101,19 +104,20 @@ class VisualizeFrame(tk.Frame):
                 for member in tar.getmembers():
                     if member.isfile():
                         new_file = os.path.basename(member.name)
-                        folder_name = os.path.join("./generatedBinFiles", f"{file_chosen}_{new_file}_extracted")
+                        folder_name = os.path.join("./generatedBinFiles", f"{file_chosen}_{new_file}")
 
                         os.makedirs(folder_name, exist_ok=True)
                         member.name = new_file
                         tar.extract(member, folder_name)
-        except:
-            print("ERROR extracting file")
+        except Exception as e:
+            print("ERROR extracting file: {}".format(e))
 
     def create_images(self):
         def convertRawFile(folder, filename):
             # todo find correct location on target computer
             #bashCommand = "/home/sq/sq/stormquant-beta/build_old/common/raytestingutils/convertRawToCleartext "
             bashCommand = f"{os.environ.get('CLEAR_TEXT_PATH')} "
+            #bashCommand = f"{cpp_module} "
             bashCommand = bashCommand + " -d " + folder + " -f " + filename
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
             output, error = process.communicate()
@@ -221,7 +225,7 @@ class VisualizeFrame(tk.Frame):
            #todo find correct location on target computer DOESNT WORK DUE TO FILE VS FOLDER
            #bashCommand = "/home/sq/sq/stormquant-beta/build_old/common/raytestingutils/convertRawToCleartext "
            bashCommand = f"{os.environ.get('CLEAR_TEXT_PATH')} "
-           # bashCommand = "/home/sq/Desktop/pythonAppImprovements/testingFiles/binFiles "
+           #bashCommand = f"{cpp_module} "
            bashCommand = bashCommand + "-d " + folder + " -f " + filename
            process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
            output, error = process.communicate()
