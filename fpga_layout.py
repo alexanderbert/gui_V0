@@ -414,36 +414,6 @@ class ButtonFrame(tk.Frame):
             time.sleep(0.5)
 
 
-            ### PRE BAD CODE
-            # target_dir = 'generatedBinFiles'
-            # mkdir_command = f"mkdir -p {target_dir}"
-            # stdin, stdout,stderr = client.exec_command(mkdir_command)
-            #
-            # dir_errors = stderr.read().decode("iso-8859-1")
-            # if dir_errors:
-            #     print(f"Directory creation error: {dir_errors}")
-            #
-            # mv_command = f"mv ./*.bin ./generatedBinFiles"
-            # stdin, stdout,stderr = client.exec_command(mv_command)
-            # mv_errors = stderr.read().decode("iso-8859-1")
-            # if mv_errors:
-            #     if "No such file" in mv_errors:
-            #         print("No .bin files were found in the source directory.")
-            #     else:
-            #         print(f"Error moving files: {mv_errors}")
-            # else:
-            #     print(f"Successfully moved all .bin files to {target_dir}")
-            #
-            # #Put files in individual folders
-            # target_dir = Path("./generatedBinFiles")
-            # for file_path in target_dir.iterdir():
-            #     if file_path.is_file():
-            #         individual_folder = file_path.stem
-            #         new_folder_path = target_dir / individual_folder
-            #
-            #         new_folder_path.mkdir(parents=True, exist_ok=True)
-            #         destination = new_folder_path / file_path.name
-            #         file_path.rename(destination)
             stdin, stdout, stderr = client.exec_command("pwd")
             print(f"{stdout.read().decode()}")
             now = datetime.now()
@@ -462,26 +432,6 @@ class ButtonFrame(tk.Frame):
                 )
             exit_status = stdout.channel.recv_exit_status()
             print(f"{exit_status}")
-            # if bin_files:
-            #     # new_directory = f"raw-bin-{formatted_time}"
-            #     # stdin, stdout, stderr = client.exec_command(f"mkdir -p '{os.environ['FPGAPATH']}/{new_directory}/'")
-            #     # print(f"{new_directory} CREATED")
-            #     # stdin, stdout, stderr = client.exec_command(f"mv daq0080*.bin '{os.environ['FPGAPATH']}/{new_directory}/'")
-            #     # stdin, stdout, stderr = client.exec_command(f"tar -czvf '{os.environ['FPGAPATH']}/{new_directory}.tgz' '{os.environ['FPGAPATH']}/{new_directory}/'")
-            #     # exit_status = stdout.channel.recv_exit_status()
-            #     # print(f"{exit_status}")
-            #     pass
-            #
-            #
-            # elif not bin_files:
-            #     time.sleep(1)
-            #     stdin, stdout, stderr = client.exec_command(f"tar -czvf raw-bin-{formatted_time}.tgz daq0080*.bin")
-            #     exit_status = stdout.channel.recv_exit_status()
-            #     print(f"{exit_status}")
-            # else:
-            #     print("No bins found")
-            #     client.close()
-            #     return 1
 
 
             stdin, stdout, stderr = client.exec_command(f"rm {os.environ['FPGAPATH']}/*.bin")
