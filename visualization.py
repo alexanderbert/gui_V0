@@ -112,6 +112,11 @@ class VisualizeFrame(tk.Frame):
         except Exception as e:
             print("ERROR extracting file: {}".format(e))
 
+        print("file_chosen:", file_chosen)
+        print("archive_name:", os.path.basename(file_chosen))
+        print("cwd:", os.getcwd())
+        print("output example:", folder_name)
+
     def create_images(self):
         def convertRawFile(folder, filename):
             # todo find correct location on target computer
