@@ -122,6 +122,7 @@ class VisualizeFrame(tk.Frame):
             # todo find correct location on target computer
             #bashCommand = "/home/sq/sq/stormquant-beta/build_old/common/raytestingutils/convertRawToCleartext "
             bashCommand = f"{os.environ.get('CLEAR_TEXT_PATH')} "
+            bashCommand = "./ClearText/convertRawToCleartext"
             #bashCommand = f"{cpp_module} "
             bashCommand = bashCommand + " -d " + folder + " -f " + filename
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
@@ -229,8 +230,9 @@ class VisualizeFrame(tk.Frame):
        def convertRawFile(folder, filename):
            #todo find correct location on target computer DOESNT WORK DUE TO FILE VS FOLDER
            #bashCommand = "/home/sq/sq/stormquant-beta/build_old/common/raytestingutils/convertRawToCleartext "
-           bashCommand = f"{os.environ.get('CLEAR_TEXT_PATH')} "
+           #bashCommand = f"{os.environ.get('CLEAR_TEXT_PATH')} "
            #bashCommand = f"{cpp_module} "
+           bashCommand = "./ClearText/convertRawToCleartext"
            bashCommand = bashCommand + "-d " + folder + " -f " + filename
            process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
            output, error = process.communicate()
