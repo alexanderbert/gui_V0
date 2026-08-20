@@ -454,8 +454,12 @@ class ButtonFrame(tk.Frame):
             stdin, stdout, stderr = client.exec_command(f"mkdir -p '{os.environ['FPGAPATH']}/{new_directory}/'")
             print(f"{new_directory} CREATED")
             stdin, stdout, stderr = client.exec_command(f"cp {os.environ['FPGAPATH']}/daq0080*.bin '{os.environ['FPGAPATH']}/{new_directory}/'")
+            transfer_status = stdout.channel.recv_exit_status()
+            print(f"{transfer_status} of bins")
             stdin, stdout, stderr = client.exec_command(
-                f"tar -czvf '{os.environ['FPGAPATH']}/{new_directory}.tgz' '{os.environ['FPGAPATH']}/{new_directory}/'")
+                f"cd {os.environ['FPGAPATH']} && tar -czvf '{new_directory}.tgz' '{new_directory}'"
+                #f"tar -czvf '{os.environ['FPGAPATH']}/{new_directory}.tgz' '{os.environ['FPGAPATH']}/{new_directory}/'"
+                )
             exit_status = stdout.channel.recv_exit_status()
             print(f"{exit_status}")
             # if bin_files:
