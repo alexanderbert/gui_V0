@@ -1035,10 +1035,11 @@ class ButtonFrame(tk.Frame):
         self.io_frame.input_frame.scan_frame.homing_mode_interface()
 
     def connect_positioner_initial_state(self):
+        #Todo kill this behavior for now and go right into normal mode
         logging.info(f"running connect_positioner_initial_state")
         initial_state = self.io_frame.input_frame.output_frame.terminal_frame.set_positioner(self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get()))
         logging.info(f"CONNECT POSITIONER INITIAL STATE: {initial_state}, false should activate homing mode interface")
-        self.io_frame.input_frame.scan_frame.homing_mode_interface()
+        #self.io_frame.input_frame.scan_frame.homing_mode_interface()
         if not initial_state:
             logging.info("INITIAL STATE WAS FALSEY")
             self.io_frame.input_frame.scan_frame.homing_mode_interface()

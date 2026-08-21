@@ -34,8 +34,9 @@ client = paramiko.client.SSHClient()
 output_queue = queue.Queue()
 capture_output_flag = False
 
-dir_path = Path("../ClearText")
-dir_path.mkdir(parents=True, exist_ok=True)
+# Todo unnecessary if exe exists
+# dir_path = Path("../ClearText")
+# dir_path.mkdir(parents=True, exist_ok=True)
 
 class MainFrame(tk.Frame):
     def __init__(self, parent):
@@ -445,7 +446,8 @@ class ButtonFrame(tk.Frame):
 
             with SCPClient(client.get_transport()) as scp:
                 scp.get(f"{os.environ['FPGAPATH']}/raw-bin-{formatted_time}.tgz", "./generatedBinFiles/")
-                scp.get("/home/sq/sq/stormquant-beta/cmake-build-debug/common/raytestingutils/convertRawToCleartext", "../ClearText/")
+                #todo unnecessary if exe exists on file
+                #scp.get("/home/sq/sq/stormquant-beta/cmake-build-debug/common/raytestingutils/convertRawToCleartext", "../ClearText/")
                 #os.chmod("../ClearText/convertRawToCleartext", 0o755)
         except Exception as e:
             print(f"An error has occurred: {e}")
