@@ -246,15 +246,18 @@ class TerminalFrame(tk.Frame):
 
         channel.close()
         client.close()
-        self.pos_text_box.delete("1.0", tk.END)
-        self.pos_text_box.insert("1.0", "Scanning\n")
+
         run_status_variable = int(run_status_variable.strip())
         simplified_variables_list = [scan_mode_variable, start_az_variable, end_az_variable, el_axis_start, el_axis_end, el_beam_start, el_beam_end]
         self.simplified_status.delete("1.0", tk.END)
         if run_status_variable == 1:
             self.simplified_status.insert(tk.END, "Running\n")
+            self.pos_text_box.delete("1.0", tk.END)
+            self.pos_text_box.insert("1.0", "Scanning\n")
         elif run_status_variable == 0:
             self.simplified_status.insert(tk.END, "Stopped\n")
+            self.pos_text_box.delete("1.0", tk.END)
+            self.pos_text_box.insert("1.0", "Scan Stopped\n")
         else:
             self.simplified_status.insert(tk.END, "Status Issue\n")
         for varies in simplified_variables_list:
