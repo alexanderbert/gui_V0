@@ -142,8 +142,8 @@ class TerminalFrame(tk.Frame):
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(hostname=f"{self.positioner_selected}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
                        password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-        print(f"{self.positioner_selected_for_use} inside status")
-        print(f"{selected_positioner_global} GLOBAL status")
+        # print(f"{self.positioner_selected_for_use} inside status")
+        # print(f"{selected_positioner_global} GLOBAL status")
         transport = client.get_transport()
         channel = transport.open_session()
         channel.get_pty()
@@ -406,7 +406,7 @@ class TerminalFrame(tk.Frame):
         logging.info("STOPPING SCAN")
         print("STOPPING SCAN")
         self.pos_text_box.delete("1.0", tk.END)
-        self.pos_text_box.insert(tk.END, "Executing Stop Command\n Please Standby for positioner to finish rotation\n")
+        self.pos_text_box.insert("1.0", "Executing Stop Command\n Please Standby for positioner to finish rotation\n")
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         time.sleep(1)
@@ -423,7 +423,7 @@ class TerminalFrame(tk.Frame):
             else:
                 print("WITHIN ELSE CONDITION OF STOP SCAN")
                 self.pos_text_box.delete("1.0", tk.END)
-                self.pos_text_box.insert(tk.END, f"Executing Stop Command Attempt #{i}\n Please Standby, max 300 attempts\n")
+                self.pos_text_box.insert("1.0", f"Executing Stop Command Attempt #{i}\n Please Standby, max 300 attempts\n")
                 channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
                 channel.send(f"echo scan stop > {ttyf}\n")
                 time.sleep(.5)
