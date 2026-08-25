@@ -406,7 +406,7 @@ class TerminalFrame(tk.Frame):
         logging.info("STOPPING SCAN")
         print("STOPPING SCAN")
         self.pos_text_box.delete("1.0", tk.END)
-        self.pos_text_box.insert(tk.END, "Executing Stop Command\n Please Standby for positioner to finish rotation\n")
+        self.pos_text_box.config(font=("Arial", 16), foreground="white")
         self.pos_text_box.insert("1.0", "Executing Stop Command\n Please Standby for positioner to finish rotation\n")
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
@@ -1039,7 +1039,8 @@ class ButtonFrame(tk.Frame):
 
     def stop_scan_all(self):
         self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
-        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert("1.0", f"Stopping Scan.\n Please standby as the positioner completes the rotation.")
+        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.config(font=("Arial", 16), foreground="white")
+        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, f"Stopping Scan.\n Please standby as the positioner completes the rotation.")
 
         thread = threading.Thread(
             target = self.io_frame.input_frame.output_frame.terminal_frame.stop_scan(),
