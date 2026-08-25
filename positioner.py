@@ -405,8 +405,9 @@ class TerminalFrame(tk.Frame):
     def stop_scan(self):
         channel = self.fl_network_mode()
         logging.info("STOPPING SCAN")
+        print("STOPPING SCAN")
         self.pos_text_box.delete("1.0", tk.END)
-        self.pos_text_box.insert(tk.END, "Executing Stop Command\n Please Standby\n")
+        self.pos_text_box.insert(tk.END, "Executing Stop Command\n Please Standby for position to finish rotation\n")
         self.pos_text_box.config(font=("Arial", 24), foreground="red")
         #channel = self.alex_home_network_mode()
         time.sleep(1)
@@ -418,8 +419,10 @@ class TerminalFrame(tk.Frame):
         for i in range(1, 301):
             run_status_variable = self.get_positioner_status()
             if run_status_variable != 1:
+                print("WITHIN IF CONDITION OF STOP SCAN")
                 break
             else:
+                print("WITHIN ELSE CONDITION OF STOP SCAN")
                 channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
                 channel.send(f"echo scan stop > {ttyf}\n")
                 time.sleep(.5)
