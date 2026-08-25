@@ -407,7 +407,7 @@ class TerminalFrame(tk.Frame):
         print("STOPPING SCAN")
         self.pos_text_box.delete("1.0", tk.END)
         self.pos_text_box.config(font=("Arial", 16), foreground="white")
-        self.pos_text_box.insert("1.0", "Executing Stop Command\n Please Standby for positioner to finish rotation\n")
+        self.pos_text_box.insert("1.0", "Executing Stop Command\nPlease Standby for positioner\nto finish rotation\n")
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         time.sleep(1)
