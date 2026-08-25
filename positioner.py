@@ -1040,7 +1040,12 @@ class ButtonFrame(tk.Frame):
     def stop_scan_all(self):
         self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
         self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert("1.0", f"Stopping Scan.\n Please standby as the positioner completes the rotation.")
-        self.io_frame.input_frame.output_frame.terminal_frame.stop_scan()
+
+        thread = threading.Thread(
+            target = self.io_frame.input_frame.output_frame.terminal_frame.stop_scan(),
+            daemon = True
+        )
+        thread.start()
 
 
     def start_homing_mode_and_reset(self):
