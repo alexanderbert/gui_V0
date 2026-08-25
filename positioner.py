@@ -406,6 +406,7 @@ class TerminalFrame(tk.Frame):
         logging.info("STOPPING SCAN")
         print("STOPPING SCAN")
         self.pos_text_box.delete("1.0", tk.END)
+        self.pos_text_box.insert(tk.END, "Executing Stop Command\n Please Standby for positioner to finish rotation\n")
         self.pos_text_box.insert("1.0", "Executing Stop Command\n Please Standby for positioner to finish rotation\n")
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
@@ -1036,6 +1037,12 @@ class ButtonFrame(tk.Frame):
         self.network_check_button = None
         self.create_buttons()
 
+    def stop_scan_all(self):
+        self.io_frame.input_frame.pos_text_box.delete("1.0", tk.END)
+        self.io_frame.input_frame.pos_text_box.insert("1.0", f"Stopping Scan.\n Please standby as the positioner completes the rotation.")
+        self.io_frame.input_frame.output_frame.terminal_frame.stop_scan()
+
+
     def start_homing_mode_and_reset(self):
         logging.info(f"STARTING HOMING MODE AND RESET")
         self.io_frame.input_frame.output_frame.terminal_frame.reset_positioner()
@@ -1066,7 +1073,9 @@ class ButtonFrame(tk.Frame):
         #                               hostname = self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get())))
         # self.button_reset.grid(column=0, row=2)
         # self.button_reset.config(width=10, font=("Arial", 20))
-        self.stop_scan_button = tk.Button(self, text="Stop Scan", command= lambda: self.io_frame.input_frame.output_frame.terminal_frame.stop_scan())
+
+        #self.stop_scan_button = tk.Button(self, text="Stop Scan", command=lambda: self.io_frame.input_frame.output_frame.terminal_frame.stop_scan())
+        self.stop_scan_button = tk.Button(self, text="Stop Scan", command= lambda: self.stop_scan_all())
         self.stop_scan_button.grid(column=0, row=3)
         self.stop_scan_button.config(width=15, font=("Arial", 20))
 
