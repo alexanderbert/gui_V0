@@ -1052,7 +1052,7 @@ class ButtonFrame(tk.Frame):
         self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.after(0, self.update_status, f"Stopping Scan.\nPlease standby as the positioner \ncompletes the rotation." )
 
         thread = threading.Thread(
-            target = self.io_frame.input_frame.output_frame.terminal_frame.stop_scan(),
+            target = self.io_frame.input_frame.output_frame.terminal_frame.stop_scan,
             daemon = True
         )
         thread.start()
