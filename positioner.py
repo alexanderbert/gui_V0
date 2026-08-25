@@ -403,11 +403,11 @@ class TerminalFrame(tk.Frame):
         client.close()
 
     def stop_scan(self):
-        channel = self.fl_network_mode()
         logging.info("STOPPING SCAN")
         print("STOPPING SCAN")
         self.pos_text_box.delete("1.0", tk.END)
-        self.pos_text_box.insert(tk.END, "Executing Stop Command\n Please Standby for position to finish rotation\n")
+        self.pos_text_box.insert(tk.END, "Executing Stop Command\n Please Standby for positioner to finish rotation\n")
+        channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         time.sleep(1)
         ttyf="/dev/ttyUSB1"
