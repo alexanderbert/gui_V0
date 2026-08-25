@@ -567,9 +567,9 @@ class OutputFrame(tk.Frame):
         self.terminal_frame = terminal_frame
 
         #self.pos_text_box = tk.Text(self, height=1, width=20, background="gray7")
-        self.pos_text_box = tk.Text(self, font=("Arial", 20), background="orange", fg="white")
-        self.pos_text_box.grid(column=0, row=0, sticky="NEW")
-        self.pos_text_box.config(height=30, width = 30, bg="orange")
+        # self.pos_text_box = tk.Text(self, font=("Arial", 20), background="orange", fg="white")
+        # self.pos_text_box.grid(column=0, row=0, sticky="NEW")
+        # self.pos_text_box.config(height=30, width = 30, bg="orange")
 
 
 class ScanFrame(tk.Frame):
