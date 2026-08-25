@@ -1016,6 +1016,7 @@ class RadarsAvailableFrame(tk.Frame):
         try:
             if ip_address not in self.radar_dict.values():
                 self.radar_dict[hostname] = ip_address
+                self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
                 self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, f"Found: {ip_address}")
         except:
             print("ERROR")
