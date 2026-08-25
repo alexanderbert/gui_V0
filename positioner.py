@@ -276,6 +276,9 @@ class TerminalFrame(tk.Frame):
 
 
     def spot_scan(self, start_az, end_az, start_elbeam, end_elbeam, speed, inc, repeat, slipdetect):
+        self.pos_text_box.delete("1.0", tk.END)
+        self.pos_text_box.config(font=("Arial", 16), foreground="white")
+        self.pos_text_box.insert("1.0", "Starting Spot Scan")
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
@@ -300,6 +303,9 @@ class TerminalFrame(tk.Frame):
 
 
     def rhi_scan(self, start_az, end_az, start_ele, end_ele, speed, inc, repeat, slipdetect):
+        self.pos_text_box.delete("1.0", tk.END)
+        self.pos_text_box.config(font=("Arial", 16), foreground="white")
+        self.pos_text_box.insert("1.0", "Starting RHI Scan")
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
@@ -322,6 +328,9 @@ class TerminalFrame(tk.Frame):
         client.close()
 
     def rhi_square_scan(self, start_az, end_az, start_ele, end_ele, speed, inc, repeat, slipdetect):
+        self.pos_text_box.delete("1.0", tk.END)
+        self.pos_text_box.config(font=("Arial", 16), foreground="white")
+        self.pos_text_box.insert("1.0", "Starting RHI Square Scan")
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
@@ -346,6 +355,9 @@ class TerminalFrame(tk.Frame):
         #channel.send(f"echo scan status > {ttyf}\n")
 
     def ppi_scan(self, start_az, end_az, start_ele, end_ele, speed, inc, repeat, slipdetect):
+        self.pos_text_box.delete("1.0", tk.END)
+        self.pos_text_box.config(font=("Arial", 16), foreground="white")
+        self.pos_text_box.insert("1.0", "Starting PPI Scan")
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
@@ -379,6 +391,9 @@ class TerminalFrame(tk.Frame):
         client.close()
 
     def sector_scan(self, start_az, end_az, start_ele, end_ele, speed, inc, repeat, slipdetect):
+        self.pos_text_box.delete("1.0", tk.END)
+        self.pos_text_box.config(font=("Arial", 16), foreground="white")
+        self.pos_text_box.insert("1.0", "Starting Sector Scan")
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
@@ -907,7 +922,8 @@ class ScanFrame(tk.Frame):
             #                              slipdetect)
 
             thread = threading.Thread(
-                target=self.terminal_frame.rhi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+                target=self.terminal_frame.rhi_scan,
+                args= (start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
                                          slipdetect),
                 daemon=True
             )
@@ -917,7 +933,9 @@ class ScanFrame(tk.Frame):
             #self.terminal_frame.rhi_square_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
 
             thread = threading.Thread(
-                target=self.terminal_frame.rhi_square_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect),
+                target=self.terminal_frame.rhi_square_scan,
+                args=(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+                      slipdetect),
                 daemon=True
             )
             thread.start()
@@ -925,8 +943,9 @@ class ScanFrame(tk.Frame):
             # self.terminal_frame.ppi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
             #                              slipdetect)
             thread = threading.Thread(
-                target=self.terminal_frame.ppi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
-                                         slipdetect),
+                target=self.terminal_frame.ppi_scan,
+                args=(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+                      slipdetect),
                 daemon=True
             )
             thread.start()
@@ -934,8 +953,9 @@ class ScanFrame(tk.Frame):
             # self.terminal_frame.sector_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
             #                                 slipdetect)
             thread = threading.Thread(
-                target=self.terminal_frame.sector_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
-                                            slipdetect),
+                target=self.terminal_frame.sector_scan,
+                args=(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+                      slipdetect),
                 daemon=True
             )
             thread.start()
@@ -943,8 +963,9 @@ class ScanFrame(tk.Frame):
             # self.terminal_frame.spot_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
             #                               slipdetect)
             thread = threading.Thread(
-                target=self.terminal_frame.spot_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
-                                          slipdetect),
+                target=self.terminal_frame.spot_scan,
+                args=(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+                      slipdetect),
                 daemon=True
             )
             thread.start()
@@ -1082,7 +1103,7 @@ class ButtonFrame(tk.Frame):
         # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.config(font=("Arial", 16), foreground="white")
         # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, f"Stopping Scan.\nPlease standby as the positioner \ncompletes the rotation.")
 
-        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.after(0, self.update_status, f"Stopping Scan.\nPlease standby as the positioner \ncompletes the rotation." )
+        #self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.after(0, self.update_status, f"Stopping Scan.\nPlease standby as the positioner \ncompletes the rotation." )
 
         thread = threading.Thread(
             target = self.io_frame.input_frame.output_frame.terminal_frame.stop_scan,
