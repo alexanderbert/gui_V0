@@ -1037,10 +1037,19 @@ class ButtonFrame(tk.Frame):
         self.network_check_button = None
         self.create_buttons()
 
-    def stop_scan_all(self):
+    def update_status(self, message):
+        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.config(font=("Arial", 16),
+                                                                                  foreground="white")
+        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.config(state="normal")
         self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
-        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.config(font=("Arial", 16), foreground="white")
-        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, f"Stopping Scan.\n Please standby as the positioner completes the rotation.")
+        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, message)
+
+    def stop_scan_all(self):
+        # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
+        # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.config(font=("Arial", 16), foreground="white")
+        # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, f"Stopping Scan.\nPlease standby as the positioner \ncompletes the rotation.")
+
+        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.after(0, self.update_status, f"Stopping Scan.\nPlease standby as the positioner \ncompletes the rotation." )
 
         thread = threading.Thread(
             target = self.io_frame.input_frame.output_frame.terminal_frame.stop_scan(),
