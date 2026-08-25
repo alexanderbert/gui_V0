@@ -424,7 +424,7 @@ class TerminalFrame(tk.Frame):
             else:
                 print("WITHIN ELSE CONDITION OF STOP SCAN")
                 self.pos_text_box.delete("1.0", tk.END)
-                self.pos_text_box.insert("1.0", f"Executing Stop Command Attempt #{i}\n Please Standby, max 300 attempts\n")
+                self.pos_text_box.insert("1.0", f"Executing Stop Command Attempt #{i}\n Please Standby for positioner\nto finish rotation\n")
                 channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
                 channel.send(f"echo scan stop > {ttyf}\n")
                 time.sleep(.5)
@@ -903,19 +903,52 @@ class ScanFrame(tk.Frame):
         #         return print("unknown")
 
         if scan_type == "RHI":
-            self.terminal_frame.rhi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
-                                         slipdetect)
+            # self.terminal_frame.rhi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+            #                              slipdetect)
+
+            thread = threading.Thread(
+                target=self.terminal_frame.rhi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+                                         slipdetect),
+                daemon=True
+            )
+            thread.start()
+
         elif scan_type == "RHI SQUARE":
-            self.terminal_frame.rhi_square_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
+            #self.terminal_frame.rhi_square_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect)
+
+            thread = threading.Thread(
+                target=self.terminal_frame.rhi_square_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat, slipdetect),
+                daemon=True
+            )
+            thread.start()
         elif scan_type == "PPI":
-            self.terminal_frame.ppi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
-                                         slipdetect)
+            # self.terminal_frame.ppi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+            #                              slipdetect)
+            thread = threading.Thread(
+                target=self.terminal_frame.ppi_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+                                         slipdetect),
+                daemon=True
+            )
+            thread.start()
         elif scan_type == "SECTOR":
-            self.terminal_frame.sector_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
-                                            slipdetect)
+            # self.terminal_frame.sector_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+            #                                 slipdetect)
+            thread = threading.Thread(
+                target=self.terminal_frame.sector_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+                                            slipdetect),
+                daemon=True
+            )
+            thread.start()
         elif scan_type == "SPOT":
-            self.terminal_frame.spot_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
-                                          slipdetect)
+            # self.terminal_frame.spot_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+            #                               slipdetect)
+            thread = threading.Thread(
+                target=self.terminal_frame.spot_scan(start_az, end_az, start_elbeam, end_elbeam, speed, increment, repeat,
+                                          slipdetect),
+                daemon=True
+            )
+            thread.start()
+
         elif scan_type == "SET HOME":
             self.terminal_frame.set_home()
         else:
