@@ -181,7 +181,8 @@ class OutputFrame(tk.Frame):
                 output_string += f"{COMMAND_UPDATE[command]['shorthand']}: "
             else:
                 output_string += f"{command}, "
-            output_string.removesuffix(", ")
+            #todo does not work on python 3.8
+            #output_string.removesuffix(", ")
         self.settings_textbox.insert(tk.END, output_string)
 
 
@@ -364,7 +365,6 @@ class ButtonFrame(tk.Frame):
                 output += chunk
                 current_time = time.time()
                 if "Captured 10000 packets." in output:
-
                     is_capture_run = True
                     break
 
