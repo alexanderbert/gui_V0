@@ -363,7 +363,9 @@ class ButtonFrame(tk.Frame):
                 output += chunk
                 current_time = time.time()
                 if "Captured 10000 packets." in output:
+                    self.io_frame.input_frame.output_frame.settings_textbox.insert(tk.END, "SCAN FINISHED")
                     break
+
                 if current_time - start_time < 2:
                     time.sleep(3)
                 if "<5>" in output:
