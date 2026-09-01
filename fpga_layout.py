@@ -175,13 +175,13 @@ class OutputFrame(tk.Frame):
         print(commands)
         output_string = ""
         for command in commands:
-            if command == "-u":
+            if command == "-u" or command == "-n":
                 output_string += f"{COMMAND_UPDATE[command]['shorthand']}: True"
             elif command in COMMAND_UPDATE.keys():
                 output_string += f"{COMMAND_UPDATE[command]['shorthand']}: "
             else:
                 output_string += f"{command}, "
-
+            output_string.removesuffix(", ")
         self.settings_textbox.insert(tk.END, output_string)
 
 
@@ -339,6 +339,7 @@ class ButtonFrame(tk.Frame):
     def run_command_connect(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}"):
         global is_running
         is_running = True
+        is_capture_run = False
         self.io_frame.hide_input_frame_show_output_frame()
         self.io_frame.output_frame.display_settings(command)
         try:
@@ -363,7 +364,8 @@ class ButtonFrame(tk.Frame):
                 output += chunk
                 current_time = time.time()
                 if "Captured 10000 packets." in output:
-                    self.io_frame.input_frame.output_frame.settings_textbox.insert(tk.END, "SCAN FINISHED")
+
+                    is_capture_run = True
                     break
 
                 if current_time - start_time < 2:
@@ -396,6 +398,11 @@ class ButtonFrame(tk.Frame):
             channel.send("^S\n")
             channel.send("^C\n")
             client.close()
+        if is_capture_run:
+            self.io_frame.input_frame.output_frame.settings_textbox.config(state="normal")
+            self.io_frame.input_frame.output_frame.settings_textbox.insert(tk.END, "SCAN FINISHED")
+            self.io_frame.input_frame.output_frame.settings_textbox.config(bg="red")
+            self.io_frame.input_frame.output_frame.settings_textbox.config(state="disabled")
 
 
 
