@@ -175,7 +175,7 @@ class OutputFrame(tk.Frame):
         print(commands)
         output_string = ""
         for command in commands:
-            if command == "-u" or command == "-n":
+            if command == "-u":
                 output_string += f"{COMMAND_UPDATE[command]['shorthand']}: True"
             elif command in COMMAND_UPDATE.keys():
                 output_string += f"{COMMAND_UPDATE[command]['shorthand']}: "
