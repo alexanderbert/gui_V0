@@ -879,11 +879,90 @@ class ScanFrame(tk.Frame):
         self.re_home.destroy()
 
         #TODO: A=J W=I S=K D=L SET UP IJKL columns and rows 0-3 and other functionality on the right side
-        #Ordered based on key pattern and left to right
+        # Ordered based on key pattern and left to right a/j s/k w/i d/l
 
+        self.coarse_a_key = tk.Button(self, text="Coarse A", command=lambda: self.terminal_frame.set_home("A"))
+        self.coarse_a_key.grid(column=0, row=0, sticky="NSEW")
+        self.coarse_a_key.config(font=("Arial", 20))
+        self.coarse_a_key.config(width=10)
 
+        self.fine_a_key = tk.Button(self, text="Fine a", command=lambda: self.terminal_frame.set_home("a"))
+        self.fine_a_key.grid(column=0, row=1, sticky="NSEW")
+        self.fine_a_key.config(font=("Arial", 20))
+        self.fine_a_key.config(width=10)
 
+        self.extra_fine_j = tk.Button(self, text="Extra Fine j", command=lambda: self.terminal_frame.set_home("j"))
+        self.extra_fine_j.grid(column=0, row=2, sticky="NSEW")
+        self.extra_fine_j.config(font=("Arial", 20))
+        self.extra_fine_j.config(width=10)
 
+        self.extra_extra_fine_j = tk.Button(self, text="Extra Extra J", command=lambda: self.terminal_frame.set_home("J"))
+        self.extra_extra_fine_j.grid(column=0, row=3, sticky="NSEW")
+        self.extra_extra_fine_j.config(font=("Arial", 20))
+        self.extra_extra_fine_j.config(width=10)
+
+        self.coarse_s_key = tk.Button(self, text="Coarse S", command=lambda: self.terminal_frame.set_home("S"))
+        self.coarse_s_key.grid(column=1, row=0, sticky="NSEW")
+        self.coarse_s_key.config(font=("Arial", 20))
+        self.coarse_s_key.config(width=10)
+
+        self.fine_s_key = tk.Button(self, text="Fine s", command=lambda: self.terminal_frame.set_home("s"))
+        self.fine_s_key.grid(column=1, row=1, sticky="NSEW")
+        self.fine_s_key.config(font=("Arial", 20))
+        self.fine_s_key.config(width=10)
+
+        self.extra_fine_k = tk.Button(self, text="Extra Fine k", command=lambda: self.terminal_frame.set_home("k"))
+        self.extra_fine_k.grid(column=1, row=2, sticky="NSEW")
+        self.extra_fine_k.config(font=("Arial", 20))
+        self.extra_fine_k.config(width=10)
+
+        self.extra_extra_fine_k = tk.Button(self, text="Extra Extra K",
+                                            command=lambda: self.terminal_frame.set_home("K"))
+        self.extra_extra_fine_k.grid(column=1, row=3, sticky="NSEW")
+        self.extra_extra_fine_k.config(font=("Arial", 20))
+        self.extra_extra_fine_k.config(width=10)
+
+        self.coarse_w_key = tk.Button(self, text="Coarse W", command=lambda: self.terminal_frame.set_home("W"))
+        self.coarse_w_key.grid(column=2, row=0, sticky="NSEW")
+        self.coarse_w_key.config(font=("Arial", 20))
+        self.coarse_w_key.config(width=10)
+
+        self.fine_w_key = tk.Button(self, text="Fine w", command=lambda: self.terminal_frame.set_home("w"))
+        self.fine_w_key.grid(column=2, row=1, sticky="NSEW")
+        self.fine_w_key.config(font=("Arial", 20))
+        self.fine_w_key.config(width=10)
+
+        self.extra_fine_i = tk.Button(self, text="Extra Fine i", command=lambda: self.terminal_frame.set_home("i"))
+        self.extra_fine_i.grid(column=2, row=2, sticky="NSEW")
+        self.extra_fine_i.config(font=("Arial", 20))
+        self.extra_fine_i.config(width=10)
+
+        self.extra_extra_fine_i = tk.Button(self, text="Extra Extra I",
+                                            command=lambda: self.terminal_frame.set_home("I"))
+        self.extra_extra_fine_i.grid(column=2, row=3, sticky="NSEW")
+        self.extra_extra_fine_i.config(font=("Arial", 20))
+        self.extra_extra_fine_i.config(width=10)
+
+        self.coarse_d_key = tk.Button(self, text="Coarse D", command=lambda: self.terminal_frame.set_home("D"))
+        self.coarse_d_key.grid(column=3, row=0, sticky="NSEW")
+        self.coarse_d_key.config(font=("Arial", 20))
+        self.coarse_d_key.config(width=10)
+
+        self.fine_d_key = tk.Button(self, text="Fine d", command=lambda: self.terminal_frame.set_home("d"))
+        self.fine_d_key.grid(column=3, row=1, sticky="NSEW")
+        self.fine_d_key.config(font=("Arial", 20))
+        self.fine_d_key.config(width=10)
+
+        self.extra_fine_l = tk.Button(self, text="Extra Fine l", command=lambda: self.terminal_frame.set_home("l"))
+        self.extra_fine_l.grid(column=3, row=2, sticky="NSEW")
+        self.extra_fine_l.config(font=("Arial", 20))
+        self.extra_fine_l.config(width=10)
+
+        self.extra_extra_fine_l = tk.Button(self, text="Extra Extra L",
+                                            command=lambda: self.terminal_frame.set_home("L"))
+        self.extra_extra_fine_l.grid(column=3, row=3, sticky="NSEW")
+        self.extra_extra_fine_l.config(font=("Arial", 20))
+        self.extra_extra_fine_l.config(width=10)
 
         # self.extra_fine_i = tk.Button(self, text="Extra Fine I", command=lambda: self.terminal_frame.set_home("i"))
         #
@@ -902,62 +981,67 @@ class ScanFrame(tk.Frame):
         # self.extra_extra_fine_l = tk.Button(self, text="Extra Fine L", command=lambda: self.terminal_frame.set_home("L"))
 
 
-        self.fine_w_key = tk.Button(self, text="Fine W", command=lambda: self.terminal_frame.set_home("w"))
-        self.fine_w_key.grid(column=1, row=0, sticky="NSEW")
-        self.fine_w_key.config(font=("Arial", 20))
-        self.fine_w_key.config(width=10)
+        # self.fine_w_key = tk.Button(self, text="Fine W", command=lambda: self.terminal_frame.set_home("w"))
+        # self.fine_w_key.grid(column=1, row=0, sticky="NSEW")
+        # self.fine_w_key.config(font=("Arial", 20))
+        # self.fine_w_key.config(width=10)
 
-        self.fine_s_key = tk.Button(self, text="Fine S", command=lambda: self.terminal_frame.set_home("s"))
-        self.fine_s_key.grid(column=1, row=2, sticky="NSEW")
-        self.fine_s_key.config(font=("Arial", 20))
-        self.fine_s_key.config(width=10)
+        # self.fine_s_key = tk.Button(self, text="Fine S", command=lambda: self.terminal_frame.set_home("s"))
+        # self.fine_s_key.grid(column=1, row=2, sticky="NSEW")
+        # self.fine_s_key.config(font=("Arial", 20))
+        # self.fine_s_key.config(width=10)
 
-        self.fine_a_key = tk.Button(self, text="Fine A", command=lambda: self.terminal_frame.set_home("a"))
-        self.fine_a_key.grid(column=0, row=1, sticky="NSEW")
-        self.fine_a_key.config(font=("Arial", 20))
-        self.fine_a_key.config(width=10)
+        # self.fine_a_key = tk.Button(self, text="Fine A", command=lambda: self.terminal_frame.set_home("a"))
+        # self.fine_a_key.grid(column=0, row=1, sticky="NSEW")
+        # self.fine_a_key.config(font=("Arial", 20))
+        # self.fine_a_key.config(width=10)
 
-        self.fine_d_key = tk.Button(self, text="Fine D", command=lambda: self.terminal_frame.set_home("d"))
-        self.fine_d_key.grid(column=2, row=1, sticky="NSEW")
-        self.fine_d_key.config(font=("Arial", 20))
-        self.fine_d_key.config(width=10)
+        # self.fine_d_key = tk.Button(self, text="Fine D", command=lambda: self.terminal_frame.set_home("d"))
+        # self.fine_d_key.grid(column=2, row=1, sticky="NSEW")
+        # self.fine_d_key.config(font=("Arial", 20))
+        # self.fine_d_key.config(width=10)
 
-        self.set_home_button = tk.Button(self, text="Save Home /", command=lambda: self.set_home_finished())
-        self.set_home_button.grid(column=2, row=3, sticky="NSEW")
+        self.set_home_button = tk.Button(self, text="Save Home-'/'", command=lambda: self.set_home_finished())
+        self.set_home_button.grid(column=4, row=0, sticky="NSEW")
         self.set_home_button.config(font=("Arial", 20))
 
 
         # self.space_bar_button = tk.Button(self, text="Space Bar", command=lambda: self.terminal_frame.set_home("space_bar"))
         # self.set_home_button.grid(column=4, row=3, sticky="NSEW")
         # self.set_home_button.config(font=("Arial", 20))
-        self.space_bar_button = tk.Button(self, text="Last Saved-spacebar", command=lambda: self.terminal_frame.set_home(" "))
-        self.space_bar_button.grid(column=3, row=3, sticky="NSEW")
+        self.space_bar_button = tk.Button(self, text="Last Saved-' '", command=lambda: self.terminal_frame.set_home(" "))
+        self.space_bar_button.grid(column=4, row=1, sticky="NSEW")
         self.space_bar_button.config(font=("Arial", 20))
 
-        self.coarse_w_key = tk.Button(self, text="Coarse W", command=lambda: self.terminal_frame.set_home("W"))
-        self.coarse_w_key.grid(column=4, row=0, sticky="NSEW")
-        self.coarse_w_key.config(font=("Arial", 20))
-        self.coarse_w_key.config(width=10)
+        # self.coarse_w_key = tk.Button(self, text="Coarse W", command=lambda: self.terminal_frame.set_home("W"))
+        # self.coarse_w_key.grid(column=4, row=0, sticky="NSEW")
+        # self.coarse_w_key.config(font=("Arial", 20))
+        # self.coarse_w_key.config(width=10)
 
-        self.coarse_s_key = tk.Button(self, text="Coarse S", command=lambda: self.terminal_frame.set_home("S"))
-        self.coarse_s_key.grid(column=4, row=2, sticky="NSEW")
-        self.coarse_s_key.config(font=("Arial", 20))
-        self.coarse_s_key.config(width=10)
+        # self.coarse_s_key = tk.Button(self, text="Coarse S", command=lambda: self.terminal_frame.set_home("S"))
+        # self.coarse_s_key.grid(column=4, row=2, sticky="NSEW")
+        # self.coarse_s_key.config(font=("Arial", 20))
+        # self.coarse_s_key.config(width=10)
 
-        self.coarse_a_key = tk.Button(self, text="Coarse A", command=lambda: self.terminal_frame.set_home("A"))
-        self.coarse_a_key.grid(column=3, row=1, sticky="NSEW")
-        self.coarse_a_key.config(font=("Arial", 20))
-        self.coarse_a_key.config(width=10)
+        # self.coarse_a_key = tk.Button(self, text="Coarse A", command=lambda: self.terminal_frame.set_home("A"))
+        # self.coarse_a_key.grid(column=3, row=1, sticky="NSEW")
+        # self.coarse_a_key.config(font=("Arial", 20))
+        # self.coarse_a_key.config(width=10)
 
-        self.coarse_d_key = tk.Button(self, text="Coarse D", command=lambda: self.terminal_frame.set_home("D"))
-        self.coarse_d_key.grid(column=5, row=1, sticky="NSEW")
-        self.coarse_d_key.config(font=("Arial", 20))
-        self.coarse_d_key.config(width=10)
+        # self.coarse_d_key = tk.Button(self, text="Coarse D", command=lambda: self.terminal_frame.set_home("D"))
+        # self.coarse_d_key.grid(column=5, row=1, sticky="NSEW")
+        # self.coarse_d_key.config(font=("Arial", 20))
+        # self.coarse_d_key.config(width=10)
 
         self.fpgastream = tk.Button(self, text="FPGA", command=lambda: self.open_fpga_popup())
-        self.fpgastream.grid(column=5, row=3, sticky="NSEW")
+        self.fpgastream.grid(column=5, row=2, sticky="NSEW")
         self.fpgastream.config(font=("Arial", 20))
         self.fpgastream.config(width=10)
+
+        self.stop_fpgastream = tk.Button(self, text="Stop FPGA", command=lambda: self.terminal_frame.end_fpga_running())
+        self.stop_fpgastream.grid(column=5, row=3, sticky="NSEW")
+        self.stop_fpgastream.config(font=("Arial", 20))
+        self.stop_fpgastream.config(width=10)
 
         #Bound Keys for Use as well as buttons
         for key in self.keys_to_bind:
