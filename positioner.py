@@ -12,6 +12,7 @@ import logging
 from datetime import datetime
 
 logging.basicConfig(filename="log.txt", filemode='a', level=logging.INFO, format="%(asctime)s - %(message)s")
+output_queue = queue.Queue()
 
 client = paramiko.client.SSHClient()
 output_queue = queue.Queue()
@@ -576,14 +577,61 @@ class TerminalFrame(tk.Frame):
         print(f"positioner selected: {self.positioner_selected}")
         print(one, two)
         #todo Setup Output of x y power and command path
-        # channel = self.fl_network_mode()
-        # channel.get_pty()
-        # channel.invoke_shell()
-        # channel.send(f"cd {os.environ['FPGAPATH']}\n")
-        # time.sleep(1)
-        # channel.send(f"./fpgaStream {command}\n")
-        # time.sleep(2)
+        channel = self.fl_network_mode()
+        channel.get_pty()
+        channel.invoke_shell()
+        channel.send(f"cd {os.environ['FPGAPATH']}\n")
+        time.sleep(1)
+        #TODO SET COMMAND PATH
+        #channel.send(f"./fpgaStream {command}\n")
+        time.sleep(2)
+        while channel.active:
+            chunk = channel.recv(1024).decode("iso-8859-1")
+            output += chunk
+            current_time = time.time()
+            if "<5>" in output:
+                after = output.split("<5>", 1)
+                if "[1;1H$<5>" in after[1]:
+                    new_output = after[1].replace("[1;1H$<5>", "\n")
+                    new_output = new_output.split("\n")
+                    for line in new_output:
+                        print(line)
+                        splits = line.split(",")
+                        desired_fields = []
+                        for index, split in enumerate(splits):
+                            if len(splits) == 11:
+                                if index < 6 or index == 9:
+                                    desired_fields.append(split)
+                        print(desired_fields)
+                        output_queue.put(desired_fields)
+                        self.run_queue()
+            output = ""
+            time.sleep(.5)
+        channel.send("^S\n")
+        channel.send("^C\n")
+        client.close()
 
+    def run_queue(self):
+        # print(f"OPQ: {output_queue.get()}")
+        # while output_queue.qsize() > 10 and is_running:
+        #     self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
+        print(output_queue.qsize())
+        try:
+            if not output_queue.empty():
+                self.after(10, self.update_status_textbox_fpga(output_queue.get()))
+        except:
+            print("Error occured")
+
+    def update_status_textbox_fpga(self, output_list):
+        x_power_value = output_list[4].split(": ")
+        # self.x_power_textbox.replace("1.0", tk.END, x_power_value[1], "center")
+        # self.x_power_textbox.tag_configure("center", justify="center")
+        y_power_value = output_list[5].split(": ")
+        # self.y_power_textbox.replace("1.0", tk.END, y_power_value[1], "center")
+        # self.y_power_textbox.tag_configure("center", justify="center")
+
+        self.status_text_box.insert("1.0", tk.END, x_power_value[1], "center")
+        self.status_text_box.replace("1.0", tk.END, y_power_value[1], "center")
 
 
 class OutputFrame(tk.Frame):
@@ -824,7 +872,7 @@ class ScanFrame(tk.Frame):
         self.go_home.destroy()
         self.re_home.destroy()
 
-        #TODO: A=J W=I S=K D=L
+        #TODO: A=J W=I S=K D=L SET UP IJKL columns and rows 0-3 and other functionality on the right side
         #Ordered based on key pattern and left to right
 
 
