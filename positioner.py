@@ -10,7 +10,7 @@ import sys
 import logging
 
 from datetime import datetime
-
+is_fpga_running = False
 logging.basicConfig(filename="log.txt", filemode='a', level=logging.INFO, format="%(asctime)s - %(message)s")
 output_queue = queue.Queue()
 
@@ -574,6 +574,8 @@ class TerminalFrame(tk.Frame):
             print("dont reset positioner")
 
     def fpga_stream(self, one, two):
+        global is_fpga_running
+        is_fpga_running = True
         print(f"positioner selected: {self.positioner_selected}")
         print(one, two)
         #todo Setup Output of x y power and command path
@@ -585,7 +587,7 @@ class TerminalFrame(tk.Frame):
         #TODO SET COMMAND PATH
         #channel.send(f"./fpgaStream {command}\n")
         time.sleep(2)
-        while channel.active:
+        while channel.active and is_fpga_running:
             chunk = channel.recv(1024).decode("iso-8859-1")
             output += chunk
             current_time = time.time()
@@ -632,6 +634,10 @@ class TerminalFrame(tk.Frame):
 
         self.status_text_box.insert("1.0", tk.END, x_power_value[1], "center")
         self.status_text_box.replace("1.0", tk.END, y_power_value[1], "center")
+
+    def end_fpga_running(self):
+        global is_fpga_running
+        is_fpga_running = False
 
 
 class OutputFrame(tk.Frame):
