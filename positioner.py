@@ -571,6 +571,17 @@ class TerminalFrame(tk.Frame):
         else:
             print("dont reset positioner")
 
+    def fpga_stream(self, one, two):
+        print(f"positioner selected: {self.positioner_selected}")
+        print(one, two)
+        # channel = self.fl_network_mode()
+        # channel.get_pty()
+        # channel.invoke_shell()
+        # channel.send(f"cd {os.environ['FPGAPATH']}\n")
+        # time.sleep(1)
+        # channel.send(f"./fpgaStream {command}\n")
+        # time.sleep(2)
+
 
 
 class OutputFrame(tk.Frame):
@@ -604,6 +615,45 @@ class ScanFrame(tk.Frame):
         self.slipdetect_var = tk.StringVar()
         self.create_layout()
 
+    def run_fpga(self, one, two):
+        self.popup.destroy()
+
+        thread = threading.Thread(
+            target=self.terminal_frame.fpga_stream,
+            args=(one, two),
+            daemon=True
+        )
+        thread.start()
+
+        #self.terminal_frame.fpga_stream(command_list)
+
+    def open_fpga_popup(self):
+        self.popup = tk.Toplevel()
+        self.popup.title("FPGA")
+        self.popup.geometry("500x500")
+        self.popup.grab_set()
+
+
+
+        entry_1 = tk.StringVar(value="Place")
+        entry_2 = tk.StringVar(value="Holder")
+
+        label_1= tk.Label(self.popup, text="Label 1")
+        label_1.grid(column=0, row=0, sticky="NSW")
+        label_2 = tk.Label(self.popup, text="Label 2")
+        label_2.grid(column=0, row=1, sticky="NSW")
+
+        entry_1=tk.Entry(self.popup, width=10, textvariable=entry_1)
+        entry_1.grid(column=1, row=0, sticky="NSW")
+
+        entry_2 = tk.Entry(self.popup, width=10, textvariable=entry_2)
+        entry_2.grid(column=1, row=1, sticky="NSW")
+
+        fpga_button = tk.Button(self.popup, text="FPGA", command= lambda: self.run_fpga(entry_1.get(), entry_2.get()))
+        fpga_button.grid(column=2, row=0, sticky="NSW")
+
+        close_btn = tk.Button(self.popup, text="close", command=self.popup.destroy)
+        close_btn.grid(column=2, row=1, sticky="NSW")
 
     def create_layout(self):
 
@@ -709,7 +759,10 @@ class ScanFrame(tk.Frame):
 
 
     def set_home_finished(self):
-        self.terminal_frame.set_home("/")
+        try:
+            self.terminal_frame.set_home("/")
+        except:
+            pass
         self.fine_w_key.destroy()
         self.fine_a_key.destroy()
         self.fine_s_key.destroy()
@@ -749,6 +802,7 @@ class ScanFrame(tk.Frame):
         self.homing_mode.destroy()
         self.go_home.destroy()
         self.re_home.destroy()
+
 
 
         self.fine_w_key = tk.Button(self, text="Fine W", command=lambda: self.terminal_frame.set_home("w"))
@@ -803,6 +857,10 @@ class ScanFrame(tk.Frame):
         self.coarse_d_key.config(font=("Arial", 20))
         self.coarse_d_key.config(width=10)
 
+        self.fpgastream = tk.Button(self, text="FPGA", command=lambda: self.open_fpga_popup())
+        self.fpgastream.grid(column=5, row=3, sticky="NSEW")
+        self.fpgastream.config(font=("Arial", 20))
+        self.fpgastream.config(width=10)
 
 
 
