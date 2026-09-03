@@ -528,6 +528,7 @@ class TerminalFrame(tk.Frame):
 
     def set_home(self, key_stroke):
         logging.info(f"key stroke pressed: {key_stroke}")
+        print(key_stroke)
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
@@ -574,6 +575,7 @@ class TerminalFrame(tk.Frame):
     def fpga_stream(self, one, two):
         print(f"positioner selected: {self.positioner_selected}")
         print(one, two)
+        #todo Setup Output of x y power and command path
         # channel = self.fl_network_mode()
         # channel.get_pty()
         # channel.invoke_shell()
@@ -614,6 +616,17 @@ class ScanFrame(tk.Frame):
         self.repeat_var = tk.StringVar()
         self.slipdetect_var = tk.StringVar()
         self.create_layout()
+
+        self.keys_to_bind = [
+            '<Key-I>', '<Key-i>',
+            '<Key-J>', '<Key-j>',
+            '<Key-K>', '<Key-k>',
+            '<Key-L>', '<Key-l>',
+            '<Key-W>', '<Key-w>',
+            '<Key-A>', '<Key-a>',
+            '<Key-S>', '<Key-s>',
+            '<Key-D>', '<Key-d>',
+        ]
 
     def run_fpga(self, one, two):
         self.popup.destroy()
@@ -759,8 +772,11 @@ class ScanFrame(tk.Frame):
 
 
     def set_home_finished(self):
+        for key in self.keys_to_bind:
+            self.unbind_all(key)
         try:
             self.terminal_frame.set_home("/")
+
         except:
             pass
         self.fine_w_key.destroy()
@@ -778,6 +794,11 @@ class ScanFrame(tk.Frame):
     def homing_mode_interface(self):
         #Clear or reset default values
         logging.info("HOMING MODE ACTIVATED")
+        self.focus_set()
+        self.terminal_frame.pos_text_box.config(state="disabled")
+        self.terminal_frame.status_text_box.config(state="disabled")
+        self.terminal_frame.simplified_status.config(state="disabled")
+
         self.start_azimuth_label.destroy()
         self.start_azimuth_entry.destroy()
         self.end_azimuth_label.destroy()
@@ -803,6 +824,28 @@ class ScanFrame(tk.Frame):
         self.go_home.destroy()
         self.re_home.destroy()
 
+        #TODO: A=J W=I S=K D=L
+        #Ordered based on key pattern and left to right
+
+
+
+
+
+        # self.extra_fine_i = tk.Button(self, text="Extra Fine I", command=lambda: self.terminal_frame.set_home("i"))
+        #
+        # self.extra_fine_j= tk.Button(self, text="Extra Fine J", command=lambda: self.terminal_frame.set_home("j"))
+        #
+        # self.extra_fine_k =tk.Button(self, text="Extra Fine K", command=lambda: self.terminal_frame.set_home("k"))
+        #
+        # self.extra_fine_l=tk.Button(self, text="Extra Fine L", command=lambda: self.terminal_frame.set_home("l"))
+        #
+        # self.extra_extra_fine_i = tk.Button(self, text="Extra Fine I", command=lambda: self.terminal_frame.set_home("I"))
+        #
+        # self.extra_extra_fine_j = tk.Button(self, text="Extra Fine J", command=lambda: self.terminal_frame.set_home("J"))
+        #
+        # self.extra_extra_fine_k = tk.Button(self, text="Extra Fine K", command=lambda: self.terminal_frame.set_home("K"))
+        #
+        # self.extra_extra_fine_l = tk.Button(self, text="Extra Fine L", command=lambda: self.terminal_frame.set_home("L"))
 
 
         self.fine_w_key = tk.Button(self, text="Fine W", command=lambda: self.terminal_frame.set_home("w"))
@@ -862,6 +905,9 @@ class ScanFrame(tk.Frame):
         self.fpgastream.config(font=("Arial", 20))
         self.fpgastream.config(width=10)
 
+        #Bound Keys for Use as well as buttons
+        for key in self.keys_to_bind:
+            self.bind_all(key, lambda event, k=key: self.terminal_frame.set_home(k[-2]))
 
 
     def on_click_clear(self, event):
