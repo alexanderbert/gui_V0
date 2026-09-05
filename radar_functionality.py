@@ -83,10 +83,11 @@ class RadarFunctionality(tk.Frame):
         # self.status_textbox.grid(column=0, row=1, sticky="nesw")
         # self.status_textbox.config(font=("Arial", 20))
         # self.status_textbox.config(state="disabled")
-        self.output_queue = queue.Queue()
+        self.power_queue = queue.Queue()
         self.initial_output_frame()
 
         self.update_textboxes()
+
 
 
 
@@ -147,7 +148,8 @@ class RadarFunctionality(tk.Frame):
                     x_power = float(match.group(1))
                     y_power = float(match.group(2))
                     print("PARSED: ", x_power, y_power)
-                    self.output_queue.put((x_power, y_power))
+                    print("Queue Size:", self.power_queue.qsize())
+                    self.power_queue.put((x_power, y_power))
 
                 if len(buffer) > 4096:
                     buffer = buffer[-4096]
@@ -293,6 +295,7 @@ class RadarFunctionality(tk.Frame):
     #         print("Error occured")
 
     def update_textboxes(self):
+
         # x_dc_offset_value = output_list[0].split("= ")
         # # self.x_dc_offset_textbox.replace("1.0", tk.END, x_dc_offset_value[1], "center")
         # # self.x_dc_offset_textbox.tag_configure("center", justify="center")
@@ -320,7 +323,7 @@ class RadarFunctionality(tk.Frame):
         # # self.rate_textbox.replace("1.0", tk.END, final_rate[0], "center")
         # # self.rate_textbox.tag_configure("center", justify="center")
         try:
-            x_power, y_power = self.output_queue.get_nowait()
+            x_power, y_power = self.power_queue.get_nowait()
             print("GUI RECIEVED:", x_power, y_power)
 
             self.x_power_entry.delete(0, "end")
