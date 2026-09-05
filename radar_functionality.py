@@ -48,6 +48,7 @@ class RadarFunctionality(tk.Frame):
         self.radar_control_frame = tk.Frame(self)
         self.radar_control_frame.grid(row=1, column=2, sticky="nsew")
 
+
         self.output_frame = tk.Frame(self)
         self.output_frame.grid(column=0, row=0, sticky="nsew")
         self.output_frame.grid_columnconfigure(0, weight=1)
@@ -77,14 +78,14 @@ class RadarFunctionality(tk.Frame):
         self.find_other_radars_button = tk.Button(self.radar_control_frame, text="Find other radars", command=lambda:self.start_network_scan())
         self.find_other_radars_button.grid(row=3, column=2)
         self.find_other_radars_button.config(width=20, font=("Arial", 20))
+        # self.status_textbox = tk.Text(self.radar_control_frame)
+        # self.status_textbox.grid(column=0, row=1, sticky="nesw")
+        # self.status_textbox.config(font=("Arial", 20))
+        # self.status_textbox.config(state="disabled")
 
         self.initial_output_frame()
 
-    # def enable_autostart(self):
-    #     print("ENABLE AUTOSTART")
-    #     radar_key = self.radar_selected.get()
-    #     radar_value = self.radar_dict.get(radar_key)
-    #     self.paramiko_connection(radar_value, "enable")
+
 
     def initial_output_frame(self):
         self.az_label = tk.Label(self.output_frame, text="Az:")
@@ -118,14 +119,15 @@ class RadarFunctionality(tk.Frame):
         print("After connection to fl network")
         global is_fpga_running
         is_fpga_running = True
-        time.sleep(.1)
+        time.sleep(1)
         channel.send(f"cd {os.environ['FPGAPATH']}\n")
         print(f"sent: cd {os.environ['FPGAPATH']}")
-        time.sleep(.1)
+        time.sleep(1)
         channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 100 -8 144 -9 24 -X -D 10\n")
         print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 100 -8 144 -9 24 -X -D 10\n")
-        time.sleep(.1)
+        time.sleep(1)
         print(f"FPGA RUNNING STATE: {is_fpga_running}")
+        output = ""
         try:
             while channel.active and is_fpga_running:
                 chunk = channel.recv(1024).decode("iso-8859-1")
@@ -220,6 +222,7 @@ class RadarFunctionality(tk.Frame):
 
 
     def find_other_radars(self):
+        self.status_textbox.config(state="normal")
         nm = nmap.PortScanner()
         host_ip = os.environ.get("HOST_IP")
         nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
@@ -239,8 +242,9 @@ class RadarFunctionality(tk.Frame):
             except:
                 print(f"No connection to {host}")
         logging.info("RUNNING find_other_radars")
-        # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
-        # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, "Finished Scanning")
+        # self.status_textbox.insert(tk.END, "FINISHED SCANNING")
+        # self.status_textbox.config(state="disabled")
+
 
     def start_network_scan(self):
         thread = threading.Thread(
