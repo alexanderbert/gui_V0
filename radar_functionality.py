@@ -131,24 +131,26 @@ class RadarFunctionality(tk.Frame):
         time.sleep(1)
         print(f"FPGA RUNNING STATE: {is_fpga_running}")
         buffer = ""
-        pattern = re.compile(r"X power:\s*(-?\d+\.\d+),\s*Y power:\s*(-?\d+\.\d+)")
+        pattern = re.compile(
+            r"X power:\s*([+-]?\d+\.\d+),\s*"
+            r"Y power:\s*([+-]?\d+\.\d+)"
+            )
         try:
             while channel.active and is_fpga_running:
                 data = channel.recv(1024).decode("iso-8859-1")
                 print(data)
                 buffer += data
-                while "\n" in buffer:
-                    line, buffer = buffer.split("\n", 1)
-                    line = line.strip()
-                    match = pattern.search(line)
 
-                    if match:
-                        x_power = float(match.group(1))
-                        y_power = float(match.group(2))
-                        print("PARSED: ", x_power, y_power)
-                        self.output_queue.put((x_power, y_power))
+                matches = list(pattern.finditer(buffer))
 
+                for match in matches:
+                    x_power = float(match.group(1))
+                    y_power = float(match.group(2))
+                    print("PARSED: ", x_power, y_power)
+                    self.output_queue.put((x_power, y_power))
 
+                if len(buffer) > 4096:
+                    buffer = buffer[-4096]
 
                 # if "<5>" in output:
                 #     after = output.split("<5>", 1)
