@@ -32,11 +32,11 @@ class RadarFunctionality(tk.Frame):
         self.radar_drop()
 
 
-        self.enable_autostart_button = tk.Button(self, text="Enable Autostart", command=lambda:self.enable_autostart())
+        self.enable_autostart_button = tk.Button(self, text="Heat Map FPGA", command=lambda:self.heat_map_fpga())
         self.enable_autostart_button.grid(row=0, column=0)
         self.enable_autostart_button.config(width=20, font=("Arial", 20))
 
-        self.disable_autostart_button = tk.Button(self, text="Disable Autostart", command=lambda:self.disable_autostart())
+        self.disable_autostart_button = tk.Button(self, text="Disable Autostart", command=lambda:self.stop_fpga())
         self.disable_autostart_button.grid(row=1, column=0)
         self.disable_autostart_button.config(width=20, font=("Arial", 20))
 
@@ -45,18 +45,18 @@ class RadarFunctionality(tk.Frame):
         self.find_other_radars_button.grid(row=2, column=2)
         self.find_other_radars_button.config(width=20, font=("Arial", 20))
 
-    def enable_autostart(self):
-        print("ENABLE AUTOSTART")
-        radar_key = self.radar_selected.get()
-        radar_value = self.radar_dict.get(radar_key)
-        self.paramiko_connection(radar_value, "enable")
+    # def enable_autostart(self):
+    #     print("ENABLE AUTOSTART")
+    #     radar_key = self.radar_selected.get()
+    #     radar_value = self.radar_dict.get(radar_key)
+    #     self.paramiko_connection(radar_value, "enable")
+
+    def heat_map_fpga(self):
+        pass
 
 
-    def disable_autostart(self):
-        print("DISABLE AUTOSTART")
-        radar_key = self.radar_selected.get()
-        radar_value = self.radar_dict.get(radar_key)
-        self.paramiko_connection(radar_value, "disable")
+    def stop_fpga(self):
+        pass
 
     def paramiko_connection(self, hostname, chosen_command):
         print("CONNECTING TO HOSTNAME", hostname)
