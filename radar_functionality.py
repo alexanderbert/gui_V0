@@ -138,7 +138,7 @@ class RadarFunctionality(tk.Frame):
         try:
             while channel.active and is_fpga_running:
                 data = channel.recv(1024).decode("iso-8859-1")
-                print(data)
+                #print(data)
                 buffer += data
 
                 matches = list(pattern.finditer(buffer))
