@@ -89,20 +89,28 @@ class RadarFunctionality(tk.Frame):
     def initial_output_frame(self):
         self.az_label = tk.Label(self.output_frame, text="Az:")
         self.az_label.grid(column=0, row=0, sticky="nsew")
+        self.az_label.config(font=("Arial", 20))
         self.az_entry = tk.Entry(self.output_frame)
         self.az_entry.grid(column=1, row=0, sticky="nsew")
+        self.az_entry.config(font=("Arial", 20))
         self.el_label = tk.Label(self.output_frame, text= "El:")
         self.el_label.grid(column=0, row=1, sticky="nsew")
+        self.el_label.config(font=("Arial", 20))
         self.el_entry = tk.Entry(self.output_frame)
         self.el_entry.grid(column=1, row=1, sticky="nsew")
+        self.el_entry.config(font=("Arial", 20))
         self.x_power_label = tk.Label(self.output_frame, text="X Power:")
         self.x_power_label.grid(column=0, row=2, sticky="nsew")
+        self.x_power_label.config(font=("Arial", 20))
         self.x_power_entry = tk.Entry(self.output_frame)
         self.x_power_entry.grid(column=1, row=2, sticky="nsew")
+        self.x_power_entry.config(font=("Arial", 20))
         self.y_power_label = tk.Label(self.output_frame, text="Y Power:")
         self.y_power_label.grid(column=0, row=3, sticky="nsew")
+        self.y_power_label.config(font=("Arial", 20))
         self.y_power_entry = tk.Entry(self.output_frame)
         self.y_power_entry.grid(column=1, row=3, sticky="nsew")
+        self.y_power_entry.config(font=("Arial", 20))
 
 
     def heat_map_fpga(self):
@@ -110,13 +118,13 @@ class RadarFunctionality(tk.Frame):
         channel.get_pty()
         channel.invoke_shell()
         channel.send(f"cd {os.environ['FPGAPATH']}\n")
-        channel.send(f"cd {os.environ['FPGAPATH']}\n")
         time.sleep(.1)
         channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 100 -8 144 -9 24 -X -D 10\n")
         time.sleep(.1)
         try:
             while channel.active and is_fpga_running:
                 chunk = channel.recv(1024).decode("iso-8859-1")
+                print(chunk)
                 output += chunk
 
                 if "<5>" in output:
@@ -272,6 +280,34 @@ class RadarFunctionality(tk.Frame):
         print(output_queue.qsize())
         try:
             if not output_queue.empty():
-                self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
+                self.after(100, self.update_textboxes(output_queue.get()))
         except:
             print("Error occured")
+
+    def update_textboxes(self, output_list):
+        x_dc_offset_value = output_list[0].split("= ")
+        # self.x_dc_offset_textbox.replace("1.0", tk.END, x_dc_offset_value[1], "center")
+        # self.x_dc_offset_textbox.tag_configure("center", justify="center")
+        y_dc_offset_value = output_list[1].split("= ")
+        # self.y_dc_offset_textbox.replace("1.0", tk.END, y_dc_offset_value[1], "center")
+        # self.y_dc_offset_textbox.tag_configure("center", justify="center")
+        x_min_max_value = output_list[2].split("X  ")
+        # self.x_min_max_textbox.replace("1.0", tk.END, x_min_max_value[1], "center")
+        # self.x_min_max_textbox.tag_configure("center", justify="center")
+        y_min_max_value = output_list[3].split("Y  ")
+        # self.y_min_max_textbox.replace("1.0", tk.END, y_min_max_value[1], "center")
+        # self.y_min_max_textbox.tag_configure("center", justify="center")
+        x_power_value = output_list[4].split(": ")
+        self.x_power_entry.delete(0, tk.END)
+        self.x_power_entry.insert(0, x_power_value[0])
+        # self.x_power_entry.replace("1.0", tk.END, x_power_value[1], "center")
+        # self.x_power_entry.tag_configure("center", justify="center")
+        y_power_value = output_list[5].split(": ")
+        self.y_power_entry.delete(0, tk.END)
+        self.y_power_entry.insert(0, y_power_value[0])
+        # self.y_power_textbox.replace("1.0", tk.END, y_power_value[1], "center")
+        # self.y_power_textbox.tag_configure("center", justify="center")
+        rate_value = output_list[6].split(": ")
+        final_rate = rate_value[1].split("=")
+        # self.rate_textbox.replace("1.0", tk.END, final_rate[0], "center")
+        # self.rate_textbox.tag_configure("center", justify="center")
