@@ -222,7 +222,7 @@ class RadarFunctionality(tk.Frame):
 
 
     def find_other_radars(self):
-        self.status_textbox.config(state="normal")
+        #self.status_textbox.config(state="normal")
         nm = nmap.PortScanner()
         host_ip = os.environ.get("HOST_IP")
         nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
