@@ -115,8 +115,9 @@ class RadarFunctionality(tk.Frame):
 
     def heat_map_fpga(self):
         channel = self.fl_network_mode()
-        channel.get_pty()
-        channel.invoke_shell()
+        print("After connection to fl network")
+        global is_fpga_running
+        is_fpga_running = True
         channel.send(f"cd {os.environ['FPGAPATH']}\n")
         time.sleep(.1)
         channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 100 -8 144 -9 24 -X -D 10\n")
@@ -154,6 +155,10 @@ class RadarFunctionality(tk.Frame):
             channel.send("^C\n")
 
     def stop_fpga(self):
+        global is_fpga_running
+        is_fpga_running = False
+
+    def capture_fpga(self):
         pass
 
     def start_threading(self, funct, argus = None):
