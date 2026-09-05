@@ -17,7 +17,7 @@ logging.basicConfig(filename="log.txt", filemode='a', level=logging.INFO, format
 output_queue = queue.Queue()
 
 client = paramiko.client.SSHClient()
-output_queue = queue.Queue()
+
 selected_positioner_global = None
 home_set = False
 
