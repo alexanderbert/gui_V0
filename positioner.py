@@ -8,6 +8,7 @@ import queue
 import threading
 import sys
 import logging
+import subprocess
 from settings import *
 
 from datetime import datetime
@@ -530,7 +531,7 @@ class TerminalFrame(tk.Frame):
 
     def set_home(self, key_stroke):
         logging.info(f"key stroke pressed: {key_stroke}")
-        print(key_stroke)
+        print(f"{type(key_stroke)} in set home")
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         ttyf="/dev/ttyUSB1"
@@ -577,6 +578,13 @@ class TerminalFrame(tk.Frame):
     def fpga_stream(self, command_string):
         global is_fpga_running
         is_fpga_running = True
+        #Set up to capture packets
+        #set up directory
+        try:
+            subprocess.run(['socat','tcp-l:7777,reuseaddr,fork','system:\'cpio -i\''], check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Command failed with exit code {e.returncode}")
+
         print(f"positioner selected: {self.positioner_selected}")
         print(f"INSIDE FPGA STREAM{command_string}")
         #todo Setup Output of x y power and command path
@@ -584,7 +592,9 @@ class TerminalFrame(tk.Frame):
         channel.get_pty()
         channel.invoke_shell()
         channel.send(f"cd {os.environ['FPGAPATH']}\n")
-        time.sleep(1)
+        time.sleep(.1)
+        #sent to reroute capture packets
+        channel.send("./fpgaStream -q -c | socat - tcp:10.42.0.1:7777")
         #TODO SET COMMAND PATH
         channel.send(f"./fpgaStream {command_string}\n")
         time.sleep(2)
@@ -621,11 +631,11 @@ class TerminalFrame(tk.Frame):
         print(output_queue.qsize())
         try:
             if not output_queue.empty():
-                self.after(10, self.update_status_textbox_fpga(output_queue.get()))
+                self.after(10, self.update_pos_textbox_fpga(output_queue.get()))
         except:
             print("Error occured")
 
-    def update_status_textbox_fpga(self, output_list):
+    def update_pos_textbox_fpga(self, output_list):
         #TODO clean this up
         x_dc_offset_value = output_list[0].split("= ")
         y_dc_offset_value = output_list[1].split("= ")
@@ -639,8 +649,8 @@ class TerminalFrame(tk.Frame):
         # self.y_power_textbox.replace("1.0", tk.END, y_power_value[1], "center")
         # self.y_power_textbox.tag_configure("center", justify="center")
 
-        self.status_text_box.insert("1.0", tk.END, x_power_value[1], "center")
-        self.status_text_box.replace("1.0", tk.END, y_power_value[1], "center")
+        self.pos_text_box.insert("1.0", tk.END, x_power_value[1], "center")
+        self.pos_text_box.replace("1.0", tk.END, y_power_value[1], "center")
 
     def end_fpga_running(self):
         global is_fpga_running
@@ -678,7 +688,7 @@ class ScanFrame(tk.Frame):
         self.slipdetect_var = tk.StringVar()
         self.create_layout()
         self.homing_fpga_commands = {}
-        self.qualifier_values = ["coarse", "fine", "extra fine", "extra extra fine"]
+        self.qualifier_values = ["5.0/1.0 Deg", "0.5/0.25 Deg", "0.1/0.05 Deg", "0.01/0.01 Deg"]
         self.movement_selected = tk.StringVar()
         self.movement_selected.set(self.qualifier_values[0])
 
@@ -895,11 +905,11 @@ class ScanFrame(tk.Frame):
         self.re_home.config(font=("Arial", 20))
 
 
-    def set_home_finished(self):
+    def set_home_finished(self, cmd):
         for key in self.keys_to_bind:
             self.unbind_all(key)
         try:
-            self.terminal_frame.set_home("/")
+            self.terminal_frame.set_home(cmd)
 
         except:
             pass
@@ -908,15 +918,49 @@ class ScanFrame(tk.Frame):
         self.up_button.destroy()
         self.down_button.destroy()
         self.qualifier_box.destroy()
-        self.fpgastream.destroy()
-        self.stop_fpgastream.destroy()
+        #self.fpgastream.destroy()
+        #self.stop_fpgastream.destroy()
         self.set_home_button.destroy()
         self.create_layout()
         logging.info("NORMAL MODE ACTIVATED")
 
     def movement_output(self, key_press, movement):
         print(f"keystroke: '{movement} {key_press}'")
-        movement_dict = {"coarse left": 'A',
+        #"5.0/1.0 Deg", "0.5/0.25 Deg", "0.1/0.05 Deg", "0.01/0.01 Deg"
+        # key_pad_dict = {"5.0/1.0 Deg up": 'W',
+        #                 "5.0/1.0 Deg down": 'S',
+        #                 "5.0/1.0 Deg left": 'A',
+        #                 "5.0/1.0 Deg right": 'D',
+        #                 "0.5/0.25 Deg up": 'w',
+        #                 "0.5/0.25 Deg down": 's',
+        #                 "0.5/0.25 Deg left": 'a',
+        #                 "0.5/0.25 Deg right": 'd',
+        #                 "0.1/0.05 Deg up": 'i',
+        #                 "0.1/0.05 Deg down": 'k',
+        #                 "0.1/0.05 Deg left": 'j',
+        #                 "0.1/0.05 Deg right": 'l',
+        #                 "0.01/0.01 Deg up": 'I',
+        #                 "0.01/0.01 Deg down": 'K',
+        #                 "0.01/0.01 Deg left": 'J',
+        #                 "0.01/0.01 Deg right": 'L',
+        #                 }
+        movement_dict = {"5.0/1.0 Deg up": 'W',
+                        "5.0/1.0 Deg down": 'S',
+                        "5.0/1.0 Deg left": 'A',
+                        "5.0/1.0 Deg right": 'D',
+                        "0.5/0.25 Deg up": 'w',
+                        "0.5/0.25 Deg down": 's',
+                        "0.5/0.25 Deg left": 'a',
+                        "0.5/0.25 Deg right": 'd',
+                        "0.1/0.05 Deg up": 'i',
+                        "0.1/0.05 Deg down": 'k',
+                        "0.1/0.05 Deg left": 'j',
+                        "0.1/0.05 Deg right": 'l',
+                        "0.01/0.01 Deg up": 'I',
+                        "0.01/0.01 Deg down": 'K',
+                        "0.01/0.01 Deg left": 'J',
+                        "0.01/0.01 Deg right": 'L',
+                        "coarse left": 'A',
                          "coarse right": 'D',
                          "coarse up": 'W',
                          "coarse down": 'S',
@@ -935,7 +979,11 @@ class ScanFrame(tk.Frame):
 
         for key, value in movement_dict.items():
             if key == f'{movement} {key_press}':
-                self.terminal_frame.set_home(value)
+                try:
+                    print(f"value for set home {value}")
+                    self.terminal_frame.set_home(value)
+                except Exception as e:
+                    print(f"{e}")
 
 
 
@@ -973,11 +1021,10 @@ class ScanFrame(tk.Frame):
         self.go_home.destroy()
         self.re_home.destroy()
 
-
-        # Ordered based on key pattern and left to right a/j s/k w/i d/l
-        # TODO CHANGE LABELS TO STEP SIZE, MAYBE DROP DOWN FOR SWITCHING MODE, emoji?
-
-
+        self.exit_homing_mode = tk.Button(self, text="Exit", command=lambda: self.set_home_finished("x"))
+        self.exit_homing_mode.grid(column = 5, row = 1, sticky="NSEW")
+        self.exit_homing_mode.config(font=("Arial", 20))
+        self.exit_homing_mode.config(width=10)
 
         #self.left_button = tk.Button(self, text="Left", command= lambda: self.terminal_frame.set_home("left"))
         self.left_button = tk.Button(self, text="Left", command=lambda: self.movement_output("left", self.movement_selected.get()))
@@ -1010,92 +1057,9 @@ class ScanFrame(tk.Frame):
         self.qualifier_box.config(width=10)
 
 
-        # self.coarse_a_key = tk.Button(self, text="Coarse A", command=lambda: self.terminal_frame.set_home("A"))
-        # self.coarse_a_key.grid(column=0, row=0, sticky="NSEW")
-        # self.coarse_a_key.config(font=("Arial", 20))
-        # self.coarse_a_key.config(width=10)
-        #
-        # self.fine_a_key = tk.Button(self, text="Fine a", command=lambda: self.terminal_frame.set_home("a"))
-        # self.fine_a_key.grid(column=0, row=1, sticky="NSEW")
-        # self.fine_a_key.config(font=("Arial", 20))
-        # self.fine_a_key.config(width=10)
-        #
-        # self.extra_fine_j = tk.Button(self, text="Extra Fine j", command=lambda: self.terminal_frame.set_home("j"))
-        # self.extra_fine_j.grid(column=0, row=2, sticky="NSEW")
-        # self.extra_fine_j.config(font=("Arial", 20))
-        # self.extra_fine_j.config(width=10)
-        #
-        # self.extra_extra_fine_j = tk.Button(self, text="Extra Extra J", command=lambda: self.terminal_frame.set_home("J"))
-        # self.extra_extra_fine_j.grid(column=0, row=3, sticky="NSEW")
-        # self.extra_extra_fine_j.config(font=("Arial", 20))
-        # self.extra_extra_fine_j.config(width=10)
-        #
-        # self.coarse_s_key = tk.Button(self, text="Coarse S", command=lambda: self.terminal_frame.set_home("S"))
-        # self.coarse_s_key.grid(column=1, row=0, sticky="NSEW")
-        # self.coarse_s_key.config(font=("Arial", 20))
-        # self.coarse_s_key.config(width=10)
-        #
-        # self.fine_s_key = tk.Button(self, text="Fine s", command=lambda: self.terminal_frame.set_home("s"))
-        # self.fine_s_key.grid(column=1, row=1, sticky="NSEW")
-        # self.fine_s_key.config(font=("Arial", 20))
-        # self.fine_s_key.config(width=10)
-        #
-        # self.extra_fine_k = tk.Button(self, text="Extra Fine k", command=lambda: self.terminal_frame.set_home("k"))
-        # self.extra_fine_k.grid(column=1, row=2, sticky="NSEW")
-        # self.extra_fine_k.config(font=("Arial", 20))
-        # self.extra_fine_k.config(width=10)
-        #
-        # self.extra_extra_fine_k = tk.Button(self, text="Extra Extra K",
-        #                                     command=lambda: self.terminal_frame.set_home("K"))
-        # self.extra_extra_fine_k.grid(column=1, row=3, sticky="NSEW")
-        # self.extra_extra_fine_k.config(font=("Arial", 20))
-        # self.extra_extra_fine_k.config(width=10)
-        #
-        # self.coarse_w_key = tk.Button(self, text="Coarse W", command=lambda: self.terminal_frame.set_home("W"))
-        # self.coarse_w_key.grid(column=2, row=0, sticky="NSEW")
-        # self.coarse_w_key.config(font=("Arial", 20))
-        # self.coarse_w_key.config(width=10)
-        #
-        # self.fine_w_key = tk.Button(self, text="Fine w", command=lambda: self.terminal_frame.set_home("w"))
-        # self.fine_w_key.grid(column=2, row=1, sticky="NSEW")
-        # self.fine_w_key.config(font=("Arial", 20))
-        # self.fine_w_key.config(width=10)
-        #
-        # self.extra_fine_i = tk.Button(self, text="Extra Fine i", command=lambda: self.terminal_frame.set_home("i"))
-        # self.extra_fine_i.grid(column=2, row=2, sticky="NSEW")
-        # self.extra_fine_i.config(font=("Arial", 20))
-        # self.extra_fine_i.config(width=10)
-        #
-        # self.extra_extra_fine_i = tk.Button(self, text="Extra Extra I",
-        #                                     command=lambda: self.terminal_frame.set_home("I"))
-        # self.extra_extra_fine_i.grid(column=2, row=3, sticky="NSEW")
-        # self.extra_extra_fine_i.config(font=("Arial", 20))
-        # self.extra_extra_fine_i.config(width=10)
-        #
-        # self.coarse_d_key = tk.Button(self, text="Coarse D", command=lambda: self.terminal_frame.set_home("D"))
-        # self.coarse_d_key.grid(column=3, row=0, sticky="NSEW")
-        # self.coarse_d_key.config(font=("Arial", 20))
-        # self.coarse_d_key.config(width=10)
-        #
-        # self.fine_d_key = tk.Button(self, text="Fine d", command=lambda: self.terminal_frame.set_home("d"))
-        # self.fine_d_key.grid(column=3, row=1, sticky="NSEW")
-        # self.fine_d_key.config(font=("Arial", 20))
-        # self.fine_d_key.config(width=10)
-        #
-        # self.extra_fine_l = tk.Button(self, text="Extra Fine l", command=lambda: self.terminal_frame.set_home("l"))
-        # self.extra_fine_l.grid(column=3, row=2, sticky="NSEW")
-        # self.extra_fine_l.config(font=("Arial", 20))
-        # self.extra_fine_l.config(width=10)
-        #
-        # self.extra_extra_fine_l = tk.Button(self, text="Extra Extra L",
-        #                                     command=lambda: self.terminal_frame.set_home("L"))
-        # self.extra_extra_fine_l.grid(column=3, row=3, sticky="NSEW")
-        # self.extra_extra_fine_l.config(font=("Arial", 20))
-        # self.extra_extra_fine_l.config(width=10)
 
 
-
-        self.set_home_button = tk.Button(self, text="Save Home-'/'", command=lambda: self.set_home_finished())
+        self.set_home_button = tk.Button(self, text="Save Home-'/'", command=lambda: self.set_home_finished("/"))
         self.set_home_button.grid(column=4, row=2, sticky="NSEW")
         self.set_home_button.config(font=("Arial", 20))
 
@@ -1107,16 +1071,16 @@ class ScanFrame(tk.Frame):
         self.space_bar_button.grid(column=4, row=3, sticky="NSEW")
         self.space_bar_button.config(font=("Arial", 20))
 
-
-        self.fpgastream = tk.Button(self, text="FPGA", command=lambda: self.open_fpga_popup())
-        self.fpgastream.grid(column=5, row=2, sticky="NSEW")
-        self.fpgastream.config(font=("Arial", 20))
-        self.fpgastream.config(width=10)
-
-        self.stop_fpgastream = tk.Button(self, text="Stop FPGA", command=lambda: self.terminal_frame.end_fpga_running())
-        self.stop_fpgastream.grid(column=5, row=3, sticky="NSEW")
-        self.stop_fpgastream.config(font=("Arial", 20))
-        self.stop_fpgastream.config(width=10)
+        #TODO FPGA STREAM WITHIN BUT NOT FOR NOW
+        # self.fpgastream = tk.Button(self, text="FPGA", command=lambda: self.open_fpga_popup())
+        # self.fpgastream.grid(column=5, row=2, sticky="NSEW")
+        # self.fpgastream.config(font=("Arial", 20))
+        # self.fpgastream.config(width=10)
+        #
+        # self.stop_fpgastream = tk.Button(self, text="Stop FPGA", command=lambda: self.terminal_frame.end_fpga_running())
+        # self.stop_fpgastream.grid(column=5, row=3, sticky="NSEW")
+        # self.stop_fpgastream.config(font=("Arial", 20))
+        # self.stop_fpgastream.config(width=10)
 
         #Bound Keys for Use as well as buttons
         for key in self.keys_to_bind:
