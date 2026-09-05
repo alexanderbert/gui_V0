@@ -85,6 +85,7 @@ class RadarFunctionality(tk.Frame):
         # self.status_textbox.config(state="disabled")
 
         self.initial_output_frame()
+        self.update_textboxes()
 
 
 
@@ -276,16 +277,16 @@ class RadarFunctionality(tk.Frame):
             print("ERROR")
         self.radar_drop()
 
-    def run_queue(self):
-        #print(f"OPQ: {output_queue.get()}")
-        # while output_queue.qsize() > 10 and is_running:
-        #     self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
-        print(output_queue.qsize())
-        try:
-            if not output_queue.empty():
-                self.after(100, self.update_textboxes(output_queue.get()))
-        except:
-            print("Error occured")
+    # def run_queue(self):
+    #     #print(f"OPQ: {output_queue.get()}")
+    #     # while output_queue.qsize() > 10 and is_running:
+    #     #     self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
+    #     print(output_queue.qsize())
+    #     try:
+    #         if not output_queue.empty():
+    #             self.after(100, self.update_textboxes(output_queue.get()))
+    #     except:
+    #         print("Error occured")
 
     def update_textboxes(self):
         # x_dc_offset_value = output_list[0].split("= ")
