@@ -61,7 +61,7 @@ class RadarFunctionality(tk.Frame):
         self.radar_drop()
         
         #infrastructure
-        self.run_heatmap_fpga_button= tk.Button(self.fpga_control_frame, text="Heat Map FPGA", command=lambda:self.heat_map_fpga())
+        self.run_heatmap_fpga_button= tk.Button(self.fpga_control_frame, text="Heat Map FPGA", command=lambda:self.start_threading(self.heat_map_fpga()))
         self.run_heatmap_fpga_button.grid(row=0, column=2)
         self.run_heatmap_fpga_button.config(width=20, font=("Arial", 20))
 
@@ -74,7 +74,7 @@ class RadarFunctionality(tk.Frame):
         self.stop_fpga_button.config(width=20, font=("Arial", 20))
 
 
-        self.find_other_radars_button = tk.Button(self.radar_control_frame, text="Find other radars", command=lambda:self.find_other_radars())
+        self.find_other_radars_button = tk.Button(self.radar_control_frame, text="Find other radars", command=lambda:self.start_network_scan())
         self.find_other_radars_button.grid(row=3, column=2)
         self.find_other_radars_button.config(width=20, font=("Arial", 20))
 
@@ -118,6 +118,7 @@ class RadarFunctionality(tk.Frame):
         print("After connection to fl network")
         global is_fpga_running
         is_fpga_running = True
+        time.sleep(.1)
         channel.send(f"cd {os.environ['FPGAPATH']}\n")
         time.sleep(.1)
         channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 100 -8 144 -9 24 -X -D 10\n")
@@ -214,29 +215,6 @@ class RadarFunctionality(tk.Frame):
         return self.radar_selected.get()
 
 
-    # def find_other_radars(self):
-    #     nm = nmap.PortScanner()
-    #     nm.scan(hosts = "192.168.69.*", arguments = "-sn")
-    #     for host in nm.all_hosts():
-    #         try:
-    #             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    #             client.load_system_host_keys()
-    #             client.connect(hostname=f"{host}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=3)
-    #             stdin, stdout, stderr = client.exec_command("hostname")
-    #             radar_hostname = stdout.read().decode("utf-8")
-    #             client.close()
-    #             self.update_radar_pulldown(host, radar_hostname.strip())
-    #         except:
-    #             print(f"No connection to {host}")
-    #
-    # def update_radar_pulldown(self, ip_address, hostname):
-    #     try:
-    #         if ip_address not in self.radar_dict.values():
-    #             self.radar_dict[hostname] = ip_address
-    #     except:
-    #         print("ERROR")
-    #     self.radar_drop()
-
 
     def find_other_radars(self):
         nm = nmap.PortScanner()
@@ -316,3 +294,15 @@ class RadarFunctionality(tk.Frame):
         final_rate = rate_value[1].split("=")
         # self.rate_textbox.replace("1.0", tk.END, final_rate[0], "center")
         # self.rate_textbox.tag_configure("center", justify="center")
+
+    # class SSHWoker:
+    #     def __init__(self):
+    #         self.thread = threading.Thread(target=self._worker, daemon=True)
+    #         self.thread.start()
+    #
+    #     def _worker(self):
+    #         channel = self.fl_network_mode()
+    #
+    #         while True:
+    #             try:
+    #                 result =
