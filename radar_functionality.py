@@ -9,6 +9,7 @@ import logging
 import time
 import threading
 import queue
+import re
 
 
 
@@ -127,31 +128,43 @@ class RadarFunctionality(tk.Frame):
         print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 100 -8 144 -9 24 -X -D 10\n")
         time.sleep(1)
         print(f"FPGA RUNNING STATE: {is_fpga_running}")
-        output = ""
+        buffer = ""
+        pattern = re.compile(r"X power:\s*(-?\d+\.\d+),\s*Y power:\s*(-?\d+\.\d+)")
         try:
             while channel.active and is_fpga_running:
-                chunk = channel.recv(1024).decode("iso-8859-1")
-                print(chunk)
-                output += chunk
+                data = channel.recv(1024).decode("iso-8859-1")
+                print(data)
+                buffer += data
+                while "\n" in buffer:
+                    line, buffer = buffer.split("\n", 1)
+                    line = line.strip()
+                    match = pattern.search(line)
 
-                if "<5>" in output:
-                    after = output.split("<5>", 1)
-                    if "[1;1H$<5>" in after[1]:
-                        new_output = after[1].replace("[1;1H$<5>", "\n")
-                        new_output = new_output.split("\n")
-                        for line in new_output:
-                            print(line)
-                            splits = line.split(",")
-                            desired_fields = []
-                            for index, split in enumerate(splits):
-                                if len(splits) == 11:
-                                    if index < 6 or index == 9:
-                                        desired_fields.append(split)
-                            print(desired_fields)
-                            output_queue.put(desired_fields)
-                            self.run_queue()
-                output = ""
-                time.sleep(.5)
+                    if match:
+                        x_power = float(match.group(1))
+                        y_power = float(match.group(2))
+                        output_queue.put((x_power, y_power))
+
+
+
+                # if "<5>" in output:
+                #     after = output.split("<5>", 1)
+                #     if "[1;1H$<5>" in after[1]:
+                #         new_output = after[1].replace("[1;1H$<5>", "\n")
+                #         new_output = new_output.split("\n")
+                #         for line in new_output:
+                #             print(line)
+                #             splits = line.split(",")
+                #             desired_fields = []
+                #             for index, split in enumerate(splits):
+                #                 if len(splits) == 11:
+                #                     if index < 6 or index == 9:
+                #                         desired_fields.append(split)
+                #             print(desired_fields)
+                #             output_queue.put(desired_fields)
+                #             #self.run_queue()
+                # output = ""
+                # time.sleep(.5)
 
             channel.send("^S\n")
             channel.send("^C\n")
@@ -274,33 +287,44 @@ class RadarFunctionality(tk.Frame):
         except:
             print("Error occured")
 
-    def update_textboxes(self, output_list):
-        x_dc_offset_value = output_list[0].split("= ")
-        # self.x_dc_offset_textbox.replace("1.0", tk.END, x_dc_offset_value[1], "center")
-        # self.x_dc_offset_textbox.tag_configure("center", justify="center")
-        y_dc_offset_value = output_list[1].split("= ")
-        # self.y_dc_offset_textbox.replace("1.0", tk.END, y_dc_offset_value[1], "center")
-        # self.y_dc_offset_textbox.tag_configure("center", justify="center")
-        x_min_max_value = output_list[2].split("X  ")
-        # self.x_min_max_textbox.replace("1.0", tk.END, x_min_max_value[1], "center")
-        # self.x_min_max_textbox.tag_configure("center", justify="center")
-        y_min_max_value = output_list[3].split("Y  ")
-        # self.y_min_max_textbox.replace("1.0", tk.END, y_min_max_value[1], "center")
-        # self.y_min_max_textbox.tag_configure("center", justify="center")
-        x_power_value = output_list[4].split(": ")
-        self.x_power_entry.delete(0, tk.END)
-        self.x_power_entry.insert(0, x_power_value[0])
-        # self.x_power_entry.replace("1.0", tk.END, x_power_value[1], "center")
-        # self.x_power_entry.tag_configure("center", justify="center")
-        y_power_value = output_list[5].split(": ")
-        self.y_power_entry.delete(0, tk.END)
-        self.y_power_entry.insert(0, y_power_value[0])
-        # self.y_power_textbox.replace("1.0", tk.END, y_power_value[1], "center")
-        # self.y_power_textbox.tag_configure("center", justify="center")
-        rate_value = output_list[6].split(": ")
-        final_rate = rate_value[1].split("=")
-        # self.rate_textbox.replace("1.0", tk.END, final_rate[0], "center")
-        # self.rate_textbox.tag_configure("center", justify="center")
+    def update_textboxes(self):
+        # x_dc_offset_value = output_list[0].split("= ")
+        # # self.x_dc_offset_textbox.replace("1.0", tk.END, x_dc_offset_value[1], "center")
+        # # self.x_dc_offset_textbox.tag_configure("center", justify="center")
+        # y_dc_offset_value = output_list[1].split("= ")
+        # # self.y_dc_offset_textbox.replace("1.0", tk.END, y_dc_offset_value[1], "center")
+        # # self.y_dc_offset_textbox.tag_configure("center", justify="center")
+        # x_min_max_value = output_list[2].split("X  ")
+        # # self.x_min_max_textbox.replace("1.0", tk.END, x_min_max_value[1], "center")
+        # # self.x_min_max_textbox.tag_configure("center", justify="center")
+        # y_min_max_value = output_list[3].split("Y  ")
+        # # self.y_min_max_textbox.replace("1.0", tk.END, y_min_max_value[1], "center")
+        # # self.y_min_max_textbox.tag_configure("center", justify="center")
+        # x_power_value = output_list[4].split(": ")
+        # self.x_power_entry.delete(0, tk.END)
+        # self.x_power_entry.insert(0, x_power_value[0])
+        # # self.x_power_entry.replace("1.0", tk.END, x_power_value[1], "center")
+        # # self.x_power_entry.tag_configure("center", justify="center")
+        # y_power_value = output_list[5].split(": ")
+        # self.y_power_entry.delete(0, tk.END)
+        # self.y_power_entry.insert(0, y_power_value[0])
+        # # self.y_power_textbox.replace("1.0", tk.END, y_power_value[1], "center")
+        # # self.y_power_textbox.tag_configure("center", justify="center")
+        # rate_value = output_list[6].split(": ")
+        # final_rate = rate_value[1].split("=")
+        # # self.rate_textbox.replace("1.0", tk.END, final_rate[0], "center")
+        # # self.rate_textbox.tag_configure("center", justify="center")
+        try:
+            x_power, y_power = output_queue.get_nowait()
+
+            self.x_power_entry.delete(0, "end")
+            self.x_power_entry.insert(0, x_power)
+            self.y_power_entry.delete(0, "end")
+            self.y_power_entry.insert(0, y_power)
+        except queue.Empty:
+            pass
+
+        self.after(100, self.update_textboxes)
 
     # class SSHWoker:
     #     def __init__(self):
