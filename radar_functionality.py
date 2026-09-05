@@ -120,9 +120,12 @@ class RadarFunctionality(tk.Frame):
         is_fpga_running = True
         time.sleep(.1)
         channel.send(f"cd {os.environ['FPGAPATH']}\n")
+        print(f"sent: cd {os.environ['FPGAPATH']}")
         time.sleep(.1)
         channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 100 -8 144 -9 24 -X -D 10\n")
+        print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 100 -8 144 -9 24 -X -D 10\n")
         time.sleep(.1)
+        print(f"FPGA RUNNING STATE: {is_fpga_running}")
         try:
             while channel.active and is_fpga_running:
                 chunk = channel.recv(1024).decode("iso-8859-1")
