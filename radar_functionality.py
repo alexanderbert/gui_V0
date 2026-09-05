@@ -25,7 +25,7 @@ dotenv_path = os.path.join(application_path, '.env')
 load_dotenv(dotenv_path=dotenv_path)
 
 client = paramiko.client.SSHClient()
-output_queue = queue.Queue()
+
 is_fpga_running = False
 
 
@@ -83,8 +83,9 @@ class RadarFunctionality(tk.Frame):
         # self.status_textbox.grid(column=0, row=1, sticky="nesw")
         # self.status_textbox.config(font=("Arial", 20))
         # self.status_textbox.config(state="disabled")
-
+        self.output_queue = queue.Queue()
         self.initial_output_frame()
+
         self.update_textboxes()
 
 
@@ -144,7 +145,8 @@ class RadarFunctionality(tk.Frame):
                     if match:
                         x_power = float(match.group(1))
                         y_power = float(match.group(2))
-                        output_queue.put((x_power, y_power))
+                        print("PARSED: ", x_power, y_power)
+                        self.output_queue.put((x_power, y_power))
 
 
 
@@ -316,16 +318,17 @@ class RadarFunctionality(tk.Frame):
         # # self.rate_textbox.replace("1.0", tk.END, final_rate[0], "center")
         # # self.rate_textbox.tag_configure("center", justify="center")
         try:
-            x_power, y_power = output_queue.get_nowait()
+            x_power, y_power = self.output_queue.get_nowait()
+            print("GUI RECIEVED:", x_power, y_power)
 
             self.x_power_entry.delete(0, "end")
-            self.x_power_entry.insert(0, x_power)
+            self.x_power_entry.insert(0, str(x_power))
             self.y_power_entry.delete(0, "end")
-            self.y_power_entry.insert(0, y_power)
+            self.y_power_entry.insert(0, str(y_power))
         except queue.Empty:
             pass
 
-        self.after(100, self.update_textboxes)
+        self.after(10, self.update_textboxes)
 
     # class SSHWoker:
     #     def __init__(self):
