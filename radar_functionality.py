@@ -284,9 +284,9 @@ class RadarFunctionality(tk.Frame):
 
             x_power, y_power = data
 
-            self.x_power_entry.delete("1.0", tk.END)
+            self.x_power_entry.delete(0, tk.END)
             self.x_power_entry.insert(tk.END, str(x_power))
-            self.y_power_entry.delete("1.0", tk.END)
+            self.y_power_entry.delete(0, tk.END)
             self.y_power_entry.insert(tk.END, str(y_power))
         except queue.Empty:
             pass
