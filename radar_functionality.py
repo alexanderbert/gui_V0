@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog
 import paramiko
 from dotenv import load_dotenv
 import nmap
@@ -12,6 +12,10 @@ import queue
 import re
 from datetime import datetime
 import csv
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 
 
 
@@ -68,14 +72,18 @@ class RadarFunctionality(tk.Frame):
         self.run_heatmap_fpga_button= tk.Button(self.fpga_control_frame, text="Heat Map FPGA", command=lambda:self.start_threading(self.heat_map_fpga))
         self.run_heatmap_fpga_button.grid(row=0, column=2)
         self.run_heatmap_fpga_button.config(width=20, font=("Arial", 20))
-
-        self.run_capture_fpga_button= tk.Button(self.fpga_control_frame, text="Capture FPGA", command=lambda:self.capture_fpga())
-        self.run_capture_fpga_button.grid(row=1, column=2)
-        self.run_capture_fpga_button.config(width=20, font=("Arial", 20))
+        #
+        # self.run_capture_fpga_button= tk.Button(self.fpga_control_frame, text="Capture FPGA", command=lambda:self.capture_fpga())
+        # self.run_capture_fpga_button.grid(row=1, column=2)
+        # self.run_capture_fpga_button.config(width=20, font=("Arial", 20))
 
         self.stop_fpga_button= tk.Button(self.fpga_control_frame, text="End FPGA", command=lambda:self.stop_fpga())
         self.stop_fpga_button.grid(row=2, column=2)
         self.stop_fpga_button.config(width=20, font=("Arial", 20))
+
+        self.create_heatmap_button= tk.Button(self.fpga_control_frame, text="Create Heatmap", command=lambda:self.create_heatmap())
+        self.create_heatmap_button.grid(row=1, column=2)
+        self.create_heatmap_button.config(width=20, font=("Arial", 20))
 
 
         self.find_other_radars_button = tk.Button(self.radar_control_frame, text="Find other radars", command=lambda:self.start_network_scan())
@@ -111,7 +119,7 @@ class RadarFunctionality(tk.Frame):
         return client
 
     def create_values_csv(self):
-        timestamp = datetime.now().strftime("%y%m%d_%H%M")
+        timestamp = datetime.now().strftime("%m%d_%H%M%S")
         filename = os.path.join(
             application_path,
             f"heatmap_{timestamp}.csv"
@@ -140,7 +148,7 @@ class RadarFunctionality(tk.Frame):
             if item is None:
                 break
             if csv_file is None:
-                timestamp = datetime.now().strftime("%y%m%d_%H%M")
+                timestamp = datetime.now().strftime("%m%d_%H%M%S")
 
                 filename=os.path.join(
                     application_path,
@@ -436,3 +444,97 @@ class RadarFunctionality(tk.Frame):
         #     pass
         #
         # self.after(50, self.update_textboxes)
+
+    def create_heatmap(self):
+        self.az_entry.destroy()
+        self.az_label.destroy()
+        self.el_entry.destroy()
+        self.el_label.destroy()
+        self.x_power_entry.destroy()
+        self.x_power_label.destroy()
+        self.y_power_entry.destroy()
+        self.y_power_label.destroy()
+
+        azimuth = []
+        elevation = []
+        x_power = []
+        y_power = []
+
+        csv_file = filedialog.askopenfilename(
+            initialdir=".",
+            title="Choose a folder",
+            filetypes=[
+                ("csv files", "*.csv"),
+                ("All Files", "*.*")
+            ]
+        )
+        with open(csv_file, "r", newline="") as file:
+            reader = csv.reader(file)
+
+            next(reader, None)
+            for row in reader:
+                if len(row) < 4:
+                    continue
+                try:
+                    azimuth.append(float(row[0]))
+                    elevation.append(float(row[1]))
+                    x_power.append(float(row[2]))
+                    y_power.append(float(row[3]))
+                except ValueError:
+                    continue
+        if not azimuth:
+            raise ValueError("No valid data")
+        azimuth = np.array(azimuth)
+        elevation = np.array(elevation)
+        x_power = np.array(x_power)
+        y_power = np.array(y_power)
+
+        x_linear = 10 ** (x_power / 10)
+        y_linear = 10 ** (y_power / 10)
+
+        total_linear = x_linear + y_linear
+
+        power = 10 * np.log10(total_linear)
+
+        heatmap = np.full(
+            (len(azimuth), len(elevation)),np.nan
+        )
+        for az, el, p in zip(azimuth, elevation, power):
+            az_index = np.where(azimuth == az)[0][0]
+            el_index = np.where(elevation == el)[0][0]
+
+            heatmap[az_index, el_index] = p
+
+        fig, ax = plt.subplots(figsize=(8,6))
+
+        im = ax.imshow(
+            heatmap,
+            origin="lower",
+            aspect="auto",
+            extent =[
+                elevation.min(),
+                elevation.max(),
+                azimuth.min(),
+                azimuth.max()
+            ],
+            cmap="inferno"
+            #cmap=gray
+        )
+
+        ax.set_xlabel("Elevation")
+        ax.set_ylabel("Azimuth")
+        ax.set_title("Linear X/Y Power")
+
+        fig.colorbar(
+            im,
+            ax=ax,
+            label="Power (dB)"
+        )
+
+        fig.tight_layout()
+
+        canvas = FigureCanvasTkAgg(fig, master=self.initial_output_frame)
+        canvas.draw()
+
+        canvas.get_tk_widget().grid(column=0, row=0, sticky="nsew")
+        return canvas
