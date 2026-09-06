@@ -50,7 +50,7 @@ class RadarFunctionality(tk.Frame):
         self.radar_control_frame.grid(row=1, column=2, sticky="nsew")
 
 
-        self.output_frame = tk.Frame()
+        self.output_frame = tk.Frame(self)
         self.output_frame.grid(column=0, row=0, sticky="nsew")
         self.output_frame.grid_columnconfigure(0, weight=1)
         self.output_frame.grid_columnconfigure(1, weight=1)
@@ -63,7 +63,7 @@ class RadarFunctionality(tk.Frame):
         self.radar_drop()
         
         #infrastructure
-        self.run_heatmap_fpga_button= tk.Button(self.fpga_control_frame, text="Heat Map FPGA", command=lambda:self.start_threading(self.heat_map_fpga()))
+        self.run_heatmap_fpga_button= tk.Button(self.fpga_control_frame, text="Heat Map FPGA", command=lambda:self.start_threading(self.heat_map_fpga))
         self.run_heatmap_fpga_button.grid(row=0, column=2)
         self.run_heatmap_fpga_button.config(width=20, font=("Arial", 20))
 
