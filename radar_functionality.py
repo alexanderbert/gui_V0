@@ -50,7 +50,7 @@ class RadarFunctionality(tk.Frame):
         self.radar_control_frame.grid(row=1, column=2, sticky="nsew")
 
 
-        self.output_frame = tk.Frame(self)
+        self.output_frame = tk.Frame()
         self.output_frame.grid(column=0, row=0, sticky="nsew")
         self.output_frame.grid_columnconfigure(0, weight=1)
         self.output_frame.grid_columnconfigure(1, weight=1)
@@ -95,25 +95,25 @@ class RadarFunctionality(tk.Frame):
         self.az_label = tk.Label(self.output_frame, text="Az:")
         self.az_label.grid(column=0, row=0, sticky="nsew")
         self.az_label.config(font=("Arial", 20))
-        self.az_entry = tk.Text(self.output_frame)
+        self.az_entry = tk.Entry(self.output_frame)
         self.az_entry.grid(column=1, row=0, sticky="nsew")
         self.az_entry.config(font=("Arial", 20))
         self.el_label = tk.Label(self.output_frame, text= "El:")
         self.el_label.grid(column=0, row=1, sticky="nsew")
         self.el_label.config(font=("Arial", 20))
-        self.el_entry = tk.Text(self.output_frame)
+        self.el_entry = tk.Entry(self.output_frame)
         self.el_entry.grid(column=1, row=1, sticky="nsew")
         self.el_entry.config(font=("Arial", 20))
         self.x_power_label = tk.Label(self.output_frame, text="X Power:")
         self.x_power_label.grid(column=0, row=2, sticky="nsew")
         self.x_power_label.config(font=("Arial", 20))
-        self.x_power_entry = tk.Text(self.output_frame)
+        self.x_power_entry = tk.Entry(self.output_frame)
         self.x_power_entry.grid(column=1, row=2, sticky="nsew")
         self.x_power_entry.config(font=("Arial", 20))
         self.y_power_label = tk.Label(self.output_frame, text="Y Power:")
         self.y_power_label.grid(column=0, row=3, sticky="nsew")
         self.y_power_label.config(font=("Arial", 20))
-        self.y_power_entry = tk.Text(self.output_frame)
+        self.y_power_entry = tk.Entry(self.output_frame)
         self.y_power_entry.grid(column=1, row=3, sticky="nsew")
         self.y_power_entry.config(font=("Arial", 20))
 
@@ -147,31 +147,13 @@ class RadarFunctionality(tk.Frame):
                 for match in matches:
                     x_power = float(match.group(1))
                     y_power = float(match.group(2))
-                    print("PARSED: ", x_power, y_power)
-                    print("Queue Size:", self.power_queue.qsize())
+                    # print("PARSED: ", x_power, y_power)
+                    # print("Queue Size:", self.power_queue.qsize())
                     self.power_queue.put((x_power, y_power))
 
                 if len(buffer) > 4096:
                     buffer = buffer[-4096]
 
-                # if "<5>" in output:
-                #     after = output.split("<5>", 1)
-                #     if "[1;1H$<5>" in after[1]:
-                #         new_output = after[1].replace("[1;1H$<5>", "\n")
-                #         new_output = new_output.split("\n")
-                #         for line in new_output:
-                #             print(line)
-                #             splits = line.split(",")
-                #             desired_fields = []
-                #             for index, split in enumerate(splits):
-                #                 if len(splits) == 11:
-                #                     if index < 6 or index == 9:
-                #                         desired_fields.append(split)
-                #             print(desired_fields)
-                #             output_queue.put(desired_fields)
-                #             #self.run_queue()
-                # output = ""
-                # time.sleep(.5)
 
             channel.send("^S\n")
             channel.send("^C\n")
@@ -295,45 +277,19 @@ class RadarFunctionality(tk.Frame):
     #         print("Error occured")
 
     def update_textboxes(self):
-        print("Updating textboxes")
-        print("Queue Size before", self.power_queue.qsize())
+        print(f"Update: {threading.current_thread().name}")
 
-        # x_dc_offset_value = output_list[0].split("= ")
-        # # self.x_dc_offset_textbox.replace("1.0", tk.END, x_dc_offset_value[1], "center")
-        # # self.x_dc_offset_textbox.tag_configure("center", justify="center")
-        # y_dc_offset_value = output_list[1].split("= ")
-        # # self.y_dc_offset_textbox.replace("1.0", tk.END, y_dc_offset_value[1], "center")
-        # # self.y_dc_offset_textbox.tag_configure("center", justify="center")
-        # x_min_max_value = output_list[2].split("X  ")
-        # # self.x_min_max_textbox.replace("1.0", tk.END, x_min_max_value[1], "center")
-        # # self.x_min_max_textbox.tag_configure("center", justify="center")
-        # y_min_max_value = output_list[3].split("Y  ")
-        # # self.y_min_max_textbox.replace("1.0", tk.END, y_min_max_value[1], "center")
-        # # self.y_min_max_textbox.tag_configure("center", justify="center")
-        # x_power_value = output_list[4].split(": ")
-        # self.x_power_entry.delete(0, tk.END)
-        # self.x_power_entry.insert(0, x_power_value[0])
-        # # self.x_power_entry.replace("1.0", tk.END, x_power_value[1], "center")
-        # # self.x_power_entry.tag_configure("center", justify="center")
-        # y_power_value = output_list[5].split(": ")
-        # self.y_power_entry.delete(0, tk.END)
-        # self.y_power_entry.insert(0, y_power_value[0])
-        # # self.y_power_textbox.replace("1.0", tk.END, y_power_value[1], "center")
-        # # self.y_power_textbox.tag_configure("center", justify="center")
-        # rate_value = output_list[6].split(": ")
-        # final_rate = rate_value[1].split("=")
-        # # self.rate_textbox.replace("1.0", tk.END, final_rate[0], "center")
-        # # self.rate_textbox.tag_configure("center", justify="center")
+
         try:
             data = self.power_queue.get_nowait()
             print("GUI RECIEVED:", data)
 
             x_power, y_power = data
 
-            self.x_power_entry.delete(0, tk.END)
-            self.x_power_entry.insert(0, str(x_power))
-            self.y_power_entry.delete(0, tk.END)
-            self.y_power_entry.insert(0, str(y_power))
+            self.x_power_entry.delete("1.0", tk.END)
+            self.x_power_entry.insert(tk.END, str(x_power))
+            self.y_power_entry.delete("1.0", tk.END)
+            self.y_power_entry.insert(tk.END, str(y_power))
         except queue.Empty:
             pass
 
