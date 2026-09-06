@@ -118,26 +118,26 @@ class RadarFunctionality(tk.Frame):
 
         return client
 
-    def create_values_csv(self):
-        timestamp = datetime.now().strftime("%m%d_%H%M%S")
-        filename = os.path.join(
-            application_path,
-            f"heatmap_{timestamp}.csv"
-        )
-
-        self.csv_file = open(
-            filename,
-            "w",
-            newline="",
-            buffering=1
-        )
-
-        self.csv_writer = csv.writer(self.csv_file)
-
-        self.csv_writer.writerow([
-            "X Power",
-            "Y Power"
-        ])
+    # def create_values_csv(self):
+    #     timestamp = datetime.now().strftime("%m%d_%H%M%S")
+    #     filename = os.path.join(
+    #         application_path,
+    #         f"heatmap_{timestamp}.csv"
+    #     )
+    #
+    #     self.csv_file = open(
+    #         filename,
+    #         "w",
+    #         newline="",
+    #         buffering=1
+    #     )
+    #
+    #     self.csv_writer = csv.writer(self.csv_file)
+    #
+    #     self.csv_writer.writerow([
+    #         "X Power",
+    #         "Y Power"
+    #     ])
 
     def csv_writer_worker(self):
         csv_file = None
@@ -250,7 +250,7 @@ class RadarFunctionality(tk.Frame):
         )
         try:
 
-            self.create_values_csv()
+            # self.create_values_csv()
 
             while channel.active and is_fpga_running:
                 if channel.recv_ready():
