@@ -87,12 +87,20 @@ class RadarFunctionality(tk.Frame):
         self.latest_values = None
         self.values_lock = threading.Lock()
 
-        self.csv_file = None
-        self.csv_writer = None
+        self.csv_queue= queue.Queue()
+        #
+        # self.csv_file = None
+        # self.csv_writer = None
 
         self.initial_output_frame()
 
         self.update_textboxes()
+
+        self.csv_thread = threading.Thread(
+            target=self.csv_writer_worker,
+            daemon=True
+        )
+        self.csv_thread.start()
 
 
     def create_ssh_client(self):
@@ -122,6 +130,40 @@ class RadarFunctionality(tk.Frame):
             "X Power",
             "Y Power"
         ])
+
+    def csv_writer_worker(self):
+        csv_file = None
+        csv_writer = None
+
+        while True:
+            item = self.csv_queue.get()
+            if item is None:
+                break
+            if csv_file is None:
+                timestamp = datetime.now().strftime("%y%m%d_%H%M")
+
+                filename=os.path.join(
+                    application_path,
+                    f"heatmap_{timestamp}.csv"
+                )
+
+                csv_file = open(
+                    filename,
+                    "w",
+                    newline="",
+                    buffering=1
+                )
+
+                csv_writer = csv.writer(csv_file)
+
+                csv_writer.writerow([
+                    "X Power",
+                    "Y Power"
+                ])
+            csv_writer.writerow(item)
+        if csv_file is not None:
+            csv_file.close()
+
 
     def close_values_csv(self):
         if self.csv_file is not None:
@@ -197,14 +239,19 @@ class RadarFunctionality(tk.Frame):
                         x_power = float(match.group(1))
                         y_power = float(match.group(2))
 
-                        self.csv_writer.writerow([x_power, y_power])
-                        #try to output only the latest values for the gui for performance
+                        # try to output only the latest values for the gui for performance
                         with self.values_lock:
                             self.latest_values = (x_power, y_power)
                         #self.power_queue.put((x_power, y_power))
 
-                    if len(buffer) > 4096:
-                        buffer = buffer[-4096]
+                        #queue values
+                        self.csv_queue.put((x_power, y_power))
+                        #self.csv_writer.writerow([x_power, y_power])
+
+                        #try to new buffer tech
+                        buffer = buffer[match.end():]
+                    # if len(buffer) > 4096:
+                    #     buffer = buffer[-4096]
         finally:
             is_fpga_running = False
             if channel is not None:
