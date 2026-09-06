@@ -182,6 +182,9 @@ class RadarFunctionality(tk.Frame):
             r"Y power:\s*([+-]?\d+\.\d+)"
             )
         try:
+
+            self.create_values_csv()
+
             while channel.active and is_fpga_running:
                 if channel.recv_ready():
                     data = channel.recv(1024).decode("iso-8859-1")
