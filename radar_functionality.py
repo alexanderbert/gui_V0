@@ -10,6 +10,8 @@ import time
 import threading
 import queue
 import re
+from datetime import datetime
+import csv
 
 
 
@@ -79,11 +81,15 @@ class RadarFunctionality(tk.Frame):
         self.find_other_radars_button = tk.Button(self.radar_control_frame, text="Find other radars", command=lambda:self.start_network_scan())
         self.find_other_radars_button.grid(row=3, column=2)
         self.find_other_radars_button.config(width=20, font=("Arial", 20))
-        # self.status_textbox = tk.Text(self.radar_control_frame)
-        # self.status_textbox.grid(column=0, row=1, sticky="nesw")
-        # self.status_textbox.config(font=("Arial", 20))
-        # self.status_textbox.config(state="disabled")
-        self.power_queue = queue.Queue()
+
+
+        #self.power_queue = queue.Queue()
+        self.latest_values = None
+        self.values_lock = threading.Lock()
+
+        self.csv_file = None
+        self.csv_writer = None
+
         self.initial_output_frame()
 
         self.update_textboxes()
@@ -96,8 +102,41 @@ class RadarFunctionality(tk.Frame):
 
         return client
 
+    def create_values_csv(self):
+        timestamp = datetime.now().strftime("%y%m%d_%H%M")
+        filename = os.path.join(
+            application_path,
+            f"heatmap_{timestamp}.csv"
+        )
+
+        self.csv_file = open(
+            filename,
+            "w",
+            newline="",
+            buffering=1
+        )
+
+        self.csv_writer = csv.writer(self.csv_file)
+
+        self.csv_writer.writerow([
+            "timestamp",
+            "X Power",
+            "Y Power"
+        ])
+
+    def close_values_csv(self):
+        if self.csv_file is not None:
+            self.csv_file.close()
+        self.csv_file = None
+        self.csv_writer = None
+
 
     def initial_output_frame(self):
+
+        self.x_power_var = tk.StringVar(value="0")
+        self.y_power_var = tk.StringVar(value="0")
+
+
         self.az_label = tk.Label(self.output_frame, text="Az:")
         self.az_label.grid(column=0, row=0, sticky="nsew")
         self.az_label.config(font=("Arial", 20))
@@ -110,16 +149,17 @@ class RadarFunctionality(tk.Frame):
         self.el_entry = tk.Entry(self.output_frame)
         self.el_entry.grid(column=1, row=1, sticky="nsew")
         self.el_entry.config(font=("Arial", 20))
+
         self.x_power_label = tk.Label(self.output_frame, text="X Power:")
         self.x_power_label.grid(column=0, row=2, sticky="nsew")
         self.x_power_label.config(font=("Arial", 20))
-        self.x_power_entry = tk.Entry(self.output_frame)
+        self.x_power_entry = tk.Entry(self.output_frame, textvariable=self.x_power_var)
         self.x_power_entry.grid(column=1, row=2, sticky="nsew")
         self.x_power_entry.config(font=("Arial", 20))
         self.y_power_label = tk.Label(self.output_frame, text="Y Power:")
         self.y_power_label.grid(column=0, row=3, sticky="nsew")
         self.y_power_label.config(font=("Arial", 20))
-        self.y_power_entry = tk.Entry(self.output_frame)
+        self.y_power_entry = tk.Entry(self.output_frame, textvariable=self.y_power_var)
         self.y_power_entry.grid(column=1, row=3, sticky="nsew")
         self.y_power_entry.config(font=("Arial", 20))
 
@@ -154,9 +194,12 @@ class RadarFunctionality(tk.Frame):
                     for match in matches:
                         x_power = float(match.group(1))
                         y_power = float(match.group(2))
-                        # print("PARSED: ", x_power, y_power)
-                        # print("Queue Size:", self.power_queue.qsize())
-                        self.power_queue.put((x_power, y_power))
+
+                        self.csv_writer.writerow([x_power, y_power])
+                        #try to output only the latest values for the gui for performance
+                        with self.values_lock:
+                            self.latest_values = (x_power, y_power)
+                        #self.power_queue.put((x_power, y_power))
 
                     if len(buffer) > 4096:
                         buffer = buffer[-4096]
@@ -284,17 +327,25 @@ class RadarFunctionality(tk.Frame):
     #         print("Error occured")
 
     def update_textboxes(self):
-
-        try:
-            data = self.power_queue.get_nowait()
-
+        with self.values_lock:
+            data = self.latest_values
+        if data is not None:
             x_power, y_power = data
 
-            self.x_power_entry.delete(0, tk.END)
-            self.x_power_entry.insert(tk.END, str(x_power))
-            self.y_power_entry.delete(0, tk.END)
-            self.y_power_entry.insert(tk.END, str(y_power))
-        except queue.Empty:
-            pass
+            self.x_power_var.set(f"{x_power}")
+            self.y_power_var.set(f"{y_power}")
 
-        self.after(50, self.update_textboxes)
+        self.after(30, self.update_textboxes)
+        # try:
+        #     data = self.power_queue.get_nowait()
+        #
+        #     x_power, y_power = data
+        #
+        #     self.x_power_entry.delete(0, tk.END)
+        #     self.x_power_entry.insert(tk.END, str(x_power))
+        #     self.y_power_entry.delete(0, tk.END)
+        #     self.y_power_entry.insert(tk.END, str(y_power))
+        # except queue.Empty:
+        #     pass
+        #
+        # self.after(50, self.update_textboxes)
