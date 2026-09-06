@@ -174,6 +174,8 @@ class RadarFunctionality(tk.Frame):
 
     def initial_output_frame(self):
 
+        self.az_var = tk.StringVar(value="0")
+        self.el_var = tk.StringVar(value="0")
         self.x_power_var = tk.StringVar(value="0")
         self.y_power_var = tk.StringVar(value="0")
 
@@ -181,13 +183,13 @@ class RadarFunctionality(tk.Frame):
         self.az_label = tk.Label(self.output_frame, text="Az:")
         self.az_label.grid(column=0, row=0, sticky="nsew")
         self.az_label.config(font=("Arial", 20))
-        self.az_entry = tk.Entry(self.output_frame)
+        self.az_entry = tk.Entry(self.output_frame, textvariable=self.az_var)
         self.az_entry.grid(column=1, row=0, sticky="nsew")
         self.az_entry.config(font=("Arial", 20))
         self.el_label = tk.Label(self.output_frame, text= "El:")
         self.el_label.grid(column=0, row=1, sticky="nsew")
         self.el_label.config(font=("Arial", 20))
-        self.el_entry = tk.Entry(self.output_frame)
+        self.el_entry = tk.Entry(self.output_frame, textvariable=self.el_var)
         self.el_entry.grid(column=1, row=1, sticky="nsew")
         self.el_entry.config(font=("Arial", 20))
 
@@ -219,10 +221,23 @@ class RadarFunctionality(tk.Frame):
         time.sleep(1)
         print(f"FPGA RUNNING STATE: {is_fpga_running}")
         buffer = ""
+        #Only matches x and y power
+        # pattern = re.compile(
+        #     r"X power:\s*([+-]?\d+\.\d+),\s*"
+        #     r"Y power:\s*([+-]?\d+\.\d+)"
+        #     )
         pattern = re.compile(
-            r"X power:\s*([+-]?\d+\.\d+),\s*"
-            r"Y power:\s*([+-]?\d+\.\d+)"
-            )
+            r'position:\s*[-+]?\d+\.\d+\s+azimuth,\s*'
+            r'(?P<az>[-+]?\d+\.\d+),\s*plate,\s*'
+            r'(?P<el>[-+]?\d+\.\d+)\s+altitude;'
+            r'\s*absolute:\s*[-+]?\d+\.\d+\s+azimuth,\s*'
+            r'(?P<absAz>[-+]?\d+\.\d+),\s*plate,\s*'
+            r'(?P<absEl>[-+]?\d+\.\d+)\s+altitude;.*?\n'
+            r'X dc offset\s*=\s*[-+]?\d+\.\d+,\s*'
+            r'Y dc offset\s*=\s*[-+]?\d+\.\d+.*?'
+            r'X power:\s*(?P<xPow>[-+]?\d+\.\d+),\s*'
+            r'Y power:\s*(?P<yPow>[-+]?\d+\.\d+)'
+        )
         try:
 
             self.create_values_csv()
@@ -238,8 +253,14 @@ class RadarFunctionality(tk.Frame):
                         match = pattern.search(buffer)
                         if match is None:
                             break
-                        x_power = float(match.group(1))
-                        y_power = float(match.group(2))
+                        az = match.group("az")
+                        el = match.group("el")
+                        absAz = match.group("absAz")
+                        absEl = match.group("absEl")
+                        xPower = match.group("xPow")
+                        yPower = match.group("yPow")
+                        # x_power = float(match.group(1))
+                        # y_power = float(match.group(2))
 
                         # for match in matches:
                         #     x_power = float(match.group(1))
@@ -247,11 +268,11 @@ class RadarFunctionality(tk.Frame):
 
                         # try to output only the latest values for the gui for performance
                         #with self.values_lock:
-                        self.latest_values = (x_power, y_power)
+                        self.latest_values = (az, el, absAz, absEl, xPower, yPower)
                         #self.power_queue.put((x_power, y_power))
 
                         #queue values
-                        self.csv_queue.put((x_power, y_power))
+                        self.csv_queue.put((az, el, xPower, yPower))
                         #self.csv_writer.writerow([x_power, y_power])
 
                         #try to new buffer tech
@@ -383,9 +404,9 @@ class RadarFunctionality(tk.Frame):
 
     def update_textboxes(self):
         if self.latest_values is not None:
-            x_power, y_power = self.latest_values
-            self.x_power_var.set(f"{x_power}")
-            self.y_power_var.set(f"{y_power}")
+            az, el, absAz, absEl, xPower, yPower = self.latest_values
+            self.x_power_var.set(f"{xPower}")
+            self.y_power_var.set(f"{yPower}")
         self.after(20, self.update_textboxes)
         #2nd try
         # with self.values_lock:
