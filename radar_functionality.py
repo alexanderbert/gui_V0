@@ -295,6 +295,8 @@ class RadarFunctionality(tk.Frame):
     #         print("Error occured")
 
     def update_textboxes(self):
+        print("Updating textboxes")
+        print("Queue Size before", self.power_queue.qsize())
 
         # x_dc_offset_value = output_list[0].split("= ")
         # # self.x_dc_offset_textbox.replace("1.0", tk.END, x_dc_offset_value[1], "center")
@@ -323,12 +325,14 @@ class RadarFunctionality(tk.Frame):
         # # self.rate_textbox.replace("1.0", tk.END, final_rate[0], "center")
         # # self.rate_textbox.tag_configure("center", justify="center")
         try:
-            x_power, y_power = self.power_queue.get_nowait()
-            print("GUI RECIEVED:", x_power, y_power)
+            data = self.power_queue.get_nowait()
+            print("GUI RECIEVED:", data)
 
-            self.x_power_entry.delete(0, "end")
+            x_power, y_power = data
+
+            self.x_power_entry.delete(0, tk.END)
             self.x_power_entry.insert(0, str(x_power))
-            self.y_power_entry.delete(0, "end")
+            self.y_power_entry.delete(0, tk.END)
             self.y_power_entry.insert(0, str(y_power))
         except queue.Empty:
             pass
