@@ -24,7 +24,7 @@ else:
 dotenv_path = os.path.join(application_path, '.env')
 load_dotenv(dotenv_path=dotenv_path)
 
-client = paramiko.client.SSHClient()
+
 
 is_fpga_running = False
 
@@ -89,6 +89,12 @@ class RadarFunctionality(tk.Frame):
         self.update_textboxes()
 
 
+    def create_ssh_client(self):
+        client = paramiko.client.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
+
+        return client
 
 
     def initial_output_frame(self):
@@ -119,7 +125,7 @@ class RadarFunctionality(tk.Frame):
 
 
     def heat_map_fpga(self):
-        channel = self.fl_network_mode()
+        client, channel = self.fl_network_mode()
         print("After connection to fl network")
         global is_fpga_running
         is_fpga_running = True
@@ -154,13 +160,16 @@ class RadarFunctionality(tk.Frame):
 
                     if len(buffer) > 4096:
                         buffer = buffer[-4096]
-
-            channel.send("^S\n")
-            channel.send("^C\n")
-            client.close()
-        except:
-            channel.send("^S\n")
-            channel.send("^C\n")
+        finally:
+            is_fpga_running = False
+            if channel is not None:
+                try:
+                    channel.send("\x03")
+                    time.sleep(0.2)
+                except Exception as e:
+                    pass
+            if client is not None:
+                client.close()
 
     def stop_fpga(self):
         global is_fpga_running
@@ -196,8 +205,7 @@ class RadarFunctionality(tk.Frame):
     def fl_network_mode(self):
         self.current_radar = self.radar_dict[self.radar_selected.get()]
         print(self.current_radar)
-        client.load_system_host_keys()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client = self.create_ssh_client()
         client.connect(hostname=f"{self.current_radar}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
                        password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
         # print(f"{self.positioner_selected_for_use} inside status")
@@ -208,7 +216,7 @@ class RadarFunctionality(tk.Frame):
         channel = client.invoke_shell()
         time.sleep(.1)
         logging.info("CONNECTED TO FLORIDA NETWORK")
-        return channel
+        return client, channel
 
 
     def radar_drop(self):
@@ -230,10 +238,9 @@ class RadarFunctionality(tk.Frame):
         nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
         logging.info(f"running on {host_ip}")
         for host in nm.all_hosts():
+            client = self.create_ssh_client()
             try:
                 logging.info(f"Scanning {host}")
-                client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                client.load_system_host_keys()
                 # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
                 # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, host)
                 client.connect(hostname=f"{host}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=3, auth_timeout=5)
@@ -280,7 +287,6 @@ class RadarFunctionality(tk.Frame):
 
         try:
             data = self.power_queue.get_nowait()
-            print("GUI RECIEVED:", data)
 
             x_power, y_power = data
 
