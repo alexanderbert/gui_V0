@@ -138,22 +138,22 @@ class RadarFunctionality(tk.Frame):
             )
         try:
             while channel.active and is_fpga_running:
-                data = channel.recv(1024).decode("iso-8859-1")
+                if channel.recv_ready():
+                    data = channel.recv(1024).decode("iso-8859-1")
                 #print(data)
-                buffer += data
+                    buffer += data
 
-                matches = list(pattern.finditer(buffer))
+                    matches = list(pattern.finditer(buffer))
 
-                for match in matches:
-                    x_power = float(match.group(1))
-                    y_power = float(match.group(2))
-                    # print("PARSED: ", x_power, y_power)
-                    # print("Queue Size:", self.power_queue.qsize())
-                    self.power_queue.put((x_power, y_power))
+                    for match in matches:
+                        x_power = float(match.group(1))
+                        y_power = float(match.group(2))
+                        # print("PARSED: ", x_power, y_power)
+                        # print("Queue Size:", self.power_queue.qsize())
+                        self.power_queue.put((x_power, y_power))
 
-                if len(buffer) > 4096:
-                    buffer = buffer[-4096]
-
+                    if len(buffer) > 4096:
+                        buffer = buffer[-4096]
 
             channel.send("^S\n")
             channel.send("^C\n")
@@ -169,10 +169,10 @@ class RadarFunctionality(tk.Frame):
     def capture_fpga(self):
         pass
 
-    def start_threading(self, funct, argus = None):
+    def start_threading(self, funct, *args):
         thread = threading.Thread(
             target= funct,
-            args= (argus,),
+            args= args,
             daemon=True
         )
         thread.start()
