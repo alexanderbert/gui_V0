@@ -531,10 +531,25 @@ class RadarFunctionality(tk.Frame):
             label="Power (dB)"
         )
 
-        fig.tight_layout()
+        fig.set_size_inches(3.5, 6)
+        plot_frame = tk.Frame(self)
+        plot_frame.grid(row=0, column=0, sticky="nsew")
 
-        canvas = FigureCanvasTkAgg(fig, master=self.initial_output_frame)
+        canvas = FigureCanvasTkAgg(fig, plot_frame)
         canvas.draw()
+        canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+
+        # toolbar = NavigationToolbar2Tk(canvas, plot_frame)
+        # toolbar.update()
+        # toolbar.pack(side="left")
+
+        # PREVENTS RESIZING
+        plot_frame.pack_propagate(False)
+
+        # fig.tight_layout()
+        #
+        # canvas = FigureCanvasTkAgg(fig, master=self.initial_output_frame)
+        # canvas.draw()
 
         canvas.get_tk_widget().grid(column=0, row=0, sticky="nsew")
         return canvas
