@@ -277,8 +277,6 @@ class RadarFunctionality(tk.Frame):
     #         print("Error occured")
 
     def update_textboxes(self):
-        print(f"Update: {threading.current_thread().name}")
-
 
         try:
             data = self.power_queue.get_nowait()
@@ -293,16 +291,4 @@ class RadarFunctionality(tk.Frame):
         except queue.Empty:
             pass
 
-        self.after(10, self.update_textboxes)
-
-    # class SSHWoker:
-    #     def __init__(self):
-    #         self.thread = threading.Thread(target=self._worker, daemon=True)
-    #         self.thread.start()
-    #
-    #     def _worker(self):
-    #         channel = self.fl_network_mode()
-    #
-    #         while True:
-    #             try:
-    #                 result =
+        self.after(50, self.update_textboxes)
