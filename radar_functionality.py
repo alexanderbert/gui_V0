@@ -157,6 +157,8 @@ class RadarFunctionality(tk.Frame):
                 csv_writer = csv.writer(csv_file)
 
                 csv_writer.writerow([
+                    "Azimuth",
+                    "Elevation",
                     "X Power",
                     "Y Power"
                 ])
@@ -405,6 +407,8 @@ class RadarFunctionality(tk.Frame):
     def update_textboxes(self):
         if self.latest_values is not None:
             az, el, absAz, absEl, xPower, yPower = self.latest_values
+            self.az_var.set(f"{az}")
+            self.el_var.set(f"{el}")
             self.x_power_var.set(f"{xPower}")
             self.y_power_var.set(f"{yPower}")
         self.after(20, self.update_textboxes)
