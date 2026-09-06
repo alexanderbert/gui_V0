@@ -119,7 +119,6 @@ class RadarFunctionality(tk.Frame):
         self.csv_writer = csv.writer(self.csv_file)
 
         self.csv_writer.writerow([
-            "timestamp",
             "X Power",
             "Y Power"
         ])
