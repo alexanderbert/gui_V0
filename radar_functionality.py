@@ -85,7 +85,7 @@ class RadarFunctionality(tk.Frame):
 
         #self.power_queue = queue.Queue()
         self.latest_values = None
-        self.values_lock = threading.Lock()
+        #self.values_lock = threading.Lock()
 
         self.csv_queue= queue.Queue()
         #
@@ -233,15 +233,21 @@ class RadarFunctionality(tk.Frame):
                 #print(data)
                     buffer += data
 
-                    matches = list(pattern.finditer(buffer))
-
-                    for match in matches:
+                    while True:
+                        #matches = list(pattern.finditer(buffer))
+                        match = pattern.search(buffer)
+                        if match is None:
+                            break
                         x_power = float(match.group(1))
                         y_power = float(match.group(2))
 
+                        # for match in matches:
+                        #     x_power = float(match.group(1))
+                        #     y_power = float(match.group(2))
+
                         # try to output only the latest values for the gui for performance
-                        with self.values_lock:
-                            self.latest_values = (x_power, y_power)
+                        #with self.values_lock:
+                        self.latest_values = (x_power, y_power)
                         #self.power_queue.put((x_power, y_power))
 
                         #queue values
@@ -376,15 +382,22 @@ class RadarFunctionality(tk.Frame):
     #         print("Error occured")
 
     def update_textboxes(self):
-        with self.values_lock:
-            data = self.latest_values
-        if data is not None:
-            x_power, y_power = data
-
+        if self.latest_values is not None:
+            x_power, y_power = self.latest_values
             self.x_power_var.set(f"{x_power}")
             self.y_power_var.set(f"{y_power}")
-
-        self.after(30, self.update_textboxes)
+        self.after(20, self.update_textboxes)
+        #2nd try
+        # with self.values_lock:
+        #     data = self.latest_values
+        # if data is not None:
+        #     x_power, y_power = data
+        #
+        #     self.x_power_var.set(f"{x_power}")
+        #     self.y_power_var.set(f"{y_power}")
+        #
+        # self.after(30, self.update_textboxes)
+        #1st try
         # try:
         #     data = self.power_queue.get_nowait()
         #
