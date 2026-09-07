@@ -15,6 +15,7 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 import subprocess
 
 
@@ -598,6 +599,9 @@ class RadarFunctionality(tk.Frame):
         #self.canvas.get_tk_widget().grid(column=0, columnspan=2, row=0, rowspan=4, sticky="nsew")
         self.canvas.get_tk_widget().grid(column=0, row=0, columnspan=2, rowspan=3, sticky="nsew")
         #canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+        toolbar = NavigationToolbar2Tk(self.canvas, self.output_frame)
+        toolbar.update()
+        toolbar.pack(side="left")
 
         # toolbar = NavigationToolbar2Tk(canvas, plot_frame)
         # toolbar.update()
