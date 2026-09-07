@@ -334,6 +334,7 @@ class RadarFunctionality(tk.Frame):
         time.sleep(1)
         channel.send(f"cd {os.environ['FPGAPATH']}\n")
         print(f"sent: cd {os.environ['FPGAPATH']}")
+        #Need a total -Q number for pulses to be read i think
         channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 1000 -k 8000 -q -c | socat - tcp:10.42.0.1:7777\n")
         channel.close()
         client.close()
@@ -491,6 +492,7 @@ class RadarFunctionality(tk.Frame):
 
     def create_heatmap(self):
 
+
         self.az_entry.grid_remove()
         self.az_label.grid_remove()
         self.el_entry.grid_remove()
@@ -499,6 +501,9 @@ class RadarFunctionality(tk.Frame):
         self.x_power_label.grid_remove()
         self.y_power_entry.grid_remove()
         self.y_power_label.grid_remove()
+
+        self.find_other_radars_button.grid_remove()
+        self.radar_drop
 
 
         azimuth_raw = []
@@ -514,6 +519,9 @@ class RadarFunctionality(tk.Frame):
                 ("All Files", "*.*")
             ]
         )
+
+
+
         with open(csv_file, "r", newline="") as file:
             reader = csv.reader(file)
 
@@ -584,6 +592,16 @@ class RadarFunctionality(tk.Frame):
             label="Power (dB)"
         )
 
+        #CREATE JPG IF IT DOESNT EXIT
+        current_heatmap_output = Path(csv_file).with_suffix(".jpg")
+        if not current_heatmap_output.exists():
+            fig.savefig(
+                current_heatmap_output,
+                format="jpg",
+                dpi=300,
+                bbox_inches="tight"
+            )
+
         # fig.set_size_inches(3.5, 6)
         # self.plot_frame = tk.Frame(self)
         # self.plot_frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
@@ -648,6 +666,7 @@ class RadarFunctionality(tk.Frame):
         self.x_power_label.grid()
         self.y_power_entry.grid()
         self.y_power_label.grid()
+        self.find_other_radars_button.grid()
         # self.canvas.get_tk_widget().grid_remove()
         # self.close_heatmap_button.grid_remove()
         # self.columnconfigure(0, weight=10)
