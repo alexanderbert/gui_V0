@@ -63,8 +63,10 @@ class RadarFunctionality(tk.Frame):
         self.output_frame.grid_columnconfigure(0, weight=1)
         self.output_frame.grid_columnconfigure(1, weight=1)
         self.output_frame.rowconfigure(list(range(0,4)), weight=1)
+        self.output_frame.grid_propagate(False)
 
         self.toolbar_frame= tk.Frame(self.output_frame)
+        self.toolbar_frame.grid_propagate(False)
 
         #Variables
         self.radar_dict = {"Select A Radar": "---------"}
@@ -208,6 +210,7 @@ class RadarFunctionality(tk.Frame):
         self.az_entry = tk.Entry(self.output_frame, textvariable=self.az_var)
         self.az_entry.grid(column=1, row=0, sticky="nsew")
         self.az_entry.config(font=("Arial", 20))
+
         self.el_label = tk.Label(self.output_frame, text= "El:")
         self.el_label.grid(column=0, row=1, sticky="nsew")
         self.el_label.config(font=("Arial", 20))
@@ -221,6 +224,7 @@ class RadarFunctionality(tk.Frame):
         self.x_power_entry = tk.Entry(self.output_frame, textvariable=self.x_power_var)
         self.x_power_entry.grid(column=1, row=2, sticky="nsew")
         self.x_power_entry.config(font=("Arial", 20))
+
         self.y_power_label = tk.Label(self.output_frame, text="Y Power:")
         self.y_power_label.grid(column=0, row=3, sticky="nsew")
         self.y_power_label.config(font=("Arial", 20))
@@ -314,6 +318,7 @@ class RadarFunctionality(tk.Frame):
 
 
     def capture_packets_run(self):
+        #Todo run this from wherever the files will be stored
         try:
             subprocess.run(['socat','tcp-l:7777,reuseaddr,fork','system:\'cpio -i\''], check=True)
         except subprocess.CalledProcessError as e:
@@ -493,10 +498,10 @@ class RadarFunctionality(tk.Frame):
         self.y_power_label.grid_remove()
 
 
-        azimuth = []
-        elevation = []
-        x_power = []
-        y_power = []
+        azimuth_raw = []
+        elevation_raw = []
+        x_power_raw = []
+        y_power_raw = []
 
         csv_file = filedialog.askopenfilename(
             initialdir=".",
@@ -514,18 +519,19 @@ class RadarFunctionality(tk.Frame):
                 if len(row) < 4:
                     continue
                 try:
-                    azimuth.append(float(row[0]))
-                    elevation.append(float(row[1]))
-                    x_power.append(float(row[2]))
-                    y_power.append(float(row[3]))
+                    azimuth_raw.append(float(row[0]))
+                    elevation_raw.append(float(row[1]))
+                    x_power_raw.append(float(row[2]))
+                    y_power_raw.append(float(row[3]))
                 except ValueError:
                     continue
-        if not azimuth:
+        if not azimuth_raw:
             raise ValueError("No valid data")
-        azimuth = np.array(azimuth)
-        elevation = np.array(elevation)
-        x_power = np.array(x_power)
-        y_power = np.array(y_power)
+        azimuth = np.array(azimuth_raw)
+        elevation = np.array(elevation_raw)
+        #TODO NUMBERS
+        x_power = np.array(x_power_raw)
+        y_power = np.array(y_power_raw)
 
         x_linear = 10 ** (x_power / 10)
         y_linear = 10 ** (y_power / 10)
@@ -592,6 +598,7 @@ class RadarFunctionality(tk.Frame):
         self.toolbar = NavigationToolbar2Tk(self.canvas, self.toolbar_frame)
         self.toolbar.update()
         self.toolbar_frame.grid(column=0, row=4, sticky="ew")
+
 
         # toolbar = NavigationToolbar2Tk(canvas, plot_frame)
         # toolbar.update()
