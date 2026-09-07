@@ -339,6 +339,7 @@ class RadarFunctionality(tk.Frame):
         print(f"sent: cd {os.environ['FPGAPATH']}")
         #Need a total -Q number for pulses to be read i think
         channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 1000 -k 8000 -q -c | socat - tcp:10.42.0.1:7777\n")
+        time.sleep(.5)
         channel.close()
         client.close()
 
