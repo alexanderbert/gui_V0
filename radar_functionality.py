@@ -64,6 +64,8 @@ class RadarFunctionality(tk.Frame):
         self.output_frame.grid_columnconfigure(1, weight=1)
         self.output_frame.rowconfigure(list(range(0,4)), weight=1)
 
+        self.toolbar_frame= tk.Frame(self.output_frame)
+
         #Variables
         self.radar_dict = {"Select A Radar": "---------"}
         #self.radar_selected = None
@@ -481,18 +483,8 @@ class RadarFunctionality(tk.Frame):
 
     def create_heatmap(self):
 
-        # if(hasattr(self, "canvas")):
-        #     self.canvas.get_tk_widget().destroy()
-        #     plt.close(self.canvas.figure)
-        #     self.canvas = None
-        #
-        # if(hasattr(self, "plot_frame")):
-        #     self.plot_frame.destroy()
-        #     self.plot_frame = None
-        #
-        # if(hasattr(self, "close_heatmap_button")):
-        #     self.close_heatmap_button.destroy()
-        #     self.close_heatmap_button = None
+        self.output_frame.destroy()
+
 
 
         self.az_entry.grid_remove()
@@ -599,9 +591,11 @@ class RadarFunctionality(tk.Frame):
         #self.canvas.get_tk_widget().grid(column=0, columnspan=2, row=0, rowspan=4, sticky="nsew")
         self.canvas.get_tk_widget().grid(column=0, row=0, columnspan=2, rowspan=3, sticky="nsew")
         #canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
-        toolbar = NavigationToolbar2Tk(self.canvas, self.output_frame)
-        toolbar.update()
-        toolbar.grid(column=0, row=1, sticky="nsew")
+        self.toolbar_frame = tk.Frame(self.output_frame)
+
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self.toolbar_frame)
+        self.toolbar.update()
+        self.toolbar_frame.grid(column=0, row=4, sticky="ew")
 
         # toolbar = NavigationToolbar2Tk(canvas, plot_frame)
         # toolbar.update()
@@ -630,6 +624,8 @@ class RadarFunctionality(tk.Frame):
             self.canvas = None
             # self.heatmap_fig = None
             # self.heatmap_ax = None
+        if self.toolbar_frame is not None:
+            self.toolbar_frame.grid_remove()
 
         # Remove close button
         if self.close_heatmap_button is not None:
