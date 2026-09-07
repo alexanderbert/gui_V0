@@ -85,10 +85,14 @@ class RadarFunctionality(tk.Frame):
         self.create_heatmap_button.grid(row=1, column=2)
         self.create_heatmap_button.config(width=20, font=("Arial", 20))
 
+        self.close_heatmap_button = None
 
-        self.find_other_radars_button = tk.Button(self.radar_control_frame, text="Find other radars", command=lambda:self.start_network_scan())
+
+        self.find_other_radars_button = tk.Button(self.radar_control_frame, text="Check Network", command=lambda:self.start_network_scan())
         self.find_other_radars_button.grid(row=3, column=2)
         self.find_other_radars_button.config(width=20, font=("Arial", 20))
+
+        self.canvas = None
 
 
         #self.power_queue = queue.Queue()
@@ -362,6 +366,8 @@ class RadarFunctionality(tk.Frame):
 
     def find_other_radars(self):
         #self.status_textbox.config(state="normal")
+        self.find_other_radars_button.config(text="Searching for radars")
+        self.find_other_radars_button.config(state="disabled")
         nm = nmap.PortScanner()
         host_ip = os.environ.get("HOST_IP")
         nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
@@ -382,6 +388,8 @@ class RadarFunctionality(tk.Frame):
         logging.info("RUNNING find_other_radars")
         # self.status_textbox.insert(tk.END, "FINISHED SCANNING")
         # self.status_textbox.config(state="disabled")
+        self.find_other_radars_button.config(state="normal")
+        self.find_other_radars_button.config(text="Find Radars")
 
 
     def start_network_scan(self):
@@ -446,14 +454,30 @@ class RadarFunctionality(tk.Frame):
         # self.after(50, self.update_textboxes)
 
     def create_heatmap(self):
-        self.az_entry.destroy()
-        self.az_label.destroy()
-        self.el_entry.destroy()
-        self.el_label.destroy()
-        self.x_power_entry.destroy()
-        self.x_power_label.destroy()
-        self.y_power_entry.destroy()
-        self.y_power_label.destroy()
+
+        # if(hasattr(self, "canvas")):
+        #     self.canvas.get_tk_widget().destroy()
+        #     plt.close(self.canvas.figure)
+        #     self.canvas = None
+        #
+        # if(hasattr(self, "plot_frame")):
+        #     self.plot_frame.destroy()
+        #     self.plot_frame = None
+        #
+        # if(hasattr(self, "close_heatmap_button")):
+        #     self.close_heatmap_button.destroy()
+        #     self.close_heatmap_button = None
+
+
+        self.az_entry.grid_remove()
+        self.az_label.grid_remove()
+        self.el_entry.grid_remove()
+        self.el_label.grid_remove()
+        self.x_power_entry.grid_remove()
+        self.x_power_label.grid_remove()
+        self.y_power_entry.grid_remove()
+        self.y_power_label.grid_remove()
+
 
         azimuth = []
         elevation = []
@@ -503,26 +527,26 @@ class RadarFunctionality(tk.Frame):
             az_index = np.where(azimuth == az)[0][0]
             el_index = np.where(elevation == el)[0][0]
 
-            heatmap[az_index, el_index] = p
+            heatmap[el_index, az_index] = p
 
-        fig, ax = plt.subplots(figsize=(8,6))
+        fig, ax = plt.subplots(figsize=(3.5,6))
 
         im = ax.imshow(
             heatmap,
             origin="lower",
             aspect="auto",
             extent =[
-                elevation.min(),
-                elevation.max(),
                 azimuth.min(),
-                azimuth.max()
+                azimuth.max(),
+                elevation.min(),
+                elevation.max()
             ],
             cmap="inferno"
             #cmap=gray
         )
 
-        ax.set_xlabel("Elevation")
-        ax.set_ylabel("Azimuth")
+        ax.set_xlabel("Azimuth")
+        ax.set_ylabel("Elevation")
         ax.set_title("Linear X/Y Power")
 
         fig.colorbar(
@@ -531,25 +555,75 @@ class RadarFunctionality(tk.Frame):
             label="Power (dB)"
         )
 
-        fig.set_size_inches(3.5, 6)
-        plot_frame = tk.Frame(self)
-        plot_frame.grid(row=0, column=0, sticky="nsew")
+        # fig.set_size_inches(3.5, 6)
+        # self.plot_frame = tk.Frame(self)
+        # self.plot_frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
-        canvas = FigureCanvasTkAgg(fig, plot_frame)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+        # self.plot_frame.grid_columnconfigure(0, weight=1)
+        # self.plot_frame.grid_rowconfigure(0, weight=1)
+        #canvas = FigureCanvasTkAgg(fig, plot_frame)
+        self.canvas = FigureCanvasTkAgg(fig, self.output_frame)
+        self.canvas.draw()
+        #self.canvas.get_tk_widget().grid(column=0, columnspan=2, row=0, rowspan=4, sticky="nsew")
+        self.canvas.get_tk_widget().grid(column=0, row=0, columnspan=2, rowspan=3, sticky="nsew")
+        #canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
 
         # toolbar = NavigationToolbar2Tk(canvas, plot_frame)
         # toolbar.update()
         # toolbar.pack(side="left")
 
         # PREVENTS RESIZING
-        plot_frame.pack_propagate(False)
+        # self.plot_frame.pack_propagate(False)
 
         # fig.tight_layout()
         #
         # canvas = FigureCanvasTkAgg(fig, master=self.initial_output_frame)
         # canvas.draw()
 
-        canvas.get_tk_widget().grid(column=0, row=0, sticky="nsew")
-        return canvas
+        self.canvas.get_tk_widget().grid(column=0, row=0, sticky="nsew")
+
+        self.close_heatmap_button= tk.Button(self.fpga_control_frame, text="Close Heatmap", command=lambda:self.close_heatmap())
+        self.close_heatmap_button.grid(column=2, row=4)
+        self.close_heatmap_button.config(width=20, font=("Arial", 20))
+        return self.canvas
+
+    def close_heatmap(self):
+        if self.canvas is not None:
+            plt.close(self.canvas.figure)
+            self.canvas.get_tk_widget().destroy()
+
+            self.canvas = None
+            # self.heatmap_fig = None
+            # self.heatmap_ax = None
+
+        # Remove close button
+        if self.close_heatmap_button is not None:
+            self.close_heatmap_button.destroy()
+
+            self.close_heatmap_button = None
+        self.az_entry.grid()
+        self.az_label.grid()
+        self.el_entry.grid()
+        self.el_label.grid()
+        self.x_power_entry.grid()
+        self.x_power_label.grid()
+        self.y_power_entry.grid()
+        self.y_power_label.grid()
+        # self.canvas.get_tk_widget().grid_remove()
+        # self.close_heatmap_button.grid_remove()
+        # self.columnconfigure(0, weight=10)
+        # self.columnconfigure(1, weight=10)
+        # self.columnconfigure(2, weight=1)
+        # self.rowconfigure(0, weight=1)
+        # self.rowconfigure(1, weight=1)
+
+        #INNER FRAMES
+
+        #
+        #
+        # self.output_frame = tk.Frame(self)
+        # self.output_frame.grid(column=0, row=0, sticky="nsew")
+        # self.output_frame.grid_columnconfigure(0, weight=1)
+        # self.output_frame.grid_columnconfigure(1, weight=1)
+        # self.output_frame.rowconfigure(list(range(0,4)), weight=1)
+        self.initial_output_frame()
