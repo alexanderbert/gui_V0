@@ -22,6 +22,9 @@ from pathlib import Path
 dir_path = Path("./captureMode")
 dir_path.mkdir(parents=True, exist_ok=True)
 
+dir_path = Path("./generatedHeatmaps")
+dir_path.mkdir(parents=True, exist_ok=True)
+
 
 if getattr(sys, 'frozen', False):
     # Running in a PyInstaller bundle
@@ -503,7 +506,7 @@ class RadarFunctionality(tk.Frame):
         self.y_power_label.grid_remove()
 
         self.find_other_radars_button.grid_remove()
-        self.radar_drop
+
 
 
         azimuth_raw = []
@@ -593,7 +596,9 @@ class RadarFunctionality(tk.Frame):
         )
 
         #CREATE JPG IF IT DOESNT EXIT
-        current_heatmap_output = Path(csv_file).with_suffix(".jpg")
+        csv_path = Path(csv_file)
+        output_dir = csv_path.parent / "generatedHeatmaps"
+        current_heatmap_output = output_dir / (csv_path.stem + ".jpg")
         if not current_heatmap_output.exists():
             fig.savefig(
                 current_heatmap_output,
