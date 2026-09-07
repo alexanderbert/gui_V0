@@ -17,8 +17,10 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 import subprocess
+from pathlib import Path
 
-
+dir_path = Path("./captureMode")
+dir_path.mkdir(parents=True, exist_ok=True)
 
 
 if getattr(sys, 'frozen', False):
@@ -320,7 +322,8 @@ class RadarFunctionality(tk.Frame):
     def capture_packets_run(self):
         #Todo run this from wherever the files will be stored
         try:
-            subprocess.run(['socat','tcp-l:7777,reuseaddr,fork','system:\'cpio -i\''], check=True)
+            target_directory = "/captureMode"
+            subprocess.run(['socat','tcp-l:7777,reuseaddr,fork','system:\'cpio -i\''],cwd=target_directory, check=True)
         except subprocess.CalledProcessError as e:
             print(f"Command failed with exit code {e.returncode}")
 
