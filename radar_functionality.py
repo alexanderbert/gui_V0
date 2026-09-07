@@ -521,7 +521,7 @@ class RadarFunctionality(tk.Frame):
         power = 10 * np.log10(total_linear)
 
         heatmap = np.full(
-            (len(azimuth), len(elevation)),np.nan
+            (len(elevation), len(azimuth)),np.nan
         )
         for az, el, p in zip(azimuth, elevation, power):
             az_index = np.where(azimuth == az)[0][0]
