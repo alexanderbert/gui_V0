@@ -593,11 +593,13 @@ class RadarFunctionality(tk.Frame):
         #self.canvas.get_tk_widget().grid(column=0, columnspan=2, row=0, rowspan=4, sticky="nsew")
         self.canvas.get_tk_widget().grid(column=0, row=0, columnspan=2, rowspan=3, sticky="nsew")
         #canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
-        self.toolbar_frame = tk.Frame(self.output_frame)
+        self.toolbar_frame = tk.Frame(self.output_frame, width=300, height=40)
 
         self.toolbar = NavigationToolbar2Tk(self.canvas, self.toolbar_frame)
         self.toolbar.update()
         self.toolbar_frame.grid(column=0, row=4, sticky="ew")
+
+        self.toolbar_frame.grid_propagate(False)
 
 
         # toolbar = NavigationToolbar2Tk(canvas, plot_frame)
