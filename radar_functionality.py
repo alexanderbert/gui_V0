@@ -483,10 +483,6 @@ class RadarFunctionality(tk.Frame):
 
     def create_heatmap(self):
 
-        self.output_frame.destroy()
-
-
-
         self.az_entry.grid_remove()
         self.az_label.grid_remove()
         self.el_entry.grid_remove()
