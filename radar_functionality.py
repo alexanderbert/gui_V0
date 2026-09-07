@@ -63,7 +63,7 @@ class RadarFunctionality(tk.Frame):
         self.output_frame.grid_columnconfigure(0, weight=1)
         self.output_frame.grid_columnconfigure(1, weight=1)
         self.output_frame.rowconfigure(list(range(0,4)), weight=1)
-        self.output_frame.grid_propagate(False)
+        #self.output_frame.grid_propagate(False)
 
         self.toolbar_frame= tk.Frame(self.output_frame)
         self.toolbar_frame.grid_propagate(False)
