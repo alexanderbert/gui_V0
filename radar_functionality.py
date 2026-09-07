@@ -15,6 +15,7 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import subprocess
 
 
 
@@ -69,7 +70,7 @@ class RadarFunctionality(tk.Frame):
         self.radar_drop()
         
         #infrastructure
-        self.run_heatmap_fpga_button= tk.Button(self.fpga_control_frame, text="Heat Map FPGA", command=lambda:self.start_threading(self.heat_map_fpga))
+        self.run_heatmap_fpga_button= tk.Button(self.fpga_control_frame, text="RUN", command=lambda:self.start_threading(self.heat_map_fpga))
         self.run_heatmap_fpga_button.grid(row=0, column=2)
         self.run_heatmap_fpga_button.config(width=20, font=("Arial", 20))
         #
@@ -77,13 +78,17 @@ class RadarFunctionality(tk.Frame):
         # self.run_capture_fpga_button.grid(row=1, column=2)
         # self.run_capture_fpga_button.config(width=20, font=("Arial", 20))
 
-        self.stop_fpga_button= tk.Button(self.fpga_control_frame, text="End FPGA", command=lambda:self.stop_fpga())
+        self.stop_fpga_button= tk.Button(self.fpga_control_frame, text="End RUN", command=lambda:self.stop_fpga())
         self.stop_fpga_button.grid(row=2, column=2)
         self.stop_fpga_button.config(width=20, font=("Arial", 20))
 
         self.create_heatmap_button= tk.Button(self.fpga_control_frame, text="Create Heatmap", command=lambda:self.create_heatmap())
         self.create_heatmap_button.grid(row=1, column=2)
         self.create_heatmap_button.config(width=20, font=("Arial", 20))
+
+        self.capture_packets_button = tk.Button(self.fpga_control_frame, text="CAPTURE ONLY", command=lambda:self.start_threading(self.capture_packets_run))
+        self.capture_packets_button.grid(column=2, row =4)
+        self.capture_packets_button.config(width=20, font=("Arial", 20))
 
         self.close_heatmap_button = None
 
@@ -303,6 +308,26 @@ class RadarFunctionality(tk.Frame):
                     pass
             if client is not None:
                 client.close()
+
+
+    def capture_packets_run(self):
+        try:
+            subprocess.run(['socat','tcp-l:7777,reuseaddr,fork','system:\'cpio -i\''], check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Command failed with exit code {e.returncode}")
+
+        client, channel = self.fl_network_mode()
+        print("After connection to fl network")
+        global is_fpga_running
+        is_fpga_running = True
+        time.sleep(1)
+        channel.send(f"cd {os.environ['FPGAPATH']}\n")
+        print(f"sent: cd {os.environ['FPGAPATH']}")
+        channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 1000 -k 8000 -q -c | socat - tcp:10.42.0.1:7777\n")
+        channel.close()
+        client.close()
+
+
 
     def stop_fpga(self):
         global is_fpga_running
@@ -531,6 +556,11 @@ class RadarFunctionality(tk.Frame):
 
         fig, ax = plt.subplots(figsize=(3.5,6))
 
+        print("Number of oints:", len(azimuth))
+        print("Non-Nan heatmap values:", np.count_nonzero(~np.isnan(heatmap)))
+        print("Power min", np.nanmin(heatmap))
+        print("Power max", np.nanmax(heatmap))
+
         im = ax.imshow(
             heatmap,
             origin="lower",
@@ -541,7 +571,8 @@ class RadarFunctionality(tk.Frame):
                 elevation.min(),
                 elevation.max()
             ],
-            cmap="inferno"
+            cmap="inferno",
+            interpolation="nearest"
             #cmap=gray
         )
 
