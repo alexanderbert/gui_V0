@@ -258,19 +258,13 @@ class RadarFunctionality(tk.Frame):
         #     r"Y power:\s*([+-]?\d+\.\d+)"
         #     )
 
-        #todo check proper findings
-        # position: 000.00000 azimuth, 045.00000, plate, 000.00000 altitude;
+
         pattern = re.compile(
-            r'position:\s*[-+]?\d+\.\d+\s+azimuth,\s*'
-            r'(?P<az>[-+]?\d+\.\d+),\s*plate,\s*'
-            r'(?P<el>[-+]?\d+\.\d+)\s+altitude;'
-            r'\s*absolute:\s*[-+]?\d+\.\d+\s+azimuth,\s*'
-            r'(?P<absAz>[-+]?\d+\.\d+),\s*plate,\s*'
-            r'(?P<absEl>[-+]?\d+\.\d+)\s+altitude;.*?\n'
-            r'X dc offset\s*=\s*[-+]?\d+\.\d+,\s*'
-            r'Y dc offset\s*=\s*[-+]?\d+\.\d+.*?'
-            r'X power:\s*(?P<xPow>[-+]?\d+\.\d+),\s*'
-            r'Y power:\s*(?P<yPow>[-+]?\d+\.\d+)'
+            r"position:\s*([+-]?\d+\.\d+)\s+azimuth,\s*"
+            r"[+-]?\d+\.\d+,\s*plate,\s*"
+            r"([+-]?\d+\.\d+)\s+altitude;.*?"
+            r"X power:\s*([+-]?\d+\.\d+),\s*"
+            r"Y power:\s*([+-]?\d+\.\d+)"
         )
         try:
 
