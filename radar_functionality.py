@@ -258,7 +258,8 @@ class RadarFunctionality(tk.Frame):
         #     r"Y power:\s*([+-]?\d+\.\d+)"
         #     )
 
-
+        #todo check proper findings
+        # position: 000.00000 azimuth, 045.00000, plate, 000.00000 altitude;
         pattern = re.compile(
             r"position:\s*([+-]?\d+\.\d+)\s+azimuth,\s*"
             r"[+-]?\d+\.\d+,\s*plate,\s*"
@@ -281,12 +282,10 @@ class RadarFunctionality(tk.Frame):
                         match = pattern.search(buffer)
                         if match is None:
                             break
-                        az = match.group("az")
-                        el = match.group("el")
-                        absAz = match.group("absAz")
-                        absEl = match.group("absEl")
-                        xPower = match.group("xPow")
-                        yPower = match.group("yPow")
+                        az_match = match.group("az")
+                        el_match = match.group("el")
+                        x_power_match = match.group("xPow")
+                        y_power_match = match.group("yPow")
                         # x_power = float(match.group(1))
                         # y_power = float(match.group(2))
 
@@ -296,11 +295,11 @@ class RadarFunctionality(tk.Frame):
 
                         # try to output only the latest values for the gui for performance
                         #with self.values_lock:
-                        self.latest_values = (az, el, absAz, absEl, xPower, yPower)
+                        self.latest_values = (az_match, el_match, x_power_match, y_power_match)
                         #self.power_queue.put((x_power, y_power))
 
                         #queue values
-                        self.csv_queue.put((az, el, xPower, yPower))
+                        self.csv_queue.put((az_match, el_match, x_power_match, y_power_match))
                         #self.csv_writer.writerow([x_power, y_power])
 
                         #try to new buffer tech
