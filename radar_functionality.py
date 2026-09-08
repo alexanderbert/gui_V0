@@ -532,6 +532,19 @@ class RadarFunctionality(tk.Frame):
             ]
         )
 
+        if not csv_file:
+            self.az_entry.grid()
+            self.az_label.grid()
+            self.el_entry.grid()
+            self.el_label.grid()
+            self.x_power_entry.grid()
+            self.x_power_label.grid()
+            self.y_power_entry.grid()
+            self.y_power_label.grid()
+            self.find_other_radars_button.grid()
+            return
+
+
         with open(csv_file, "r", newline="") as file:
             reader = csv.reader(file)
 
