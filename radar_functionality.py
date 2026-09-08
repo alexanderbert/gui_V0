@@ -257,6 +257,9 @@ class RadarFunctionality(tk.Frame):
         #     r"X power:\s*([+-]?\d+\.\d+),\s*"
         #     r"Y power:\s*([+-]?\d+\.\d+)"
         #     )
+
+        #todo check proper findings
+        # position: 000.00000 azimuth, 045.00000, plate, 000.00000 altitude;
         pattern = re.compile(
             r'position:\s*[-+]?\d+\.\d+\s+azimuth,\s*'
             r'(?P<az>[-+]?\d+\.\d+),\s*plate,\s*'
@@ -338,7 +341,7 @@ class RadarFunctionality(tk.Frame):
         channel.send(f"cd {os.environ['FPGAPATH']}\n")
         print(f"sent: cd {os.environ['FPGAPATH']}")
         #Need a total -Q number for pulses to be read i think
-        channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 1000 -k 8000 -q -c | socat - tcp:10.42.0.1:7777\n")
+        channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 1000 -k 8000 -Q 10000 -q -c | socat - tcp:10.42.0.1:7777\n")
         time.sleep(.5)
         channel.close()
         client.close()
@@ -417,8 +420,6 @@ class RadarFunctionality(tk.Frame):
             client = self.create_ssh_client()
             try:
                 logging.info(f"Scanning {host}")
-                # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
-                # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, host)
                 client.connect(hostname=f"{host}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=3, auth_timeout=5)
                 stdin, stdout, stderr = client.exec_command("hostname")
                 radar_hostname = stdout.read().decode("utf-8")
@@ -427,8 +428,6 @@ class RadarFunctionality(tk.Frame):
             except:
                 print(f"No connection to {host}")
         logging.info("RUNNING find_other_radars")
-        # self.status_textbox.insert(tk.END, "FINISHED SCANNING")
-        # self.status_textbox.config(state="disabled")
         self.find_other_radars_button.config(state="normal")
         self.find_other_radars_button.config(text="Find Radars")
 
@@ -524,8 +523,6 @@ class RadarFunctionality(tk.Frame):
             ]
         )
 
-
-
         with open(csv_file, "r", newline="") as file:
             reader = csv.reader(file)
 
@@ -545,20 +542,22 @@ class RadarFunctionality(tk.Frame):
         azimuth = np.array(azimuth_raw)
         elevation = np.array(elevation_raw)
         #TODO NUMBERS
+        #ONLY USE X Power
+        #remove linear power calculation
         x_power = np.array(x_power_raw)
-        y_power = np.array(y_power_raw)
-
-        x_linear = 10 ** (x_power / 10)
-        y_linear = 10 ** (y_power / 10)
-
-        total_linear = x_linear + y_linear
-
-        power = 10 * np.log10(total_linear)
+        # y_power = np.array(y_power_raw)
+        #
+        # x_linear = 10 ** (x_power / 10)
+        # y_linear = 10 ** (y_power / 10)
+        #
+        # total_linear = x_linear + y_linear
+        #
+        # power = 10 * np.log10(total_linear)
 
         heatmap = np.full(
             (len(elevation), len(azimuth)),np.nan
         )
-        for az, el, p in zip(azimuth, elevation, power):
+        for az, el, p in zip(azimuth, elevation, x_power):
             az_index = np.where(azimuth == az)[0][0]
             el_index = np.where(elevation == el)[0][0]
 
