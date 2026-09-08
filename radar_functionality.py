@@ -260,13 +260,29 @@ class RadarFunctionality(tk.Frame):
 
         #todo check proper findings
         # position: 000.00000 azimuth, 045.00000, plate, 000.00000 altitude;
+        # pattern = re.compile(
+        #     r"position:\s*([+-]?\d+\.\d+)\s+azimuth,\s*"
+        #     r"[+-]?\d+\.\d+,\s*plate,\s*"
+        #     r"([+-]?\d+\.\d+)\s+altitude;.*?"
+        #     r"X power:\s*([+-]?\d+\.\d+),\s*"
+        #     r"Y power:\s*([+-]?\d+\.\d+)"
+        # )
+        # pattern = re.compile(
+        #     r"position:\s*(?P<az>[+-]?\d+\.\d+)\s+azimuth,\s*"
+        #     r"[+-]?\d+\.\d+,\s*plate,\s*"
+        #     r"(?P<el>[+-]?\d+\.\d+)\s+altitude;.*?"
+        #     r"X power:\s*(?P<xPow>[+-]?\d+\.\d+),\s*"
+        #     r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)"
+        # )
         pattern = re.compile(
-            r"position:\s*([+-]?\d+\.\d+)\s+azimuth,\s*"
+            r"position:\s*(?P<az>[+-]?\d+\.\d+)\s+azimuth,\s*"
             r"[+-]?\d+\.\d+,\s*plate,\s*"
-            r"([+-]?\d+\.\d+)\s+altitude;.*?"
-            r"X power:\s*([+-]?\d+\.\d+),\s*"
-            r"Y power:\s*([+-]?\d+\.\d+)"
+            r"(?P<el>[+-]?\d+\.\d+)\s+altitude;.*?"
+            r"X power:\s*(?P<xPow>[+-]?\d+\.\d+),\s*"
+            r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)",
+            re.DOTALL
         )
+
         try:
 
             # self.create_values_csv()
@@ -282,10 +298,10 @@ class RadarFunctionality(tk.Frame):
                         match = pattern.search(buffer)
                         if match is None:
                             break
-                        az_match = match.group("az")
-                        el_match = match.group("el")
-                        x_power_match = match.group("xPow")
-                        y_power_match = match.group("yPow")
+                        az_match = float(match.group("az"))
+                        el_match = float(match.group("el"))
+                        x_power_match = float(match.group("xPow"))
+                        y_power_match = float(match.group("yPow"))
                         # x_power = float(match.group(1))
                         # y_power = float(match.group(2))
 
