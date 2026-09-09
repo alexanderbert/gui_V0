@@ -274,13 +274,24 @@ class RadarFunctionality(tk.Frame):
         #     r"X power:\s*(?P<xPow>[+-]?\d+\.\d+),\s*"
         #     r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)"
         # )
-        pattern = re.compile(
+        # pattern = re.compile(
+        #     r"position:\s*(?P<az>[+-]?\d+\.\d+)\s+azimuth,\s*"
+        #     r"[+-]?\d+\.\d+,\s*plate,\s*"
+        #     r"(?P<el>[+-]?\d+\.\d+)\s+altitude;.*?"
+        #     r"X power:\s*(?P<xPow>[+-]?\d+\.\d+),\s*"
+        #     r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)",
+        #     re.DOTALL
+        # )
+        # Grabs the line with Power and the line above it for azimuth and altitude
+        position_pattern = re.compile(
             r"position:\s*(?P<az>[+-]?\d+\.\d+)\s+azimuth,\s*"
             r"[+-]?\d+\.\d+,\s*plate,\s*"
-            r"(?P<el>[+-]?\d+\.\d+)\s+altitude;.*?"
-            r"X power:\s*(?P<xPow>[+-]?\d+\.\d+),\s*"
-            r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)",
-            re.DOTALL
+            r"(?P<el>[+-]?\d+\.\d+)\s+altitude"
+        )
+
+        power_pattern = re.compile(
+            r"X power:\s*(?P<xPow>[+-]?\d+\.\d+).*?"
+            r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)"
         )
 
         try:
@@ -292,34 +303,88 @@ class RadarFunctionality(tk.Frame):
                     data = channel.recv(1024).decode("iso-8859-1")
                 #print(data)
                     buffer += data
-
                     while True:
-                        #matches = list(pattern.finditer(buffer))
-                        match = pattern.search(buffer)
-                        if match is None:
+                        position_match = position_pattern.search(buffer)
+                        power_match = power_pattern.search(buffer)
+
+                        if position_match is None and power_match is None:
                             break
-                        az_match = float(match.group("az"))
-                        el_match = float(match.group("el"))
-                        x_power_match = float(match.group("xPow"))
-                        y_power_match = float(match.group("yPow"))
-                        # x_power = float(match.group(1))
-                        # y_power = float(match.group(2))
 
-                        # for match in matches:
-                        #     x_power = float(match.group(1))
-                        #     y_power = float(match.group(2))
+                        if position_match is not None and (power_match is None or position_match.start() < power_match.start()):
+                            last_position = position_match
 
-                        # try to output only the latest values for the gui for performance
-                        #with self.values_lock:
-                        self.latest_values = (az_match, el_match, x_power_match, y_power_match)
-                        #self.power_queue.put((x_power, y_power))
+                            buffer = buffer[position_match.end():]
+                            continue
 
-                        #queue values
-                        self.csv_queue.put((az_match, el_match, x_power_match, y_power_match))
-                        #self.csv_writer.writerow([x_power, y_power])
+                        if power_match is not None:
+                            if last_position is not None:
+                                az = float(last_position.group("az"))
+                                el = float(last_position.group("el"))
+                                x_power = float(power_match.group("xPow"))
+                                y_power = float(power_match.group("yPow"))
 
-                        #try to new buffer tech
-                        buffer = buffer[match.end():]
+                                self.latest_values = (az, el, x_power, y_power)
+                                self.csv_queue.put((az, el, x_power, y_power))
+
+                                last_position = None
+                            buffer = buffer[power_match.end():]
+                            continue
+
+
+                    # while True:
+                    #     #matches = list(pattern.finditer(buffer))
+                    #
+                    #     position_match = position_pattern.search(buffer)
+                    #     if position_match:
+                    #         # Always keep the newest position
+                    #         last_position = position_match
+                    #     power_match = power_pattern.search(buffer)
+                    #
+                    #     if power_match and last_position:
+                    #         # This is the position immediately before X power
+                    #         az = float(last_position.group("az"))
+                    #         el = float(last_position.group("el"))
+                    #         xPow = float(power_match.group("xPow"))
+                    #         yPow = float(power_match.group("yPow"))
+                    #         # azimuth_raw.append(az)
+                    #         # elevation_raw.append(el)
+                    #         # x_power_raw.append(xPow)
+                    #         # y_power_raw.append(yPow)
+                    #
+                    #         # print(
+                    #         #     f"Azimuth: {az:.5f}, "
+                    #         #     f"Elevation: {el:.5f}, "
+                    #         #     f"X Power: {xPow:.6f}, "
+                    #         #     f"Y Power: {yPow:.6f}"
+                    #         # )
+                    #
+                    #         last_position = None
+                    #
+                    #     # match = pattern.search(buffer)
+                    #     # if match is None:
+                    #     #     break
+                    #     # az_match = float(match.group("az"))
+                    #     # el_match = float(match.group("el"))
+                    #     # x_power_match = float(match.group("xPow"))
+                    #     # y_power_match = float(match.group("yPow"))
+                    #     # x_power = float(match.group(1))
+                    #     # y_power = float(match.group(2))
+                    #
+                    #     # for match in matches:
+                    #     #     x_power = float(match.group(1))
+                    #     #     y_power = float(match.group(2))
+                    #
+                    #     # try to output only the latest values for the gui for performance
+                    #     #with self.values_lock:
+                    #     self.latest_values = (az, el, xPow, yPow)
+                    #     #self.power_queue.put((x_power, y_power))
+                    #
+                    #     #queue values
+                    #     self.csv_queue.put((az, el, xPow, yPow))
+                    #     #self.csv_writer.writerow([x_power, y_power])
+                    #
+                    #     #try to new buffer tech
+                    #     buffer = buffer[power_match.end():]
                     # if len(buffer) > 4096:
                     #     buffer = buffer[-4096]
         finally:
