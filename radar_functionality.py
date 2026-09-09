@@ -253,6 +253,7 @@ class RadarFunctionality(tk.Frame):
         time.sleep(1)
         print(f"FPGA RUNNING STATE: {is_fpga_running}")
         buffer = ""
+
         #Only matches x and y power
         # pattern = re.compile(
         #     r"X power:\s*([+-]?\d+\.\d+),\s*"
@@ -296,7 +297,7 @@ class RadarFunctionality(tk.Frame):
         )
 
         try:
-
+            last_position = None
             # self.create_values_csv()
 
             while channel.active and is_fpga_running:
@@ -331,7 +332,7 @@ class RadarFunctionality(tk.Frame):
                             buffer = buffer[power_match.end():]
                             continue
 
-
+                    #OLDER MATCHING SYSTEMS
                     # while True:
                     #     #matches = list(pattern.finditer(buffer))
                     #
@@ -643,8 +644,8 @@ class RadarFunctionality(tk.Frame):
 
         #NEW HEATMAP CREATION
         fig, ax = plt.subplots(figsize=(4, 6))
-        az_grid = np.linspace(azimuth.min(), azimuth.max(), 200)
-        el_grid = np.linspace(elevation.min(), elevation.max(), 200)
+        az_grid = np.linspace(azimuth.min(), azimuth.max(), 500)
+        el_grid = np.linspace(elevation.min(), elevation.max(), 500)
 
         AZ, EL = np.meshgrid(az_grid, el_grid)
 
@@ -656,13 +657,41 @@ class RadarFunctionality(tk.Frame):
         )
 
 
+        peak_index = np.nanargmax(POWER)
 
+        peak_el, peak_az = np.unravel_index(
+            peak_index,
+            POWER.shape
+        )
+
+        peak_azimuth = AZ[peak_el, peak_az]
+        peak_elevation = EL[peak_el, peak_az]
+        peak_power = POWER[peak_el, peak_az]
+        ax.plot(
+            peak_azimuth,
+            peak_elevation,
+            marker="x",
+            markersize=12,
+            markeredgewidth=3,
+            color="black"
+        )
+
+        ax.annotate(
+            f"{peak_azimuth:.2f}, {peak_elevation:.2f}",
+            (peak_azimuth, peak_elevation),
+            xytext=(10,10),
+            textcoords="offset points",
+            color="black",
+
+
+        )
         heatmap = ax.pcolormesh(
             AZ,
             EL,
             POWER,
             shading="auto",
             cmap="inferno"
+            #cmap="gray
         )
 
 
