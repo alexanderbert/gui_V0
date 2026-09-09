@@ -18,6 +18,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 import subprocess
 from pathlib import Path
+from scipy.interpolate import griddata
 
 dir_path = Path("./captureMode")
 dir_path.mkdir(parents=True, exist_ok=True)
@@ -628,10 +629,8 @@ class RadarFunctionality(tk.Frame):
             raise ValueError("No valid data")
         azimuth = np.array(azimuth_raw)
         elevation = np.array(elevation_raw)
-        #TODO NUMBERS
-        #ONLY USE X Power
-        #remove linear power calculation
         x_power = np.array(x_power_raw)
+        # TODO OLD EQUATION
         # y_power = np.array(y_power_raw)
         #
         # x_linear = 10 ** (x_power / 10)
@@ -641,46 +640,84 @@ class RadarFunctionality(tk.Frame):
         #
         # power = 10 * np.log10(total_linear)
 
-        heatmap = np.full(
-            (len(elevation), len(azimuth)),np.nan
-        )
-        for az, el, p in zip(azimuth, elevation, x_power):
-            az_index = np.where(azimuth == az)[0][0]
-            el_index = np.where(elevation == el)[0][0]
 
-            heatmap[el_index, az_index] = p
+        #NEW HEATMAP CREATION
+        fig, ax = plt.subplots(figsize=(4, 6))
+        az_grid = np.linspace(azimuth.min(), azimuth.max(), 200)
+        el_grid = np.linspace(elevation.min(), elevation.max(), 200)
 
-        fig, ax = plt.subplots(figsize=(3.5,6))
+        AZ, EL = np.meshgrid(az_grid, el_grid)
 
-        print("Number of oints:", len(azimuth))
-        print("Non-Nan heatmap values:", np.count_nonzero(~np.isnan(heatmap)))
-        print("Power min", np.nanmin(heatmap))
-        print("Power max", np.nanmax(heatmap))
-
-        im = ax.imshow(
-            heatmap,
-            origin="lower",
-            aspect="auto",
-            extent =[
-                azimuth.min(),
-                azimuth.max(),
-                elevation.min(),
-                elevation.max()
-            ],
-            cmap="inferno",
-            interpolation="nearest"
-            #cmap=gray
+        POWER = griddata(
+            (azimuth,elevation),
+            x_power,
+            (AZ, EL),
+            method="linear",
         )
 
-        ax.set_xlabel("Azimuth")
-        ax.set_ylabel("Elevation")
-        ax.set_title("Linear X/Y Power")
 
-        fig.colorbar(
-            im,
-            ax=ax,
-            label="Power (dB)"
+
+        heatmap = ax.pcolormesh(
+            AZ,
+            EL,
+            POWER,
+            shading="auto",
+            cmap="inferno"
         )
+
+
+
+        #plt.fig(4, 6)
+
+
+        fig.colorbar(heatmap, ax=ax, label="X Power (dB)")
+        ax.set_xlabel("Azimuth (degrees)")
+        ax.set_ylabel("Elevation (degrees)")
+        ax.set_title("X Power Heatmap")
+        plt.tight_layout()
+
+
+        #TODO Hide this initial version of HEATMAP FOR NOW
+        # heatmap = np.full(
+        #     (len(elevation), len(azimuth)),np.nan
+        # )
+        # for az, el, p in zip(azimuth, elevation, x_power):
+        #     az_index = np.where(azimuth == az)[0][0]
+        #     el_index = np.where(elevation == el)[0][0]
+        #
+        #     heatmap[el_index, az_index] = p
+        #
+        # fig, ax = plt.subplots(figsize=(3.5,6))
+        #
+        # print("Number of oints:", len(azimuth))
+        # print("Non-Nan heatmap values:", np.count_nonzero(~np.isnan(heatmap)))
+        # print("Power min", np.nanmin(heatmap))
+        # print("Power max", np.nanmax(heatmap))
+        #
+        # im = ax.imshow(
+        #     heatmap,
+        #     origin="lower",
+        #     aspect="auto",
+        #     extent =[
+        #         azimuth.min(),
+        #         azimuth.max(),
+        #         elevation.min(),
+        #         elevation.max()
+        #     ],
+        #     cmap="inferno",
+        #     interpolation="nearest"
+        #     #cmap=gray
+        # )
+        #
+        # ax.set_xlabel("Azimuth")
+        # ax.set_ylabel("Elevation")
+        # ax.set_title("Linear X/Y Power")
+        #
+        # fig.colorbar(
+        #     im,
+        #     ax=ax,
+        #     label="Power (dB)"
+        # )
 
         #CREATE JPG IF IT DOESNT EXIT
         csv_path = Path(csv_file)
