@@ -81,7 +81,7 @@ class NetworkSwitch(tk.Frame):
         if self.state:
             self.lbl_a.config(font=("Helvetica", 12), fg="#999999")
             self.lbl_b.config(font=("Helvetica", 12, "bold"), fg="#333333")
-            state.network_state = "10.42.0"
+            state.network_state = "10.42.0.*"
             # self.network_state.set("Wifi")
             # state.network_state = "Wifi"
             # print(state.network_state)
