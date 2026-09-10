@@ -20,6 +20,9 @@ import subprocess
 from pathlib import Path
 from scipy.interpolate import griddata
 
+from network_toggle import NetworkSwitch
+import state
+
 dir_path = Path("./captureMode")
 dir_path.mkdir(parents=True, exist_ok=True)
 
@@ -53,6 +56,8 @@ class RadarFunctionality(tk.Frame):
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
 
+
+
         #INNER FRAMES
         self.fpga_control_frame = tk.Frame(self)
         self.fpga_control_frame.grid(row=0, column=2, sticky="nsew")
@@ -62,6 +67,7 @@ class RadarFunctionality(tk.Frame):
 
         self.radar_control_frame = tk.Frame(self)
         self.radar_control_frame.grid(row=1, column=2, sticky="nsew")
+        # self.radar_control_frame.grid_rowconfigure(list(range(0,3)), weight=1)
 
 
         self.output_frame = tk.Frame(self)
@@ -73,6 +79,13 @@ class RadarFunctionality(tk.Frame):
 
         self.toolbar_frame= tk.Frame(self.output_frame)
         self.toolbar_frame.grid_propagate(False)
+        # self.network_state = "Wifi"
+
+
+        self.network_switch = NetworkSwitch(self.radar_control_frame, label_a="Wifi", label_b="Ethernet", command=self.on_switch_toggle)
+        self.network_switch.grid(row=2, column=2)
+
+
 
         #Variables
         self.radar_dict = {"Select A Radar": "---------"}
@@ -129,6 +142,18 @@ class RadarFunctionality(tk.Frame):
             daemon=True
         )
         self.csv_thread.start()
+
+    def on_switch_toggle(self, is_on):
+        if is_on:
+            # print("Switch is at Position B")
+            # print(f"on: {self.network_state.get()}")
+            state.network_state = "Ethernet"
+            #return self.network_state
+        else:
+            # print("Switch is at Position A")
+            # print(f"off: {self.network_state.get()}")
+            state.network_state = "Wifi"
+            #return self.network_state
 
 
     def create_ssh_client(self):
@@ -509,6 +534,7 @@ class RadarFunctionality(tk.Frame):
 
 
     def start_network_scan(self):
+        print(state.network_state)
         thread = threading.Thread(
             target = self.find_other_radars,
             daemon = True
@@ -843,3 +869,5 @@ class RadarFunctionality(tk.Frame):
         # self.output_frame.grid_columnconfigure(1, weight=1)
         # self.output_frame.rowconfigure(list(range(0,4)), weight=1)
         self.initial_output_frame()
+
+
