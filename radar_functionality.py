@@ -82,11 +82,6 @@ class RadarFunctionality(tk.Frame):
         # self.network_state = "Wifi"
 
 
-        self.network_switch = NetworkSwitch(self.radar_control_frame, label_a="Wifi", label_b="Ethernet", command=self.on_switch_toggle)
-        self.network_switch.grid(row=2, column=2)
-
-
-
         #Variables
         self.radar_dict = {"Select A Radar": "---------"}
         #self.radar_selected = None
@@ -142,18 +137,6 @@ class RadarFunctionality(tk.Frame):
             daemon=True
         )
         self.csv_thread.start()
-
-    def on_switch_toggle(self, is_on):
-        if is_on:
-            # print("Switch is at Position B")
-            # print(f"on: {self.network_state.get()}")
-            state.network_state = "Ethernet"
-            #return self.network_state
-        else:
-            # print("Switch is at Position A")
-            # print(f"off: {self.network_state.get()}")
-            state.network_state = "Wifi"
-            #return self.network_state
 
 
     def create_ssh_client(self):
@@ -511,12 +494,17 @@ class RadarFunctionality(tk.Frame):
 
     def find_other_radars(self):
         #self.status_textbox.config(state="normal")
+        print(f"insid eother radars {state.network_state}")
         self.find_other_radars_button.config(text="Searching for radars")
         self.find_other_radars_button.config(state="disabled")
         nm = nmap.PortScanner()
-        host_ip = os.environ.get("HOST_IP")
-        nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
+        # host_ip = os.environ.get("HOST_IP")
+        # nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
+        #CHANGE NMAP SCAN BASED ON NETWORK STATE
+        nm.scan(hosts=state.network_state, arguments="-sn")
+        host_ip = state.network_state
         logging.info(f"running on {host_ip}")
+        print(f"running on {host_ip}")
         for host in nm.all_hosts():
             client = self.create_ssh_client()
             try:
@@ -534,7 +522,6 @@ class RadarFunctionality(tk.Frame):
 
 
     def start_network_scan(self):
-        print(state.network_state)
         thread = threading.Thread(
             target = self.find_other_radars,
             daemon = True
