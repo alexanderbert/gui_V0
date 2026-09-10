@@ -1,3 +1,4 @@
+import logging
 import tkinter as tk
 from tkinter import ttk, messagebox
 from settings import *
@@ -16,6 +17,7 @@ from pathlib import Path
 from datetime import datetime
 import glob
 import shutil
+import state
 
 # Determine the correct path to the .env file
 if getattr(sys, 'frozen', False):
@@ -225,8 +227,10 @@ class RadarsAvailableFrame(tk.Frame):
     def find_other_radars(self):
         nm = nmap.PortScanner()
         #f"{os.environ.get('CONNECTION_USERNAME')}"
-        nm.scan(hosts = f"{os.environ.get('HOST_IP')}", arguments = "-sn")
-
+        #nm.scan(hosts = f"{os.environ.get('HOST_IP')}", arguments = "-sn")
+        nm.scan(hosts=state.network_state, arguments="-sn")
+        host_ip = state.network_state
+        logging.info(f"fpga_layout connect: running on {host_ip}")
         for host in nm.all_hosts():
             self.messagebox.config(state="normal")
             self.messagebox.delete("1.0", tk.END)

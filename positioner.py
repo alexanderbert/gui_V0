@@ -10,6 +10,8 @@ import sys
 import logging
 import subprocess
 from settings import *
+from network_toggle import NetworkSwitch
+import state
 
 from datetime import datetime
 is_fpga_running = False
@@ -1320,10 +1322,14 @@ class RadarsAvailableFrame(tk.Frame):
 
 
     def find_other_radars(self):
+        print(state.network_state)
         nm = nmap.PortScanner()
-        host_ip = os.environ.get("HOST_IP")
-        nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
-        logging.info(f"running on {host_ip}")
+        # host_ip = os.environ.get("HOST_IP")
+        # nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
+        #Update for state.network_state
+        nm.scan(hosts=state.network_state, arguments="-sn")
+        host_ip = state.network_state
+        logging.info(f"Positioner connect: running on {host_ip}")
         for host in nm.all_hosts():
             try:
                 logging.info(f"Scanning {host}")
