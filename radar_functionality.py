@@ -275,6 +275,8 @@ class RadarFunctionality(tk.Frame):
             time.sleep(1)
             print(f"FPGA RUNNING STATE: {is_fpga_running}")
             buffer = ""
+            #REMOVE THE BUFFER PRINT
+            print(buffer)
         except:
             pass
 
