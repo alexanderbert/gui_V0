@@ -18,6 +18,8 @@ is_fpga_running = False
 logging.basicConfig(filename="log.txt", filemode='a', level=logging.INFO, format="%(asctime)s - %(message)s")
 output_queue = queue.Queue()
 
+starting_azimuth = 0
+
 client = paramiko.client.SSHClient()
 
 selected_positioner_global = None
@@ -681,11 +683,23 @@ class ScanFrame(tk.Frame):
         self.terminal_frame = terminal_frame
 
         self.start_azimuth_var = tk.StringVar()
+        self.start_azimuth_var.trace_add("write", self.on_change_start_az)
+
         self.end_azimuth_var = tk.StringVar()
+        self.end_azimuth_var.trace_add("write", self.on_change_end_az)
+
         self.start_elbeam_var = tk.StringVar()
+        self.start_elbeam_var.trace_add("write", self.on_change_start_el)
+
         self.end_elbeam_var = tk.StringVar()
+        self.end_elbeam_var.trace_add("write", self.on_change_end_el)
+
         self.speed_var = tk.StringVar()
+        self.speed_var.trace_add("write", self.on_change_speed)
+
         self.increment_var = tk.StringVar()
+        self.increment_var.trace_add("write", self.on_change_inc)
+
         self.repeat_var = tk.StringVar()
         self.slipdetect_var = tk.StringVar()
         self.create_layout()
@@ -705,6 +719,30 @@ class ScanFrame(tk.Frame):
             '<Key-S>', '<Key-s>',
             '<Key-D>', '<Key-d>',
         ]
+    def on_change_start_az(self, *args):
+        start_azimuth_value_trace = self.start_azimuth_var.get()
+        state.starting_azimuth_value = start_azimuth_value_trace
+
+    def on_change_end_az(self, *args):
+        end_azimuth_value_trace = self.end_azimuth_var.get()
+        state.ending_azimuth_value = end_azimuth_value_trace
+
+    def on_change_start_el(self, *args):
+        start_el_value_trace = self.start_elbeam_var.get()
+        state.starting_el_value = start_el_value_trace
+
+    def on_change_end_el(self, *args):
+        end_el_value_trace = self.end_elbeam_var.get()
+        state.ending_el_value = end_el_value_trace
+
+    def on_change_speed(self, *args):
+        speed_value_trace = self.speed_var.get()
+        state.speed_value = speed_value_trace
+
+    def on_change_inc(self, *args):
+        inc_value_trace = self.increment_var.get()
+        state.inc_value = inc_value_trace
+
 
     def run_fpga(self, one, two, three, four, five, six, seven):
         self.popup.destroy()
