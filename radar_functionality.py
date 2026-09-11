@@ -256,7 +256,7 @@ class RadarFunctionality(tk.Frame):
         channel.send(f"cd {os.environ['FPGAPATH']}\n")
         print(f"sent: cd {os.environ['FPGAPATH']}")
         time.sleep(1)
-        channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 100 -8 2000 -9 4000 -X -D 10\n")
+        channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 300 -8 2000 -9 4000 -X -D 10\n")
         print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 100 -8 144 -9 24 -X -D 10\n")
         time.sleep(1)
         print(f"FPGA RUNNING STATE: {is_fpga_running}")
@@ -401,6 +401,8 @@ class RadarFunctionality(tk.Frame):
             is_fpga_running = False
             if channel is not None:
                 try:
+                    channel.send("^S\n")
+                    channel.send("^C\n")
                     channel.send("\x03")
                     time.sleep(0.2)
                 except Exception as e:
@@ -552,6 +554,7 @@ class RadarFunctionality(tk.Frame):
     def update_textboxes(self):
         if self.latest_values is not None:
             az, el, absAz, absEl, xPower, yPower = self.latest_values
+            az, el, xPower, yPower = self.latest_values
             self.az_var.set(f"{az}")
             self.el_var.set(f"{el}")
             self.x_power_var.set(f"{xPower}")
