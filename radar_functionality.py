@@ -553,7 +553,7 @@ class RadarFunctionality(tk.Frame):
 
     def update_textboxes(self):
         if self.latest_values is not None:
-            az, el, absAz, absEl, xPower, yPower = self.latest_values
+            #az, el, absAz, absEl, xPower, yPower = self.latest_values
             az, el, xPower, yPower = self.latest_values
             self.az_var.set(f"{az}")
             self.el_var.set(f"{el}")
