@@ -276,7 +276,6 @@ class RadarFunctionality(tk.Frame):
             print(f"FPGA RUNNING STATE: {is_fpga_running}")
             buffer = ""
             #REMOVE THE BUFFER PRINT
-            print(buffer)
         except:
             pass
 
@@ -299,7 +298,7 @@ class RadarFunctionality(tk.Frame):
             while channel.active and is_fpga_running:
                 if channel.recv_ready():
                     data = channel.recv(1024).decode("iso-8859-1")
-                #print(data)
+                    print(data)
                     buffer += data
                     while True:
                         position_match = position_pattern.search(buffer)
