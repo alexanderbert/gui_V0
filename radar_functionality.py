@@ -246,52 +246,36 @@ class RadarFunctionality(tk.Frame):
         self.y_power_entry.grid(column=1, row=3, sticky="nsew")
         self.y_power_entry.config(font=("Arial", 20))
 
-
+        # calculate speed in seconds - degrees 20 seconds 360/20 = 18 degrees a second
+        # 10 degrees azimuth 10/18 degrees
+        # total elevation size /increment *2 (-3 to 5) is 8 incremnts
+        # mulitiply 8, add 20% as a safety
     def heat_map_fpga(self):
+        S_FLAG_VALUE = 300
+        print(f"LOOK at me StartAZ:{state.starting_azimuth_value}, ENDAZ{state.ending_azimuth_value}, STARTEL{state.starting_el_value} END EL{state.ending_el_value} speed{state.speed_value} inc{state.increment_value}")
+        try:
+            #THE JAKE EQUATION
+            expected_Q_Value = (float(state.ending_azimuth_value) - float(state.starting_azimuth_value) / (360 / float(state.speed_value))) * ((float(state.ending_el_value) - float(state.starting_el_value)) / (float(state.increment_value) * 2)) * 2 * S_FLAG_VALUE * 1.2
+            print(expected_Q_Value)
+        except:
+            pass
         client, channel = self.fl_network_mode()
         print("After connection to fl network")
         global is_fpga_running
         is_fpga_running = True
         time.sleep(1)
-        channel.send(f"cd {os.environ['FPGAPATH']}\n")
-        print(f"sent: cd {os.environ['FPGAPATH']}")
-        time.sleep(1)
-        channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 300 -8 2000 -9 4000 -X -D 10\n")
-        print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 100 -8 144 -9 24 -X -D 10\n")
-        time.sleep(1)
-        print(f"FPGA RUNNING STATE: {is_fpga_running}")
-        buffer = ""
+        try:
+            channel.send(f"cd {os.environ['FPGAPATH']}\n")
+            print(f"sent: cd {os.environ['FPGAPATH']}")
+            time.sleep(1)
+            channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {expected_Q_Value} -8 2000 -9 4000 -X -D 10\n")
+            print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {int(expected_Q_Value)} -8 2000 -9 4000 -X -D 10\n")
+            time.sleep(1)
+            print(f"FPGA RUNNING STATE: {is_fpga_running}")
+            buffer = ""
+        except:
+            pass
 
-        #Only matches x and y power
-        # pattern = re.compile(
-        #     r"X power:\s*([+-]?\d+\.\d+),\s*"
-        #     r"Y power:\s*([+-]?\d+\.\d+)"
-        #     )
-
-        #todo check proper findings
-        # position: 000.00000 azimuth, 045.00000, plate, 000.00000 altitude;
-        # pattern = re.compile(
-        #     r"position:\s*([+-]?\d+\.\d+)\s+azimuth,\s*"
-        #     r"[+-]?\d+\.\d+,\s*plate,\s*"
-        #     r"([+-]?\d+\.\d+)\s+altitude;.*?"
-        #     r"X power:\s*([+-]?\d+\.\d+),\s*"
-        #     r"Y power:\s*([+-]?\d+\.\d+)"
-        # )
-        # pattern = re.compile(
-        #     r"position:\s*(?P<az>[+-]?\d+\.\d+)\s+azimuth,\s*"
-        #     r"[+-]?\d+\.\d+,\s*plate,\s*"
-        #     r"(?P<el>[+-]?\d+\.\d+)\s+altitude;.*?"
-        #     r"X power:\s*(?P<xPow>[+-]?\d+\.\d+),\s*"
-        #     r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)"
-        # )
-        # pattern = re.compile(
-        #     r"position:\s*(?P<az>[+-]?\d+\.\d+)\s+azimuth,\s*"
-        #     r"[+-]?\d+\.\d+,\s*plate,\s*"
-        #     r"(?P<el>[+-]?\d+\.\d+)\s+altitude;.*?"
-        #     r"X power:\s*(?P<xPow>[+-]?\d+\.\d+),\s*"
-        #     r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)",
-        #     re.DOTALL
-        # )
         # Grabs the line with Power and the line above it for azimuth and altitude
         position_pattern = re.compile(
             r"position:\s*(?P<az>[+-]?\d+\.\d+)\s+azimuth,\s*"
@@ -340,63 +324,7 @@ class RadarFunctionality(tk.Frame):
                             buffer = buffer[power_match.end():]
                             continue
 
-                    #OLDER MATCHING SYSTEMS
-                    # while True:
-                    #     #matches = list(pattern.finditer(buffer))
-                    #
-                    #     position_match = position_pattern.search(buffer)
-                    #     if position_match:
-                    #         # Always keep the newest position
-                    #         last_position = position_match
-                    #     power_match = power_pattern.search(buffer)
-                    #
-                    #     if power_match and last_position:
-                    #         # This is the position immediately before X power
-                    #         az = float(last_position.group("az"))
-                    #         el = float(last_position.group("el"))
-                    #         xPow = float(power_match.group("xPow"))
-                    #         yPow = float(power_match.group("yPow"))
-                    #         # azimuth_raw.append(az)
-                    #         # elevation_raw.append(el)
-                    #         # x_power_raw.append(xPow)
-                    #         # y_power_raw.append(yPow)
-                    #
-                    #         # print(
-                    #         #     f"Azimuth: {az:.5f}, "
-                    #         #     f"Elevation: {el:.5f}, "
-                    #         #     f"X Power: {xPow:.6f}, "
-                    #         #     f"Y Power: {yPow:.6f}"
-                    #         # )
-                    #
-                    #         last_position = None
-                    #
-                    #     # match = pattern.search(buffer)
-                    #     # if match is None:
-                    #     #     break
-                    #     # az_match = float(match.group("az"))
-                    #     # el_match = float(match.group("el"))
-                    #     # x_power_match = float(match.group("xPow"))
-                    #     # y_power_match = float(match.group("yPow"))
-                    #     # x_power = float(match.group(1))
-                    #     # y_power = float(match.group(2))
-                    #
-                    #     # for match in matches:
-                    #     #     x_power = float(match.group(1))
-                    #     #     y_power = float(match.group(2))
-                    #
-                    #     # try to output only the latest values for the gui for performance
-                    #     #with self.values_lock:
-                    #     self.latest_values = (az, el, xPow, yPow)
-                    #     #self.power_queue.put((x_power, y_power))
-                    #
-                    #     #queue values
-                    #     self.csv_queue.put((az, el, xPow, yPow))
-                    #     #self.csv_writer.writerow([x_power, y_power])
-                    #
-                    #     #try to new buffer tech
-                    #     buffer = buffer[power_match.end():]
-                    # if len(buffer) > 4096:
-                    #     buffer = buffer[-4096]
+
         finally:
             is_fpga_running = False
             if channel is not None:
