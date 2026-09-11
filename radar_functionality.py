@@ -271,7 +271,7 @@ class RadarFunctionality(tk.Frame):
             #channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {expected_Q_Value} -8 2000 -9 4000 -X -D 10\n")
             channel.send(
                 f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q 4 -8 2000 -9 4000 -X -D 10\n")
-            print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {int(expected_Q_Value)} -8 2000 -9 4000 -X -D 10\n")
+            #print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {int(expected_Q_Value)} -8 2000 -9 4000 -X -D 10\n")
             time.sleep(1)
             print(f"FPGA RUNNING STATE: {is_fpga_running}")
 
@@ -299,7 +299,8 @@ class RadarFunctionality(tk.Frame):
             while channel.active and is_fpga_running:
                 if channel.recv_ready():
                     data = channel.recv(1024).decode("iso-8859-1")
-                    if f"Capture {int(expected_Q_Value)} packets" in data:
+                    if f"Capture 4 packets" in data:
+                    #if f"Capture {int(expected_Q_Value)} packets" in data:
                         self.az_entry.insert(tk.END, "RUN FINISHED")
                     print(data)
                     buffer += data
