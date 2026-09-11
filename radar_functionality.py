@@ -299,6 +299,8 @@ class RadarFunctionality(tk.Frame):
             while channel.active and is_fpga_running:
                 if channel.recv_ready():
                     data = channel.recv(1024).decode("iso-8859-1")
+                    if f"Capture {int(expected_Q_Value)} packets" in data:
+                        self.az_entry.insert(tk.END, "RUN FINISHED")
                     print(data)
                     buffer += data
                     while True:
