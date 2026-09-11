@@ -1,12 +1,17 @@
 import tkinter as tk
-import state
 
+from dotenv import load_dotenv
+
+import state
+import os
+
+load_dotenv()
 
 class NetworkSwitch(tk.Frame):
     def __init__(self, parent, label_a="Wifi", label_b="Ethernet", command=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
 
-        self.network_state = tk.StringVar()
+        #self.network_state = tk.StringVar()
         self.command = command
         if state.network_state == "Ethernet":
             self.state = True
@@ -81,14 +86,14 @@ class NetworkSwitch(tk.Frame):
         if self.state:
             self.lbl_a.config(font=("Helvetica", 12), fg="#999999")
             self.lbl_b.config(font=("Helvetica", 12, "bold"), fg="#333333")
-            state.network_state = "10.42.0.*"
+            state.network_state = f"{os.environ.get('ETHERNET_IP')}"
             # self.network_state.set("Wifi")
             # state.network_state = "Wifi"
             # print(state.network_state)
         else:
             self.lbl_a.config(font=("Helvetica", 12, "bold"), fg="#333333")
             self.lbl_b.config(font=("Helvetica", 12), fg="#999999")
-            state.network_state = "192.168.69.*"
+            state.network_state = f"{os.environ.get('HOST_IP')}"
             # self.network_state.set("Ethernet")
             # state.network_state = "Ethernet"
             # print(state.network_state)
