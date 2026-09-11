@@ -274,10 +274,11 @@ class RadarFunctionality(tk.Frame):
             print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {int(expected_Q_Value)} -8 2000 -9 4000 -X -D 10\n")
             time.sleep(1)
             print(f"FPGA RUNNING STATE: {is_fpga_running}")
-            buffer = ""
+
             #REMOVE THE BUFFER PRINT
         except:
             pass
+        buffer = ""
 
         # Grabs the line with Power and the line above it for azimuth and altitude
         position_pattern = re.compile(
