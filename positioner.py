@@ -1160,10 +1160,10 @@ class ScanFrame(tk.Frame):
             self.speed_entry.delete(0, "end")
             self.speed_entry.insert("0", "20.0")
             return messagebox.showerror("Error", "Speed must be between 2 and 300")
-        if increment < 1.5 or increment > 5:
+        if increment < 0 or increment > 45:
             self.increment_entry.delete(0, "end")
             self.increment_entry.insert("0", "1.5")
-            return messagebox.showerror("Error", "Increment must be between 1.5 and 5")
+            return messagebox.showerror("Error", "Increment must be between 0 and 45")
         if repeat not in [0, 1]:
             self.repeat_entry.delete(0, "end")
             self.repeat_entry.insert("0", "1")
