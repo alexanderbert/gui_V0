@@ -741,7 +741,7 @@ class ScanFrame(tk.Frame):
 
     def on_change_inc(self, *args):
         inc_value_trace = self.increment_var.get()
-        state.inc_value = inc_value_trace
+        state.increment_value = inc_value_trace
 
 
     def run_fpga(self, one, two, three, four, five, six, seven):
