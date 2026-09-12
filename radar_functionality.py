@@ -146,26 +146,6 @@ class RadarFunctionality(tk.Frame):
 
         return client
 
-    # def create_values_csv(self):
-    #     timestamp = datetime.now().strftime("%m%d_%H%M%S")
-    #     filename = os.path.join(
-    #         application_path,
-    #         f"heatmap_{timestamp}.csv"
-    #     )
-    #
-    #     self.csv_file = open(
-    #         filename,
-    #         "w",
-    #         newline="",
-    #         buffering=1
-    #     )
-    #
-    #     self.csv_writer = csv.writer(self.csv_file)
-    #
-    #     self.csv_writer.writerow([
-    #         "X Power",
-    #         "Y Power"
-    #     ])
 
     def csv_writer_worker(self):
         csv_file = None
@@ -252,10 +232,9 @@ class RadarFunctionality(tk.Frame):
         # mulitiply 8, add 20% as a safety
     def heat_map_fpga(self):
         S_FLAG_VALUE = 300
-        print(f"LOOK at me StartAZ:{state.starting_azimuth_value}, ENDAZ{state.ending_azimuth_value}, STARTEL{state.starting_el_value} END EL{state.ending_el_value} speed{state.speed_value} inc{state.increment_value}")
         try:
-            #THE JAKE EQUATION
-            expected_Q_Value = (float(state.ending_azimuth_value) - float(state.starting_azimuth_value) / (360 / float(state.speed_value))) * ((float(state.ending_el_value) - float(state.starting_el_value)) / (float(state.increment_value) * 2)) * 2 * S_FLAG_VALUE * 1.2
+            #todo the_jake_equation
+            expected_Q_Value = ((float(state.ending_azimuth_value) - float(state.starting_azimuth_value)) / (360.0 / float(state.speed_value))) * ((float(state.ending_el_value) - float(state.starting_el_value)) / (float(state.increment_value) * 2.0)) * 2.0 * S_FLAG_VALUE * 1.2
             print(expected_Q_Value)
         except:
             pass
@@ -268,9 +247,9 @@ class RadarFunctionality(tk.Frame):
             channel.send(f"cd {os.environ['FPGAPATH']}\n")
             print(f"sent: cd {os.environ['FPGAPATH']}")
             time.sleep(1)
-            #channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {expected_Q_Value} -8 2000 -9 4000 -X -D 10\n")
-            channel.send(
-                f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q 4 -8 2000 -9 4000 -X -D 10\n")
+            channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {expected_Q_Value} -8 2000 -9 4000 -X -D 10\n")
+            #channel.send(
+                #f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q 4 -8 2000 -9 4000 -X -D 10\n")
             #print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {int(expected_Q_Value)} -8 2000 -9 4000 -X -D 10\n")
             time.sleep(1)
             print(f"FPGA RUNNING STATE: {is_fpga_running}")
@@ -299,8 +278,8 @@ class RadarFunctionality(tk.Frame):
             while channel.active and is_fpga_running:
                 if channel.recv_ready():
                     data = channel.recv(1024).decode("iso-8859-1")
-                    if f"Capture 4 packets" in data:
-                    #if f"Capture {int(expected_Q_Value)} packets" in data:
+                    #TODO EDIT this for a visual cue that the fpga is finished the_jake_equation
+                    if f"Capture {int(expected_Q_Value)} packets" in data:
                         self.az_entry.insert(tk.END, "RUN FINISHED")
                     print(data)
                     buffer += data
@@ -347,7 +326,7 @@ class RadarFunctionality(tk.Frame):
 
 
     def capture_packets_run(self):
-        #Todo run this from wherever the files will be stored
+        #Todo make sure this works correctly. No cues but based off of -Q 10000
         try:
             target_directory = "/captureMode"
             subprocess.run(['socat','tcp-l:7777,reuseaddr,fork','system:\'cpio -i\''],cwd=target_directory, check=True)
@@ -383,22 +362,6 @@ class RadarFunctionality(tk.Frame):
             daemon=True
         )
         thread.start()
-
-    # def paramiko_connection(self, hostname, chosen_command):
-    #     print("CONNECTING TO HOSTNAME", hostname)
-    #     client.load_system_host_keys()
-    #     client.connect(hostname=hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-    #     transport = client.get_transport()
-    #     channel=transport.open_session()
-    #     channel.get_pty()
-    #     channel.invoke_shell()
-    #     #channel.send(f"sudo -S systemctl {chosen_command} radar.service\n")
-    #     # command = f"sudo -S systemctl {chosen_command} radar.service\n"
-    #     # stdin, stdout, stderr = client.exec_command(command, get_pty=True)
-    #     #
-    #     # stdin.write(f"{os.environ.get('CONNECTION_PASSWORD')} \n")
-    #     # stdin.flush()
-    #     # client.close()
 
     def fl_network_mode(self):
         self.current_radar = self.radar_dict[self.radar_selected.get()]
@@ -469,22 +432,11 @@ class RadarFunctionality(tk.Frame):
         try:
             if ip_address not in self.radar_dict.values():
                 self.radar_dict[hostname] = ip_address
-                # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
-                # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, f"Found: {ip_address}")
+
         except:
             print("ERROR")
         self.radar_drop()
 
-    # def run_queue(self):
-    #     #print(f"OPQ: {output_queue.get()}")
-    #     # while output_queue.qsize() > 10 and is_running:
-    #     #     self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
-    #     print(output_queue.qsize())
-    #     try:
-    #         if not output_queue.empty():
-    #             self.after(100, self.update_textboxes(output_queue.get()))
-    #     except:
-    #         print("Error occured")
 
     def update_textboxes(self):
         if self.latest_values is not None:
@@ -495,30 +447,6 @@ class RadarFunctionality(tk.Frame):
             self.x_power_var.set(f"{xPower}")
             self.y_power_var.set(f"{yPower}")
         self.after(20, self.update_textboxes)
-        #2nd try
-        # with self.values_lock:
-        #     data = self.latest_values
-        # if data is not None:
-        #     x_power, y_power = data
-        #
-        #     self.x_power_var.set(f"{x_power}")
-        #     self.y_power_var.set(f"{y_power}")
-        #
-        # self.after(30, self.update_textboxes)
-        #1st try
-        # try:
-        #     data = self.power_queue.get_nowait()
-        #
-        #     x_power, y_power = data
-        #
-        #     self.x_power_entry.delete(0, tk.END)
-        #     self.x_power_entry.insert(tk.END, str(x_power))
-        #     self.y_power_entry.delete(0, tk.END)
-        #     self.y_power_entry.insert(tk.END, str(y_power))
-        # except queue.Empty:
-        #     pass
-        #
-        # self.after(50, self.update_textboxes)
 
     def create_heatmap(self):
 
@@ -711,13 +639,7 @@ class RadarFunctionality(tk.Frame):
                 bbox_inches="tight"
             )
 
-        # fig.set_size_inches(3.5, 6)
-        # self.plot_frame = tk.Frame(self)
-        # self.plot_frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
-        # self.plot_frame.grid_columnconfigure(0, weight=1)
-        # self.plot_frame.grid_rowconfigure(0, weight=1)
-        #canvas = FigureCanvasTkAgg(fig, plot_frame)
         self.canvas = FigureCanvasTkAgg(fig, self.output_frame)
         self.canvas.draw()
         #self.canvas.get_tk_widget().grid(column=0, columnspan=2, row=0, rowspan=4, sticky="nsew")
@@ -732,17 +654,6 @@ class RadarFunctionality(tk.Frame):
         self.toolbar_frame.grid_propagate(False)
 
 
-        # toolbar = NavigationToolbar2Tk(canvas, plot_frame)
-        # toolbar.update()
-        # toolbar.pack(side="left")
-
-        # PREVENTS RESIZING
-        # self.plot_frame.pack_propagate(False)
-
-        # fig.tight_layout()
-        #
-        # canvas = FigureCanvasTkAgg(fig, master=self.initial_output_frame)
-        # canvas.draw()
 
         self.canvas.get_tk_widget().grid(column=0, row=0, sticky="nsew")
 
@@ -776,23 +687,7 @@ class RadarFunctionality(tk.Frame):
         self.y_power_entry.grid()
         self.y_power_label.grid()
         self.find_other_radars_button.grid()
-        # self.canvas.get_tk_widget().grid_remove()
-        # self.close_heatmap_button.grid_remove()
-        # self.columnconfigure(0, weight=10)
-        # self.columnconfigure(1, weight=10)
-        # self.columnconfigure(2, weight=1)
-        # self.rowconfigure(0, weight=1)
-        # self.rowconfigure(1, weight=1)
 
-        #INNER FRAMES
-
-        #
-        #
-        # self.output_frame = tk.Frame(self)
-        # self.output_frame.grid(column=0, row=0, sticky="nsew")
-        # self.output_frame.grid_columnconfigure(0, weight=1)
-        # self.output_frame.grid_columnconfigure(1, weight=1)
-        # self.output_frame.rowconfigure(list(range(0,4)), weight=1)
         self.initial_output_frame()
 
 
