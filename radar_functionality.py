@@ -233,9 +233,12 @@ class RadarFunctionality(tk.Frame):
     def heat_map_fpga(self):
         S_FLAG_VALUE = 300
         try:
-            #todo the_jake_equation
-            expected_Q_Value = ((float(state.ending_azimuth_value) - float(state.starting_azimuth_value)) / (360.0 / float(state.speed_value))) * ((float(state.ending_el_value) - float(state.starting_el_value)) / (float(state.increment_value) * 2.0)) * 2.0 * S_FLAG_VALUE * 1.2
-            print(expected_Q_Value)
+            azDelta = float(state.ending_azimuth_value) - float(state.starting_azimuth_value)
+            elDelta = float(state.ending_el_value) - float(state.starting_el_value)
+            azDeegPerS = 360.0 / float(state.speed_value)
+            elDegPerStep = float(state.increment_value) * 2.0
+            expected_Q_Value = (azDelta / azDeegPerS) * ( elDelta / elDegPerStep) * 2.0 * S_FLAG_VALUE * 1.2
+            print(azDelta, elDelta, azDeegPerS, elDegPerStep, expected_Q_Value)
         except:
             pass
         client, channel = self.fl_network_mode()
