@@ -97,9 +97,10 @@ class RadarFunctionality(tk.Frame):
         # self.run_capture_fpga_button.grid(row=1, column=2)
         # self.run_capture_fpga_button.config(width=20, font=("Arial", 20))
 
-        self.stop_fpga_button= tk.Button(self.fpga_control_frame, text="End RUN", command=lambda:self.stop_fpga())
-        self.stop_fpga_button.grid(row=2, column=2)
-        self.stop_fpga_button.config(width=20, font=("Arial", 20))
+        #Dont need a stop button because the runs with self terminate
+        # self.stop_fpga_button= tk.Button(self.fpga_control_frame, text="End RUN", command=lambda:self.stop_fpga())
+        # self.stop_fpga_button.grid(row=2, column=2)
+        # self.stop_fpga_button.config(width=20, font=("Arial", 20))
 
         self.create_heatmap_button= tk.Button(self.fpga_control_frame, text="Create Heatmap", command=lambda:self.create_heatmap())
         self.create_heatmap_button.grid(row=1, column=2)
@@ -237,7 +238,7 @@ class RadarFunctionality(tk.Frame):
             elDelta = float(state.ending_el_value) - float(state.starting_el_value)
             azDeegPerS = 360.0 / float(state.speed_value)
             elDegPerStep = float(state.increment_value) * 2.0
-            expected_Q_Value = (azDelta / azDeegPerS) * ( elDelta / elDegPerStep) * 2.0 * S_FLAG_VALUE * 1.2
+            expected_Q_Value = int((azDelta / azDeegPerS) * ( elDelta / elDegPerStep) * 2.0 * S_FLAG_VALUE * 1.2)
             print(azDelta, elDelta, azDeegPerS, elDegPerStep, expected_Q_Value)
         except:
             pass
@@ -282,9 +283,10 @@ class RadarFunctionality(tk.Frame):
                 if channel.recv_ready():
                     data = channel.recv(1024).decode("iso-8859-1")
                     #TODO EDIT this for a visual cue that the fpga is finished the_jake_equation
-                    if f"Capture {int(expected_Q_Value)} packets" in data:
+                    # if f"Captured {expected_Q_Value} packets." in data:
+                    if f"Captured" in data:
                         self.az_entry.insert(tk.END, "RUN FINISHED")
-                    print(data)
+                        is_fpga_running = False
                     buffer += data
                     while True:
                         position_match = position_pattern.search(buffer)
@@ -329,6 +331,10 @@ class RadarFunctionality(tk.Frame):
 
 
     def capture_packets_run(self):
+        self.az_entry.delete(0, tk.END)
+        self.az_entry.insert(tk.END, "CAPTURE RUNNING")
+        global is_fpga_running
+        is_fpga_running = True
         #Todo make sure this works correctly. No cues but based off of -Q 10000
         try:
             target_directory = "/captureMode"
@@ -346,6 +352,13 @@ class RadarFunctionality(tk.Frame):
         #Need a total -Q number for pulses to be read i think
         channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 1000 -k 8000 -Q 10000 -q -c | socat - tcp:10.42.0.1:7777\n")
         time.sleep(.5)
+        self.az_entry.insert(tk.END, "RUNNING")
+        while channel.active and is_fpga_running:
+            if channel.recv_ready():
+                data = channel.recv(1024).decode("iso-8859-1")
+                if f"Captured" in data:
+                    self.az_entry.insert(tk.END, "RUN FINISHED")
+                    is_fpga_running = False
         channel.close()
         client.close()
 
