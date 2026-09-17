@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 import paramiko
 from dotenv import load_dotenv
 import nmap
@@ -232,103 +232,106 @@ class RadarFunctionality(tk.Frame):
         # total elevation size /increment *2 (-3 to 5) is 8 incremnts
         # mulitiply 8, add 20% as a safety
     def heat_map_fpga(self):
-        S_FLAG_VALUE = 300
-        try:
-            azDelta = float(state.ending_azimuth_value) - float(state.starting_azimuth_value)
-            elDelta = float(state.ending_el_value) - float(state.starting_el_value)
-            azDeegPerS = 360.0 / float(state.speed_value)
-            elDegPerStep = float(state.increment_value) * 2.0
-            expected_Q_Value = int((azDelta / azDeegPerS) * ( elDelta / elDegPerStep) * 2.0 * S_FLAG_VALUE * 1.2)
-            print(azDelta, elDelta, azDeegPerS, elDegPerStep, expected_Q_Value)
-        except:
-            pass
-        client, channel = self.fl_network_mode()
-        print("After connection to fl network")
-        global is_fpga_running
-        is_fpga_running = True
-        time.sleep(1)
-        try:
-            channel.send(f"cd {os.environ['FPGAPATH']}\n")
-            print(f"sent: cd {os.environ['FPGAPATH']}")
+        if state.starting_azimuth_value == "startaz" or state.ending_azimuth_value == "endaz" or state.starting_el_value == "start elbeam" or state.ending_el_value == "end elbeam":
+            input_warning = messagebox.showwarning("Warning",
+                                                   f"Please enter values in the Positioner tab first.")
+        else:
+            try:
+                azDelta = float(state.ending_azimuth_value) - float(state.starting_azimuth_value)
+                elDelta = float(state.ending_el_value) - float(state.starting_el_value)
+                azDeegPerS = 360.0 / float(state.speed_value)
+                elDegPerStep = float(state.increment_value) * 2.0
+                expected_Q_Value = int((azDelta / azDeegPerS) * ( elDelta / elDegPerStep) * 2.0 * state.S_FLAG_VALUE * 1.2)
+                print(state.S_FLAG_VALUE, elDelta, azDeegPerS, elDegPerStep, expected_Q_Value)
+            except:
+                pass
+            client, channel = self.fl_network_mode()
+            print("After connection to fl network")
+            global is_fpga_running
+            is_fpga_running = True
             time.sleep(1)
-            channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {expected_Q_Value} -8 2000 -9 4000 -X -D 10\n")
-            #channel.send(
-                #f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q 4 -8 2000 -9 4000 -X -D 10\n")
-            #print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {int(expected_Q_Value)} -8 2000 -9 4000 -X -D 10\n")
-            time.sleep(1)
-            print(f"FPGA RUNNING STATE: {is_fpga_running}")
+            try:
+                channel.send(f"cd {os.environ['FPGAPATH']}\n")
+                print(f"sent: cd {os.environ['FPGAPATH']}")
+                time.sleep(1)
+                channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 2000 -9 4000 -X -D 10\n")
+                #channel.send(
+                    #f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q 4 -8 2000 -9 4000 -X -D 10\n")
+                #print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {int(expected_Q_Value)} -8 2000 -9 4000 -X -D 10\n")
+                time.sleep(1)
+                print(f"FPGA RUNNING STATE: {is_fpga_running}")
 
-            #REMOVE THE BUFFER PRINT
-        except:
-            pass
-        buffer = ""
+                #REMOVE THE BUFFER PRINT
+            except:
+                pass
+            buffer = ""
 
-        # Grabs the line with Power and the line above it for azimuth and altitude
-        position_pattern = re.compile(
-            r"position:\s*(?P<az>[+-]?\d+\.\d+)\s+azimuth,\s*"
-            r"[+-]?\d+\.\d+,\s*plate,\s*"
-            r"(?P<el>[+-]?\d+\.\d+)\s+altitude"
-        )
+            # Grabs the line with Power and the line above it for azimuth and altitude
+            position_pattern = re.compile(
+                r"position:\s*(?P<az>[+-]?\d+\.\d+)\s+azimuth,\s*"
+                r"[+-]?\d+\.\d+,\s*plate,\s*"
+                r"(?P<el>[+-]?\d+\.\d+)\s+altitude"
+            )
 
-        power_pattern = re.compile(
-            r"X power:\s*(?P<xPow>[+-]?\d+\.\d+).*?"
-            r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)"
-        )
+            power_pattern = re.compile(
+                r"X power:\s*(?P<xPow>[+-]?\d+\.\d+).*?"
+                r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)"
+            )
 
-        try:
-            last_position = None
-            # self.create_values_csv()
+            try:
+                last_position = None
+                # self.create_values_csv()
 
-            while channel.active and is_fpga_running:
-                if channel.recv_ready():
-                    data = channel.recv(1024).decode("iso-8859-1")
-                    #TODO EDIT this for a visual cue that the fpga is finished the_jake_equation
-                    # if f"Captured {expected_Q_Value} packets." in data:
-                    if f"Captured" in data:
-                        self.az_entry.delete(0, tk.END)
-                        self.az_entry.insert(tk.END, "RUN FINISHED")
-                        is_fpga_running = False
-                    buffer += data
-                    while True:
-                        position_match = position_pattern.search(buffer)
-                        power_match = power_pattern.search(buffer)
+                while channel.active and is_fpga_running:
+                    if channel.recv_ready():
+                        data = channel.recv(1024).decode("iso-8859-1")
+                        #TODO EDIT this for a visual cue that the fpga is finished the_jake_equation
+                        # if f"Captured {expected_Q_Value} packets." in data:
+                        if f"Captured" in data:
+                            self.az_entry.delete(0, tk.END)
+                            self.az_entry.insert(tk.END, "RUN FINISHED")
+                            is_fpga_running = False
+                        buffer += data
+                        while True:
+                            position_match = position_pattern.search(buffer)
+                            power_match = power_pattern.search(buffer)
 
-                        if position_match is None and power_match is None:
-                            break
+                            if position_match is None and power_match is None:
+                                break
 
-                        if position_match is not None and (power_match is None or position_match.start() < power_match.start()):
-                            last_position = position_match
+                            if position_match is not None and (power_match is None or position_match.start() < power_match.start()):
+                                last_position = position_match
 
-                            buffer = buffer[position_match.end():]
-                            continue
+                                buffer = buffer[position_match.end():]
+                                continue
 
-                        if power_match is not None:
-                            if last_position is not None:
-                                az = float(last_position.group("az"))
-                                el = float(last_position.group("el"))
-                                x_power = float(power_match.group("xPow"))
-                                y_power = float(power_match.group("yPow"))
+                            if power_match is not None:
+                                if last_position is not None:
+                                    az = float(last_position.group("az"))
+                                    el = float(last_position.group("el"))
+                                    x_power = float(power_match.group("xPow"))
+                                    y_power = float(power_match.group("yPow"))
 
-                                self.latest_values = (az, el, x_power, y_power)
-                                self.csv_queue.put((az, el, x_power, y_power))
+                                    self.latest_values = (az, el, x_power, y_power)
+                                    self.csv_queue.put((az, el, x_power, y_power))
 
-                                last_position = None
-                            buffer = buffer[power_match.end():]
-                            continue
+                                    last_position = None
+                                buffer = buffer[power_match.end():]
+                                continue
 
 
-        finally:
-            is_fpga_running = False
-            if channel is not None:
-                try:
-                    channel.send("^S\n")
-                    channel.send("^C\n")
-                    channel.send("\x03")
-                    time.sleep(0.2)
-                except Exception as e:
-                    pass
-            if client is not None:
-                client.close()
+            finally:
+                is_fpga_running = False
+                if channel is not None:
+                    try:
+                        channel.send("^S\n")
+                        channel.send("^C\n")
+                        channel.send("\x03")
+                        time.sleep(0.2)
+                    except Exception as e:
+                        pass
+                if client is not None:
+                    client.close()
 
 
     def capture_packets_run(self):
@@ -345,8 +348,6 @@ class RadarFunctionality(tk.Frame):
 
         client, channel = self.fl_network_mode()
         print("After connection to fl network")
-        global is_fpga_running
-        is_fpga_running = True
         time.sleep(1)
         channel.send(f"cd {os.environ['FPGAPATH']}\n")
         print(f"sent: cd {os.environ['FPGAPATH']}")
