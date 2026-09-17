@@ -285,7 +285,7 @@ class TerminalFrame(tk.Frame):
     def spot_scan(self, start_az, end_az, start_elbeam, end_elbeam, speed, inc, repeat, slipdetect):
         self.pos_text_box.delete("1.0", tk.END)
         self.pos_text_box.config(font=("Arial", 16), foreground="white")
-        self.pos_text_box.insert("1.0", "Starting Spot Scan")
+        self.pos_text_box.insert("1.0", "Moving to chosen Spot")
         channel = self.fl_network_mode()
         #channel = self.alex_home_network_mode()
         ttyf = "/dev/ttyUSB1"
@@ -928,7 +928,7 @@ class ScanFrame(tk.Frame):
         self.sector_scan.config(font=("Arial", 20))
 
 
-        self.spot_scan = tk.Button(self, text="Spot Scan", command=lambda: self.start_threading("SPOT"))
+        self.spot_scan = tk.Button(self, text="Spot", command=lambda: self.start_threading("SPOT"))
         self.spot_scan.grid(column=5, row = 0, sticky="NSEW")
         self.spot_scan.config(font=("Arial", 20))
 
