@@ -70,7 +70,7 @@ class RadarFunctionality(tk.Frame):
         # self.radar_control_frame.grid_rowconfigure(list(range(0,3)), weight=1)
 
 
-        self.output_frame = tk.Frame(self)
+        self.output_frame = tk.Frame(self, background="Gray63")
         self.output_frame.grid(column=0, row=0, sticky="nsew")
         self.output_frame.grid_columnconfigure(0, weight=1)
         self.output_frame.grid_columnconfigure(1, weight=1)
@@ -133,11 +133,7 @@ class RadarFunctionality(tk.Frame):
 
         self.update_textboxes()
 
-        self.csv_thread = threading.Thread(
-            target=self.csv_writer_worker,
-            daemon=True
-        )
-        self.csv_thread.start()
+
 
 
     def create_ssh_client(self):
@@ -192,7 +188,6 @@ class RadarFunctionality(tk.Frame):
 
 
     def initial_output_frame(self):
-
         self.az_var = tk.StringVar(value="0")
         self.el_var = tk.StringVar(value="0")
         self.x_power_var = tk.StringVar(value="0")
@@ -204,28 +199,28 @@ class RadarFunctionality(tk.Frame):
         self.az_label.config(font=("Arial", 20))
         self.az_entry = tk.Entry(self.output_frame, textvariable=self.az_var)
         self.az_entry.grid(column=1, row=0, sticky="nsew")
-        self.az_entry.config(font=("Arial", 20))
+        self.az_entry.config(font=("Arial", 20), justify="center")
 
         self.el_label = tk.Label(self.output_frame, text= "El:")
         self.el_label.grid(column=0, row=1, sticky="nsew")
         self.el_label.config(font=("Arial", 20))
         self.el_entry = tk.Entry(self.output_frame, textvariable=self.el_var)
         self.el_entry.grid(column=1, row=1, sticky="nsew")
-        self.el_entry.config(font=("Arial", 20))
+        self.el_entry.config(font=("Arial", 20), justify="center")
 
         self.x_power_label = tk.Label(self.output_frame, text="X Power:")
         self.x_power_label.grid(column=0, row=2, sticky="nsew")
         self.x_power_label.config(font=("Arial", 20))
         self.x_power_entry = tk.Entry(self.output_frame, textvariable=self.x_power_var)
         self.x_power_entry.grid(column=1, row=2, sticky="nsew")
-        self.x_power_entry.config(font=("Arial", 20))
+        self.x_power_entry.config(font=("Arial", 20), justify="center")
 
         self.y_power_label = tk.Label(self.output_frame, text="Y Power:")
         self.y_power_label.grid(column=0, row=3, sticky="nsew")
         self.y_power_label.config(font=("Arial", 20))
         self.y_power_entry = tk.Entry(self.output_frame, textvariable=self.y_power_var)
         self.y_power_entry.grid(column=1, row=3, sticky="nsew")
-        self.y_power_entry.config(font=("Arial", 20))
+        self.y_power_entry.config(font=("Arial", 20), justify="center")
 
         # calculate speed in seconds - degrees 20 seconds 360/20 = 18 degrees a second
         # 10 degrees azimuth 10/18 degrees
@@ -236,6 +231,13 @@ class RadarFunctionality(tk.Frame):
             input_warning = messagebox.showwarning("Warning",
                                                    f"Please enter values in the Positioner tab first.")
         else:
+
+            self.csv_thread = threading.Thread(
+                target=self.csv_writer_worker,
+                daemon=True
+            )
+            self.csv_thread.start()
+
             try:
                 azDelta = float(state.ending_azimuth_value) - float(state.starting_azimuth_value)
                 elDelta = float(state.ending_el_value) - float(state.starting_el_value)
@@ -332,7 +334,9 @@ class RadarFunctionality(tk.Frame):
                         pass
                 if client is not None:
                     client.close()
-
+                self.csv_queue.put(None)
+                if self.csv_thread is not None:
+                    self.csv_thread.join()
 
     def capture_packets_run(self):
         self.az_entry.delete(0, tk.END)
