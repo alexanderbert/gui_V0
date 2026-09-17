@@ -293,6 +293,7 @@ class RadarFunctionality(tk.Frame):
                             self.az_entry.delete(0, tk.END)
                             self.az_entry.insert(tk.END, "RUN FINISHED")
                             is_fpga_running = False
+                            break
                         buffer += data
                         while True:
                             position_match = position_pattern.search(buffer)
