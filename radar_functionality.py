@@ -285,6 +285,7 @@ class RadarFunctionality(tk.Frame):
                     #TODO EDIT this for a visual cue that the fpga is finished the_jake_equation
                     # if f"Captured {expected_Q_Value} packets." in data:
                     if f"Captured" in data:
+                        self.az_entry.delete(0, tk.END)
                         self.az_entry.insert(tk.END, "RUN FINISHED")
                         is_fpga_running = False
                     buffer += data
@@ -352,11 +353,11 @@ class RadarFunctionality(tk.Frame):
         #Need a total -Q number for pulses to be read i think
         channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 1000 -k 8000 -Q 10000 -q -c | socat - tcp:10.42.0.1:7777\n")
         time.sleep(.5)
-        self.az_entry.insert(tk.END, "RUNNING")
         while channel.active and is_fpga_running:
             if channel.recv_ready():
                 data = channel.recv(1024).decode("iso-8859-1")
                 if f"Captured" in data:
+                    self.az_entry.delete(0, tk.END)
                     self.az_entry.insert(tk.END, "RUN FINISHED")
                     is_fpga_running = False
         channel.close()
