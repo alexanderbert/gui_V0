@@ -237,9 +237,7 @@ class RadarFunctionality(tk.Frame):
                                                    f"Please enter values in the Positioner tab first.")
         else:
 
-            self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", length=400,
-                                                maximum=100)
-            self.progress_bar.grid(column=0, row=5, sticky="nsew")
+
 
 
             self.status_var.set("Starting UP")
@@ -264,6 +262,9 @@ class RadarFunctionality(tk.Frame):
             global is_fpga_running
             is_fpga_running = True
             time.sleep(1)
+            self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", length=400,
+                                                maximum=expected_Q_Value)
+            self.progress_bar.grid(column=0, row=5, sticky="nsew")
             try:
                 channel.send(f"cd {os.environ['FPGAPATH']}\n")
                 print(f"sent: cd {os.environ['FPGAPATH']}")
@@ -299,8 +300,8 @@ class RadarFunctionality(tk.Frame):
                 r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)"
             )
 
-            sample_pattern = re.compile(
-                r"samples:\s*(?P<samples>\d+)/(?P<samples_total>\d+)"
+            num_pattern = re.compile(
+                r"num:\s*(?P<num>\d+),\s*"
             )
 
 
@@ -327,11 +328,11 @@ class RadarFunctionality(tk.Frame):
                             position_match = position_pattern.search(buffer)
                             power_match = power_pattern.search(buffer)
 
-                            sample_match = sample_pattern.search(buffer)
-                            if sample_match:
-                                samples = int(sample_match.group("samples"))
-                                samples_total = int(sample_match.group("samples_total"))
-                                self.update_progressbar(samples)
+                            num_match = num_pattern.search(buffer)
+                            if num_match:
+                                num_value = int(num_match.group("nums"))
+
+                                self.update_progressbar(num_value)
 
                             if position_match is None and power_match is None:
                                 break
@@ -405,8 +406,6 @@ class RadarFunctionality(tk.Frame):
                     break
         channel.close()
         client.close()
-
-
 
     def update_progressbar(self, value):
         self.progress_bar['value'] = value
