@@ -307,13 +307,14 @@ class RadarFunctionality(tk.Frame):
                         while True:
                             power_match = power_pattern.search(buffer)
                             if power_match is not None:
-                                az = float(0.0)
-                                el = float(0.0)
+
                                 x_power = float(power_match.group("xPow"))
                                 y_power = float(power_match.group("yPow"))
 
-                                self.latest_values = (az, el, x_power, y_power)
-                                self.csv_queue.put((az, el, x_power, y_power))
+                                self.latest_values = (0, 0, x_power, y_power)
+                                self.csv_queue.put((0, 0, x_power, y_power))
+                                buffer = buffer[power_match.end():]
+                                continue
 
                             #TODO THIS CODE WORKS, COMMENTING OUT FOR LACK OF POSITION DATA DURING TESTING
                             # position_match = position_pattern.search(buffer)
