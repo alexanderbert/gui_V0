@@ -98,9 +98,9 @@ class RadarFunctionality(tk.Frame):
         # self.run_capture_fpga_button.config(width=20, font=("Arial", 20))
 
         #Dont need a stop button because the runs with self terminate
-        # self.stop_fpga_button= tk.Button(self.fpga_control_frame, text="End RUN", command=lambda:self.stop_fpga())
-        # self.stop_fpga_button.grid(row=2, column=2)
-        # self.stop_fpga_button.config(width=20, font=("Arial", 20))
+        self.abort_fpga_button= tk.Button(self.fpga_control_frame, text="Abort", command=lambda:self.start_threading(self.kill_fpga))
+        self.abort_fpga_button.grid(row=2, column=2)
+        self.abort_fpga_button.config(width=20, font=("Arial", 20))
 
         self.create_heatmap_button= tk.Button(self.fpga_control_frame, text="Create Heatmap", command=lambda:self.create_heatmap())
         self.create_heatmap_button.grid(row=1, column=2)
@@ -376,8 +376,48 @@ class RadarFunctionality(tk.Frame):
         global is_fpga_running
         is_fpga_running = False
 
-    def capture_fpga(self):
-        pass
+    def kill_fpga(self):
+        password = f"{os.environ.get('CONNECTION_PASSWORD')}"
+        client, channel = self.fl_network_mode()
+        try:
+            channel.send("ps auxfww | grep '[f]pgaStream'\n")
+
+            output = ""
+            time.sleep(.1)
+            while channel.recv_ready():
+                output += channel.recv(4096).decode("iso-8859-1")
+
+
+            open_pids = []
+
+            for line in output.splitlines():
+                parts = line.split()
+                if len(parts) > 1:
+                    pid = parts[1]
+                    if pid.isdigit():
+                        open_pids.append(pid)
+
+            for pid in open_pids:
+                stdin, stdout, stderr = client.exec_command(f"sudo -S -p '' kill -9 {pid}\n")
+                stdin.write(f"{password}\n")
+                stdin.flush()
+
+                exit_status = stdout.channel.recv_exit_status()
+                error = stderr.read().decode("utf-8", errors="replace")
+
+                if exit_status !=0:
+                    print(f"Failed to kill process: {error}")
+
+                # channel.send(f"sudo kill -9 {pid}\n")
+                # time.sleep(.1)
+                #
+                # while channel.recv_ready():
+                #     chunk = channel.recv(4096).decode("iso-8859-1")
+                #     if "password for sq:" in chunk and password:
+                #         channel.send(f"{password}\n")
+        finally:
+            client.close()
+
 
     def start_threading(self, funct, *args):
         thread = threading.Thread(
@@ -418,7 +458,7 @@ class RadarFunctionality(tk.Frame):
 
     def find_other_radars(self):
         #self.status_textbox.config(state="normal")
-        print(f"insid eother radars {state.network_state}")
+        print(f"inside other radars {state.network_state}")
         self.find_other_radars_button.config(text="Searching for radars")
         self.find_other_radars_button.config(state="disabled")
         nm = nmap.PortScanner()
