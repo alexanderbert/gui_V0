@@ -246,6 +246,7 @@ class RadarFunctionality(tk.Frame):
             )
             self.csv_thread.start()
 
+            self.csv_queue.put((0, 0, 0, 0))
             try:
                 azDelta = float(state.ending_azimuth_value) - float(state.starting_azimuth_value)
                 elDelta = float(state.ending_el_value) - float(state.starting_el_value)
