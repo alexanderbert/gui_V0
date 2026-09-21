@@ -237,6 +237,8 @@ class RadarFunctionality(tk.Frame):
                 daemon=True
             )
             self.csv_thread.start()
+            #TODO TESTING HERE
+            self.csv_queue.put(0,0,0,0)
 
             try:
                 azDelta = float(state.ending_azimuth_value) - float(state.starting_azimuth_value)
@@ -302,7 +304,7 @@ class RadarFunctionality(tk.Frame):
                         #     is_fpga_running = False
                         #     break
                         #printing out data, remove
-                        print(repr(data))
+                        print(data)
                         buffer += data
                         while True:
                             power_match = power_pattern.search(buffer)
