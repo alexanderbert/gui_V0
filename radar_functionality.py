@@ -264,7 +264,7 @@ class RadarFunctionality(tk.Frame):
             time.sleep(1)
             self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", length=400,
                                                 maximum=expected_Q_Value)
-            self.progress_bar.grid(column=0, row=5, sticky="nsew")
+            self.progress_bar.grid(column=0, columnspan=2, row=5, sticky="nsew")
             try:
                 channel.send(f"cd {os.environ['FPGAPATH']}\n")
                 print(f"sent: cd {os.environ['FPGAPATH']}")
@@ -330,7 +330,7 @@ class RadarFunctionality(tk.Frame):
 
                             num_match = num_pattern.search(buffer)
                             if num_match:
-                                num_value = int(num_match.group("nums"))
+                                num_value = int(num_match.group("num"))
 
                                 self.update_progressbar(num_value)
 
