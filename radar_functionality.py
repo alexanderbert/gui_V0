@@ -230,15 +230,18 @@ class RadarFunctionality(tk.Frame):
         self.status_entry.grid(column=1, row=4, sticky="nsew")
         self.status_entry.config(font=("Arial", 20), justify="center")
 
-        # calculate speed in seconds - degrees 20 seconds 360/20 = 18 degrees a second
-        # 10 degrees azimuth 10/18 degrees
-        # total elevation size /increment *2 (-3 to 5) is 8 incremnts
-        # mulitiply 8, add 20% as a safety
+
     def heat_map_fpga(self):
         if state.starting_azimuth_value == "startaz" or state.ending_azimuth_value == "endaz" or state.starting_el_value == "start elbeam" or state.ending_el_value == "end elbeam":
             input_warning = messagebox.showwarning("Warning",
                                                    f"Please enter values in the Positioner tab first.")
         else:
+
+            self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", length=400,
+                                                maximum=100)
+            self.progress_bar.grid(column=0, row=5, sticky="nsew")
+
+
             self.status_var.set("Starting UP")
             self.csv_thread = threading.Thread(
                 target=self.csv_writer_worker,
@@ -296,11 +299,15 @@ class RadarFunctionality(tk.Frame):
                 r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)"
             )
 
+            sample_pattern = re.compile(
+                r"samples:\s*(?P<samples>\d+)/(?P<samples_total>\d+)"
+            )
+
 
 
             try:
                 last_position = None
-                captured_pattern = re.compile(r"Captured\s+(\d+)\s+packets\.")
+
                 self.status_var.set("RUNNING")
                 while channel.active and is_fpga_running:
 
@@ -308,15 +315,23 @@ class RadarFunctionality(tk.Frame):
                         data = channel.recv(1024).decode("iso-8859-1")
                         print(repr(data))
                         buffer += data
-
-                        captured_match = captured_pattern.search(buffer)
+                        captured_match = re.search(r"Captured\s+(\d+)\s+packets\.", buffer)
                         if captured_match:
+                            captured_count = int(captured_match.group(1))
+
+                            print(f"FPGA FINISHED: captured {captured_count} packets")
                             is_fpga_running = False
                             break
 
                         while True:
                             position_match = position_pattern.search(buffer)
                             power_match = power_pattern.search(buffer)
+
+                            sample_match = sample_pattern.search(buffer)
+                            if sample_match:
+                                samples = int(sample_match.group("samples"))
+                                samples_total = int(sample_match.group("samples_total"))
+                                self.update_progressbar(samples)
 
                             if position_match is None and power_match is None:
                                 break
@@ -393,9 +408,10 @@ class RadarFunctionality(tk.Frame):
 
 
 
-    def stop_fpga(self):
-        global is_fpga_running
-        is_fpga_running = False
+    def update_progressbar(self, value):
+        self.progress_bar['value'] = value
+        self.update_idletasks()
+
 
     def kill_fpga(self):
         password = f"{os.environ.get('CONNECTION_PASSWORD')}"
