@@ -289,11 +289,12 @@ class RadarFunctionality(tk.Frame):
                         data = channel.recv(1024).decode("iso-8859-1")
                         #TODO EDIT this for a visual cue that the fpga is finished the_jake_equation
                         # if f"Captured {expected_Q_Value} packets." in data:
-                        if f"Captured" in data or "packets" in data:
-                            self.az_entry.delete(0, tk.END)
-                            self.az_entry.insert(tk.END, "RUN FINISHED")
-                            is_fpga_running = False
-                            break
+                        # if f"Captured" in data or "packets" in data:
+                        #     self.az_entry.delete(0, tk.END)
+                        #     self.az_entry.insert(tk.END, "RUN FINISHED")
+                        #     is_fpga_running = False
+                        #     break
+                        print(buffer)
                         buffer += data
                         while True:
                             position_match = position_pattern.search(buffer)
