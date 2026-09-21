@@ -269,10 +269,17 @@ class RadarFunctionality(tk.Frame):
             buffer = ""
 
             # Grabs the line with Power and the line above it for azimuth and altitude
+            # position_pattern = re.compile(
+            #     r"position:\s*(?P<az>[+-]?\d+\.\d+)\s+azimuth,\s*"
+            #     r"[+-]?\d+\.\d+,\s*plate,\s*"
+            #     r"(?P<el>[+-]?\d+\.\d+)\s+altitude"
+            # )
+
+            #regex accounts for zeros
             position_pattern = re.compile(
-                r"position:\s*(?P<az>[+-]?\d+\.\d+)\s+azimuth,\s*"
-                r"[+-]?\d+\.\d+,\s*plate,\s*"
-                r"(?P<el>[+-]?\d+\.\d+)\s+altitude"
+                r"position:\s*(?P<az>[+-]?\d+(?:\.\d+)?)\s+azimuth,\s*"
+                r"[+-]?\d+(?:\.\d+)?,\s*plate,\s*"
+                r"(?P<el>[+-]?\d+(?:\.\d+)?)\s+altitude"
             )
 
             power_pattern = re.compile(
@@ -294,7 +301,8 @@ class RadarFunctionality(tk.Frame):
                         #     self.az_entry.insert(tk.END, "RUN FINISHED")
                         #     is_fpga_running = False
                         #     break
-                        print(buffer)
+                        #printing out data, remove
+                        print(repr(data))
                         buffer += data
                         while True:
                             position_match = position_pattern.search(buffer)
