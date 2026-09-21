@@ -297,58 +297,49 @@ class RadarFunctionality(tk.Frame):
                 r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)"
             )
 
+
+
             try:
                 last_position = None
-                # self.create_values_csv()
-
+                captured_pattern = re.compile(r"Captured\s+(\d+)\s+packets\.")
+                self.status_var.set("RUNNING")
                 while channel.active and is_fpga_running:
-                    self.status_var.set("RUNNING")
+
                     if channel.recv_ready():
                         data = channel.recv(1024).decode("iso-8859-1")
-                        print(data)
-                        #TODO EDIT this for a visual cue that the fpga is finished the_jake_equation
-                        if f"Captured {expected_Q_Value} packets." in data:
+                        buffer += data
+
+                        captured_match = captured_pattern.search(buffer)
+                        if captured_match:
                             is_fpga_running = False
                             break
-                        buffer += data
+
                         while True:
+                            position_match = position_pattern.search(buffer)
                             power_match = power_pattern.search(buffer)
-                            if power_match is not None:
 
-                                x_power = float(power_match.group("xPow"))
-                                y_power = float(power_match.group("yPow"))
+                            if position_match is None and power_match is None:
+                                break
 
-                                self.latest_values = (0, 0, x_power, y_power)
-                                self.csv_queue.put((0, 0, x_power, y_power))
-                                buffer = buffer[power_match.end():]
+                            if position_match is not None and (power_match is None or position_match.start() < power_match.start()):
+                                last_position = position_match
+
+                                buffer = buffer[position_match.end():]
                                 continue
 
-                            #TODO THIS CODE WORKS, COMMENTING OUT FOR LACK OF POSITION DATA DURING TESTING
-                            # position_match = position_pattern.search(buffer)
-                            # power_match = power_pattern.search(buffer)
-                            #
-                            # if position_match is None and power_match is None:
-                            #     break
-                            #
-                            # if position_match is not None and (power_match is None or position_match.start() < power_match.start()):
-                            #     last_position = position_match
-                            #
-                            #     buffer = buffer[position_match.end():]
-                            #     continue
-                            #
-                            # if power_match is not None:
-                            #     if last_position is not None:
-                            #         az = float(last_position.group("az"))
-                            #         el = float(last_position.group("el"))
-                            #         x_power = float(power_match.group("xPow"))
-                            #         y_power = float(power_match.group("yPow"))
-                            #
-                            #         self.latest_values = (az, el, x_power, y_power)
-                            #         self.csv_queue.put((az, el, x_power, y_power))
-                            #
-                            #         last_position = None
-                            #     buffer = buffer[power_match.end():]
-                            #     continue
+                            if power_match is not None:
+                                if last_position is not None:
+                                    az = float(last_position.group("az"))
+                                    el = float(last_position.group("el"))
+                                    x_power = float(power_match.group("xPow"))
+                                    y_power = float(power_match.group("yPow"))
+
+                                    self.latest_values = (az, el, x_power, y_power)
+                                    self.csv_queue.put((az, el, x_power, y_power))
+
+                                    last_position = None
+                                buffer = buffer[power_match.end():]
+                                continue
 
 
             finally:
