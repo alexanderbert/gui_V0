@@ -304,7 +304,7 @@ class RadarFunctionality(tk.Frame):
                         #     is_fpga_running = False
                         #     break
                         #printing out data, remove
-                        print(data)
+                        print(buffer)
                         buffer += data
                         while True:
                             power_match = power_pattern.search(buffer)
