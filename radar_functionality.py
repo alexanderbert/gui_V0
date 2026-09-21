@@ -305,31 +305,42 @@ class RadarFunctionality(tk.Frame):
                         print(repr(data))
                         buffer += data
                         while True:
-                            position_match = position_pattern.search(buffer)
                             power_match = power_pattern.search(buffer)
-
-                            if position_match is None and power_match is None:
-                                break
-
-                            if position_match is not None and (power_match is None or position_match.start() < power_match.start()):
-                                last_position = position_match
-
-                                buffer = buffer[position_match.end():]
-                                continue
-
                             if power_match is not None:
-                                if last_position is not None:
-                                    az = float(last_position.group("az"))
-                                    el = float(last_position.group("el"))
-                                    x_power = float(power_match.group("xPow"))
-                                    y_power = float(power_match.group("yPow"))
+                                az = float(0.0)
+                                el = float(0.0)
+                                x_power = float(power_match.group("xPow"))
+                                y_power = float(power_match.group("yPow"))
 
-                                    self.latest_values = (az, el, x_power, y_power)
-                                    self.csv_queue.put((az, el, x_power, y_power))
+                                self.latest_values = (az, el, x_power, y_power)
+                                self.csv_queue.put((az, el, x_power, y_power))
 
-                                    last_position = None
-                                buffer = buffer[power_match.end():]
-                                continue
+                            #TODO THIS CODE WORKS, COMMENTING OUT FOR LACK OF POSITION DATA DURING TESTING
+                            # position_match = position_pattern.search(buffer)
+                            # power_match = power_pattern.search(buffer)
+                            #
+                            # if position_match is None and power_match is None:
+                            #     break
+                            #
+                            # if position_match is not None and (power_match is None or position_match.start() < power_match.start()):
+                            #     last_position = position_match
+                            #
+                            #     buffer = buffer[position_match.end():]
+                            #     continue
+                            #
+                            # if power_match is not None:
+                            #     if last_position is not None:
+                            #         az = float(last_position.group("az"))
+                            #         el = float(last_position.group("el"))
+                            #         x_power = float(power_match.group("xPow"))
+                            #         y_power = float(power_match.group("yPow"))
+                            #
+                            #         self.latest_values = (az, el, x_power, y_power)
+                            #         self.csv_queue.put((az, el, x_power, y_power))
+                            #
+                            #         last_position = None
+                            #     buffer = buffer[power_match.end():]
+                            #     continue
 
 
             finally:
