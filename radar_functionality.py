@@ -192,6 +192,7 @@ class RadarFunctionality(tk.Frame):
         self.el_var = tk.StringVar(value="0")
         self.x_power_var = tk.StringVar(value="0")
         self.y_power_var = tk.StringVar(value="0")
+        self.status_var = tk.StringVar(value="Not Running")
 
 
         self.az_label = tk.Label(self.output_frame, text="Az:")
@@ -222,6 +223,13 @@ class RadarFunctionality(tk.Frame):
         self.y_power_entry.grid(column=1, row=3, sticky="nsew")
         self.y_power_entry.config(font=("Arial", 20), justify="center")
 
+        self.status_label = tk.Label(self.output_frame, text="Status:")
+        self.status_label.grid(column=0, row=4, sticky="nsew")
+        self.status_label.config(font=("Arial", 20))
+        self.status_entry = tk.Entry(self.output_frame, textvariable=self.status_var)
+        self.status_entry.grid(column=1, row=4, sticky="nsew")
+        self.status_entry.config(font=("Arial", 20), justify="center")
+
         # calculate speed in seconds - degrees 20 seconds 360/20 = 18 degrees a second
         # 10 degrees azimuth 10/18 degrees
         # total elevation size /increment *2 (-3 to 5) is 8 incremnts
@@ -231,7 +239,7 @@ class RadarFunctionality(tk.Frame):
             input_warning = messagebox.showwarning("Warning",
                                                    f"Please enter values in the Positioner tab first.")
         else:
-
+            self.status_var.set("Starting UP")
             self.csv_thread = threading.Thread(
                 target=self.csv_writer_worker,
                 daemon=True
@@ -294,6 +302,7 @@ class RadarFunctionality(tk.Frame):
                 # self.create_values_csv()
 
                 while channel.active and is_fpga_running:
+                    self.status_var.set("RUNNING")
                     if channel.recv_ready():
                         data = channel.recv(1024).decode("iso-8859-1")
                         #TODO EDIT this for a visual cue that the fpga is finished the_jake_equation
@@ -361,6 +370,8 @@ class RadarFunctionality(tk.Frame):
                 self.csv_queue.put(None)
                 if self.csv_thread is not None:
                     self.csv_thread.join()
+                print("RUN FINISHED")
+                self.status_var.set("FINISHED")
 
     def capture_packets_run(self):
         self.az_entry.delete(0, tk.END)
