@@ -315,6 +315,8 @@ class RadarsAvailableFrame(tk.Frame):
             if "password for sq:" in chunk:
                 channel.send(f"{password}\n")
         client.close()
+        self.messagebox.config(state="disabled")
+        self.messagebox.insert(tk.END, "Reset Finished")
 
 class ButtonFrame(tk.Frame):
     def __init__(self, parent, command_dict, entry_dict, radar_available_frame, io_frame):
