@@ -495,18 +495,25 @@ class RadarFunctionality(tk.Frame):
     def fl_network_mode(self):
         self.current_radar = self.radar_dict[self.radar_selected.get()]
         print(self.current_radar)
-        client = self.create_ssh_client()
-        client.connect(hostname=f"{self.current_radar}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
-                       password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-        # print(f"{self.positioner_selected_for_use} inside status")
-        # print(f"{selected_positioner_global} GLOBAL status")
-        transport = client.get_transport()
-        channel = transport.open_session()
-        channel.get_pty()
-        channel = client.invoke_shell()
-        time.sleep(.1)
-        logging.info("CONNECTED TO FLORIDA NETWORK")
-        return client, channel
+        if self.current_radar == "---------":
+            self.status_var.set("Please Select A Radar")
+            return None
+        else:
+            try:
+                client = self.create_ssh_client()
+                client.connect(hostname=f"{self.current_radar}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
+                               password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+                # print(f"{self.positioner_selected_for_use} inside status")
+                # print(f"{selected_positioner_global} GLOBAL status")
+                transport = client.get_transport()
+                channel = transport.open_session()
+                channel.get_pty()
+                channel = client.invoke_shell()
+                time.sleep(.1)
+                logging.info("CONNECTED TO FLORIDA NETWORK")
+                return client, channel
+            except:
+                self.status_var.set("Network Error")
 
 
     def radar_drop(self):
@@ -582,18 +589,7 @@ class RadarFunctionality(tk.Frame):
     def create_heatmap(self):
 
 
-        self.az_entry.grid_remove()
-        self.az_label.grid_remove()
-        self.el_entry.grid_remove()
-        self.el_label.grid_remove()
-        self.x_power_entry.grid_remove()
-        self.x_power_label.grid_remove()
-        self.y_power_entry.grid_remove()
-        self.y_power_label.grid_remove()
-
-        self.find_other_radars_button.grid_remove()
-
-
+        self.remove_output_network_widgets()
 
         azimuth_raw = []
         elevation_raw = []
@@ -610,15 +606,7 @@ class RadarFunctionality(tk.Frame):
         )
 
         if not csv_file:
-            self.az_entry.grid()
-            self.az_label.grid()
-            self.el_entry.grid()
-            self.el_label.grid()
-            self.x_power_entry.grid()
-            self.x_power_label.grid()
-            self.y_power_entry.grid()
-            self.y_power_label.grid()
-            self.find_other_radars_button.grid()
+            self.replace_output_network_widgets()
             return
 
 
@@ -809,6 +797,26 @@ class RadarFunctionality(tk.Frame):
             self.close_heatmap_button.destroy()
 
             self.close_heatmap_button = None
+
+        self.replace_output_network_widgets()
+
+        #self.initial_output_frame()
+
+    def remove_output_network_widgets(self):
+        self.az_entry.grid_remove()
+        self.az_label.grid_remove()
+        self.el_entry.grid_remove()
+        self.el_label.grid_remove()
+        self.x_power_entry.grid_remove()
+        self.x_power_label.grid_remove()
+        self.y_power_entry.grid_remove()
+        self.y_power_label.grid_remove()
+        self.find_other_radars_button.grid_remove()
+        self.status_entry.grid_remove()
+        self.status_label.grid_remove()
+        self.create_heatmap_button.grid_remove()
+
+    def replace_output_network_widgets(self):
         self.az_entry.grid()
         self.az_label.grid()
         self.el_entry.grid()
@@ -817,8 +825,7 @@ class RadarFunctionality(tk.Frame):
         self.x_power_label.grid()
         self.y_power_entry.grid()
         self.y_power_label.grid()
+        self.status_entry.grid()
+        self.status_label.grid()
         self.find_other_radars_button.grid()
-
-        self.initial_output_frame()
-
-
+        self.create_heatmap_button.grid()
