@@ -677,7 +677,7 @@ class RadarFunctionality(tk.Frame):
         ax.annotate(
             f"{peak_azimuth:.2f}, {peak_elevation:.2f}",
             (peak_azimuth, peak_elevation),
-            xytext=(10,10),
+            xytext=(-10,-20),
             textcoords="offset points",
             color="black",
 
