@@ -240,7 +240,7 @@ class RadarFunctionality(tk.Frame):
 
 
 
-            self.status_var.set("Starting UP")
+            self.status_var.set("Starting FPGA")
             self.csv_thread = threading.Thread(
                 target=self.csv_writer_worker,
                 daemon=True
@@ -262,9 +262,12 @@ class RadarFunctionality(tk.Frame):
             global is_fpga_running
             is_fpga_running = True
             time.sleep(1)
+
             self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", length=400,
                                                 maximum=expected_Q_Value)
             self.progress_bar.grid(column=0, columnspan=2, row=5, sticky="nsew")
+            self.progress_bar['value'] = 0
+
             try:
                 channel.send(f"cd {os.environ['FPGAPATH']}\n")
                 print(f"sent: cd {os.environ['FPGAPATH']}")
@@ -276,7 +279,7 @@ class RadarFunctionality(tk.Frame):
                 time.sleep(1)
                 print(f"FPGA RUNNING STATE: {is_fpga_running}")
 
-                #REMOVE THE BUFFER PRINT
+
             except:
                 pass
             buffer = ""
@@ -307,7 +310,8 @@ class RadarFunctionality(tk.Frame):
 
 
             try:
-                last_position = None
+                #PUT THIS BACK
+                #last_position = None
 
                 self.status_var.set("RUNNING")
                 while channel.active and is_fpga_running:
@@ -324,37 +328,50 @@ class RadarFunctionality(tk.Frame):
                             break
 
                         while True:
-                            position_match = position_pattern.search(buffer)
+                            # position_match = position_pattern.search(buffer)
+                            # power_match = power_pattern.search(buffer)
+                            #
+                            # # num_match = num_pattern.search(buffer)
+                            # # if num_match:
+                            # #     num_value = int(num_match.group("num"))
+                            # #
+                            # #     self.update_progressbar(num_value)
+                            #
+                            # if position_match is None and power_match is None:
+                            #     break
+                            #
+                            # if position_match is not None and (power_match is None or position_match.start() < power_match.start()):
+                            #     last_position = position_match
+                            #
+                            #     buffer = buffer[position_match.end():]
+                            #     continue
+                            #
+                            # if power_match is not None:
+                            #     if last_position is not None:
+                            #         az = float(last_position.group("az"))
+                            #         el = float(last_position.group("el"))
+                            #         x_power = float(power_match.group("xPow"))
+                            #         y_power = float(power_match.group("yPow"))
+                            #
+                            #         self.latest_values = (az, el, x_power, y_power)
+                            #         self.csv_queue.put((az, el, x_power, y_power))
+                            #
+                            #         last_position = None
+                            #     buffer = buffer[power_match.end():]
+                            #     continue
                             power_match = power_pattern.search(buffer)
-
                             num_match = num_pattern.search(buffer)
-                            if num_match:
-                                num_value = int(num_match.group("num"))
-
-                                self.update_progressbar(num_value)
-
-                            if position_match is None and power_match is None:
-                                break
-
-                            if position_match is not None and (power_match is None or position_match.start() < power_match.start()):
-                                last_position = position_match
-
-                                buffer = buffer[position_match.end():]
-                                continue
-
                             if power_match is not None:
-                                if last_position is not None:
-                                    az = float(last_position.group("az"))
-                                    el = float(last_position.group("el"))
-                                    x_power = float(power_match.group("xPow"))
-                                    y_power = float(power_match.group("yPow"))
-
-                                    self.latest_values = (az, el, x_power, y_power)
-                                    self.csv_queue.put((az, el, x_power, y_power))
-
-                                    last_position = None
+                                if num_match:
+                                    num_value = int(num_match.group("num"))
+                                    self.update_progressbar(num_value)
+                                az = 0
+                                el = 0
+                                x_power = float(power_match.group("xPow"))
+                                y_power = float(power_match.group("yPow"))
+                                self.latest_values = (az, el, x_power, y_power)
+                                self.csv_queue.put((az, el, x_power, y_power))
                                 buffer = buffer[power_match.end():]
-                                continue
 
 
             finally:
