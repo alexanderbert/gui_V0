@@ -380,11 +380,15 @@ class RadarFunctionality(tk.Frame):
                     self.csv_thread.join()
                 print("RUN FINISHED")
                 self.status_var.set("FINISHED")
+                self.progress_bar.destroy()
 
     def capture_packets_run(self):
+        self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", length=400,
+                                            maximum=10000)
+        self.progress_bar.grid(column=0, columnspan=2, row=5, sticky="nsew")
+        self.progress_bar['value'] = 0
+
         self.status_var.set("Capture Run Started")
-        self.az_entry.delete(0, tk.END)
-        self.az_entry.insert(tk.END, "CAPTURE RUNNING")
         global is_fpga_running
         is_fpga_running = True
         #Todo make sure this works correctly. No cues but based off of -Q 10000
@@ -402,19 +406,33 @@ class RadarFunctionality(tk.Frame):
         #Need a total -Q number for pulses to be read i think
         channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 1000 -k 8000 -Q 10000 -q -c | socat - tcp:10.42.0.1:7777\n")
         time.sleep(.5)
+
+        num_pattern = re.compile(
+            r"num:\s*(?P<num>\d+),\s*"
+        )
+
         buffer = ''
         while channel.active and is_fpga_running:
             if channel.recv_ready():
                 data = channel.recv(1024).decode("iso-8859-1")
                 buffer += data
+                num_match = num_pattern.search(buffer)
+
                 captured_match = re.search(r"Captured\s+(\d+)\s+packets\.", buffer)
                 if captured_match:
                     captured_count = int(captured_match.group(1))
                     print(f"FPGA FINISHED: captured {captured_count} packets")
                     is_fpga_running = False
                     break
+
+                if num_match:
+                    num_value = int(num_match.group("num"))
+                    self.update_progressbar(num_value)
+
         channel.close()
         client.close()
+        self.status_var.set("Capture Run Finished")
+        self.progress_bar.destroy()
 
     def update_progressbar(self, value):
         self.progress_bar['value'] = value
