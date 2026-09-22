@@ -247,7 +247,7 @@ class RadarFunctionality(tk.Frame):
             )
             self.csv_thread.start()
 
-            self.csv_queue.put((0, 0, 0, 0))
+            #self.csv_queue.put((0, 0, 0, 0))
             try:
                 azDelta = float(state.ending_azimuth_value) - float(state.starting_azimuth_value)
                 elDelta = float(state.ending_el_value) - float(state.starting_el_value)
@@ -362,21 +362,6 @@ class RadarFunctionality(tk.Frame):
                                     last_position = None
                                 buffer = buffer[power_match.end():]
                                 continue
-                            #TODO DOESNT WORK
-                            # power_match = power_pattern.search(buffer)
-                            # num_match = num_pattern.search(buffer)
-                            # if power_match is not None:
-                            #     if num_match:
-                            #         num_value = int(num_match.group("num"))
-                            #         self.update_progressbar(num_value)
-                            #     az = 0
-                            #     el = 0
-                            #     x_power = float(power_match.group("xPow"))
-                            #     y_power = float(power_match.group("yPow"))
-                            #     self.latest_values = (az, el, x_power, y_power)
-                            #     self.csv_queue.put((az, el, x_power, y_power))
-                            #     buffer = buffer[power_match.end():]
-
 
             finally:
                 is_fpga_running = False
@@ -397,6 +382,7 @@ class RadarFunctionality(tk.Frame):
                 self.status_var.set("FINISHED")
 
     def capture_packets_run(self):
+        self.status_var.set("Capture Run Started")
         self.az_entry.delete(0, tk.END)
         self.az_entry.insert(tk.END, "CAPTURE RUNNING")
         global is_fpga_running
@@ -416,12 +402,15 @@ class RadarFunctionality(tk.Frame):
         #Need a total -Q number for pulses to be read i think
         channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 1000 -k 8000 -Q 10000 -q -c | socat - tcp:10.42.0.1:7777\n")
         time.sleep(.5)
+        buffer = ''
         while channel.active and is_fpga_running:
             if channel.recv_ready():
                 data = channel.recv(1024).decode("iso-8859-1")
-                if f"Captured" in data or "packets" in data:
-                    self.az_entry.delete(0, tk.END)
-                    self.az_entry.insert(tk.END, "RUN FINISHED")
+                buffer += data
+                captured_match = re.search(r"Captured\s+(\d+)\s+packets\.", buffer)
+                if captured_match:
+                    captured_count = int(captured_match.group(1))
+                    print(f"FPGA FINISHED: captured {captured_count} packets")
                     is_fpga_running = False
                     break
         channel.close()
@@ -433,6 +422,7 @@ class RadarFunctionality(tk.Frame):
 
 
     def kill_fpga(self):
+        self.status_var.set("Running Abort")
         password = f"{os.environ.get('CONNECTION_PASSWORD')}"
         client, channel = self.fl_network_mode()
         try:
@@ -473,6 +463,7 @@ class RadarFunctionality(tk.Frame):
                 #         channel.send(f"{password}\n")
         finally:
             client.close()
+            self.status_var.set("Abort Finished")
 
 
     def start_threading(self, funct, *args):
@@ -515,6 +506,7 @@ class RadarFunctionality(tk.Frame):
     def find_other_radars(self):
         #self.status_textbox.config(state="normal")
         print(f"inside other radars {state.network_state}")
+        self.status_var.set("Searching Network")
         self.find_other_radars_button.config(text="Searching for radars")
         self.find_other_radars_button.config(state="disabled")
         nm = nmap.PortScanner()
@@ -539,6 +531,7 @@ class RadarFunctionality(tk.Frame):
         logging.info("RUNNING find_other_radars")
         self.find_other_radars_button.config(state="normal")
         self.find_other_radars_button.config(text="Find Radars")
+        self.status_var.set("Finished Searching Network")
 
 
     def start_network_scan(self):
