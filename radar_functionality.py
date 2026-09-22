@@ -588,7 +588,12 @@ class RadarFunctionality(tk.Frame):
 
     def create_heatmap(self):
 
-
+        '''
+        Will Create a heatmap based on data accumulated by heat_map_fpga.
+        Does not have protections against faulty data.
+        calculation is currently based off of X POWER.
+        :return:
+        '''
         self.remove_output_network_widgets()
 
         azimuth_raw = []
@@ -624,20 +629,11 @@ class RadarFunctionality(tk.Frame):
                     y_power_raw.append(float(row[3]))
                 except ValueError:
                     continue
-        if not azimuth_raw:
+        if not azimuth_raw or not elevation_raw or not x_power_raw or not y_power_raw:
             raise ValueError("No valid data")
         azimuth = np.array(azimuth_raw)
         elevation = np.array(elevation_raw)
         x_power = np.array(x_power_raw)
-        # TODO OLD EQUATION
-        # y_power = np.array(y_power_raw)
-        #
-        # x_linear = 10 ** (x_power / 10)
-        # y_linear = 10 ** (y_power / 10)
-        #
-        # total_linear = x_linear + y_linear
-        #
-        # power = 10 * np.log10(total_linear)
 
 
         #NEW HEATMAP CREATION
