@@ -314,7 +314,6 @@ class RadarFunctionality(tk.Frame):
 
                     if channel.recv_ready():
                         data = channel.recv(1024).decode("iso-8859-1")
-                        print(repr(data))
                         buffer += data
                         captured_match = re.search(r"Captured\s+(\d+)\s+packets\.", buffer)
                         if captured_match:
