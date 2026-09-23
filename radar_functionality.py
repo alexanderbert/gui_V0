@@ -301,12 +301,8 @@ class RadarFunctionality(tk.Frame):
             power_pattern = re.compile(
                 r"X power:\s*(?P<xPow>[+-]?\d+\.\d+).*?"
                 r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)"
+                r"num:\s*(?P<num>\d+),"
             )
-
-            num_pattern = re.compile(
-                r"num:\s*(?P<num>\d+),\s*"
-            )
-
 
 
             try:
@@ -317,7 +313,8 @@ class RadarFunctionality(tk.Frame):
 
                     if channel.recv_ready():
                         data = channel.recv(1024).decode("iso-8859-1")
-                        print(repr(data))
+                        #TODO PRINT COMMAND TO VIEW DATA
+                        #print(repr(data))
                         buffer += data
                         captured_match = re.search(r"Captured\s+(\d+)\s+packets\.", buffer)
                         if captured_match:
@@ -331,10 +328,6 @@ class RadarFunctionality(tk.Frame):
                             position_match = position_pattern.search(buffer)
                             power_match = power_pattern.search(buffer)
 
-                            num_match = num_pattern.search(buffer)
-                            if num_match:
-                                num_value = int(num_match.group("num"))
-                                print(f"NUM VALUE FOUND: {num_value}")
 
                             if position_match is None and power_match is None:
                                 break
@@ -347,14 +340,14 @@ class RadarFunctionality(tk.Frame):
 
                             if power_match is not None:
                                 if last_position is not None:
+
                                     az = float(last_position.group("az"))
                                     el = float(last_position.group("el"))
                                     x_power = float(power_match.group("xPow"))
                                     y_power = float(power_match.group("yPow"))
+                                    num_value = int(power_match.group('num'))
                                     #THIS WILL UPDATE PROGRESS BAR
-                                    if num_match:
-                                        num_value = int(num_match.group("num"))
-                                        self.update_progressbar(num_value)
+                                    self.update_progressbar(num_value)
 
                                     self.latest_values = (az, el, x_power, y_power)
                                     self.csv_queue.put((az, el, x_power, y_power))
