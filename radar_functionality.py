@@ -472,11 +472,18 @@ class RadarFunctionality(tk.Frame):
         self.progress_bar.destroy()
 
     def update_progressbar(self, value):
+        '''
+        Updates the progress bar, update_idletasks forces a gui refresh so this might not be optimal but
+        I won't know until testing. The other option would be to create a .after(x, update_progressbar) function
+
+        '''
         self.progress_bar['value'] = value
-        self.update_idletasks()
+        #self.update_idletasks()
 
 
     def kill_fpga(self):
+        global is_fpga_running
+        is_fpga_running = False
         self.status_var.set("Running Abort")
         password = f"{os.environ.get('CONNECTION_PASSWORD')}"
         client, channel = self.fl_network_mode()
