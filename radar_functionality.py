@@ -125,6 +125,7 @@ class RadarFunctionality(tk.Frame):
         #self.values_lock = threading.Lock()
 
         self.csv_queue= queue.Queue()
+        self.raw_csv_queue = queue.Queue()
         #
         # self.csv_file = None
         # self.csv_writer = None
@@ -179,12 +180,37 @@ class RadarFunctionality(tk.Frame):
         if csv_file is not None:
             csv_file.close()
 
+    def raw_csv_writer_worker(self):
+        timestamp = datetime.now().strftime("%m%d_%H%M%S")
 
-    def close_values_csv(self):
-        if self.csv_file is not None:
-            self.csv_file.close()
-        self.csv_file = None
-        self.csv_writer = None
+        filename = os.path.join(
+            application_path,
+            f"heatmap_{timestamp}.csv"
+        )
+        with open(
+            filename,
+            'w',
+            newline='',
+            encoding='utf-8',
+        ) as f:
+            writer = csv.writer(f)
+            writer.writerow(['raw_data'])
+
+            while True:
+                data = self.raw_csv_queue.get()
+                if data is None:
+                    self.raw_csv_queue.task_done()
+                    break
+                writer.writerow([data])
+
+                self.raw_csv_queue.task_done()
+
+
+    # def close_values_csv(self):
+    #     if self.csv_file is not None:
+    #         self.csv_file.close()
+    #     self.csv_file = None
+    #     self.csv_writer = None
 
 
     def initial_output_frame(self):
@@ -245,8 +271,13 @@ class RadarFunctionality(tk.Frame):
                 target=self.csv_writer_worker,
                 daemon=True
             )
-            self.csv_thread.start()
+            self.raw_csv_thread = threading.Thread(
+                target=self.raw_csv_writer_worker,
+                daemon=True
+            )
 
+            self.csv_thread.start()
+            self.raw_csv_thread.start()
             #self.csv_queue.put((0, 0, 0, 0))
             try:
                 azDelta = float(state.ending_azimuth_value) - float(state.starting_azimuth_value)
@@ -315,7 +346,11 @@ class RadarFunctionality(tk.Frame):
                         data = channel.recv(1024).decode("iso-8859-1")
                         #TODO PRINT COMMAND TO VIEW DATA
                         #print(repr(data))
+
+                        #PUTTING RAW DATA INTO RAW CSV
+                        self.raw_csv_queue.put(data)
                         buffer += data
+
                         captured_match = re.search(r"Captured\s+(\d+)\s+packets\.", buffer)
                         if captured_match:
                             captured_count = int(captured_match.group(1))
@@ -369,8 +404,11 @@ class RadarFunctionality(tk.Frame):
                 if client is not None:
                     client.close()
                 self.csv_queue.put(None)
+                self.raw_csv_queue.put(None)
                 if self.csv_thread is not None:
                     self.csv_thread.join()
+                if self.raw_csv_thread is not None:
+                    self.raw_csv_thread.join()
                 print("RUN FINISHED")
                 self.status_var.set("FINISHED")
                 self.progress_bar.destroy()
