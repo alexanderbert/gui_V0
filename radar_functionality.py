@@ -148,44 +148,50 @@ class RadarFunctionality(tk.Frame):
     def csv_writer_worker(self):
         csv_file = None
         csv_writer = None
+        try:
+            while True:
+                item = self.csv_queue.get()
 
-        while True:
-            item = self.csv_queue.get()
-            if item is None:
-                break
-            if csv_file is None:
-                timestamp = datetime.now().strftime("%m%d_%H%M%S")
+                try:
+                    if item is None:
+                        break
+                    if csv_file is None:
+                        timestamp = datetime.now().strftime("%m%d_%H%M%S")
 
-                filename=os.path.join(
-                    application_path,
-                    f"heatmap_{timestamp}.csv"
-                )
+                        filename=os.path.join(
+                            application_path,
+                            f"heatmap_{timestamp}.csv"
+                        )
 
-                csv_file = open(
-                    filename,
-                    "w",
-                    newline="",
-                    buffering=1
-                )
+                        csv_file = open(
+                            filename,
+                            "w",
+                            newline="",
+                            buffering=1
+                        )
 
-                csv_writer = csv.writer(csv_file)
+                        csv_writer = csv.writer(csv_file)
 
-                csv_writer.writerow([
-                    "Azimuth",
-                    "Elevation",
-                    "X Power",
-                    "Y Power"
-                ])
-            csv_writer.writerow(item)
-        if csv_file is not None:
-            csv_file.close()
+                        csv_writer.writerow([
+                            "Azimuth",
+                            "Elevation",
+                            "X Power",
+                            "Y Power"
+                        ])
+
+                    csv_writer.writerow(item)
+                finally:
+                    self.csv_queue.task_done()
+        finally:
+            if csv_file is not None:
+                csv_file.close()
 
     def raw_csv_writer_worker(self):
         timestamp = datetime.now().strftime("%m%d_%H%M%S")
 
         filename = os.path.join(
             application_path,
-            f"heatmap_{timestamp}.csv"
+            f"RAW_OUTPUT_{timestamp}.csv"
         )
         with open(
             filename,
@@ -198,12 +204,12 @@ class RadarFunctionality(tk.Frame):
 
             while True:
                 data = self.raw_csv_queue.get()
-                if data is None:
+                try:
+                    if data is None:
+                        break
+                    writer.writerow([data])
+                finally:
                     self.raw_csv_queue.task_done()
-                    break
-                writer.writerow([data])
-
-                self.raw_csv_queue.task_done()
 
 
     # def close_values_csv(self):
