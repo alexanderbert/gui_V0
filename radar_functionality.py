@@ -538,7 +538,13 @@ class RadarFunctionality(tk.Frame):
         # host_ip = os.environ.get("HOST_IP")
         # nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
         #CHANGE NMAP SCAN BASED ON NETWORK STATE
-        nm.scan(hosts=state.network_state, arguments="-sn")
+        try:
+            nm.scan(hosts=state.network_state, arguments="-sn", timeout=20)
+        except:
+            self.status_var.set("Network Error")
+            self.find_other_radars_button.config(state="normal")
+            self.find_other_radars_button.config(text="Find Radars")
+            return
         host_ip = state.network_state
         logging.info(f"running on {host_ip}")
         print(f"running on {host_ip}")
