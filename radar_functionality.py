@@ -48,7 +48,7 @@ is_fpga_running = False
 
 class RadarFunctionality(tk.Frame):
     def __init__(self, parent):
-        super().__init__(parent, background = "Gray63")
+        super().__init__(parent, background = "gray85")
         self.current_radar = None
         self.columnconfigure(0, weight=10)
         self.columnconfigure(1, weight=10)
@@ -67,17 +67,18 @@ class RadarFunctionality(tk.Frame):
 
         self.radar_control_frame = tk.Frame(self)
         self.radar_control_frame.grid(row=1, column=2, sticky="nsew")
+        self.radar_control_frame.grid_columnconfigure(0, weight=1)
         # self.radar_control_frame.grid_rowconfigure(list(range(0,3)), weight=1)
 
 
-        self.output_frame = tk.Frame(self, background="Gray63")
+        self.output_frame = tk.Frame(self, background="gray85")
         self.output_frame.grid(column=0, row=0, sticky="nsew")
         self.output_frame.grid_columnconfigure(0, weight=1)
         self.output_frame.grid_columnconfigure(1, weight=1)
         self.output_frame.rowconfigure(list(range(0,4)), weight=1)
         #self.output_frame.grid_propagate(False)
 
-        self.toolbar_frame= tk.Frame(self.output_frame)
+        self.toolbar_frame= tk.Frame(self.output_frame, background="gray85", height =20)
         self.toolbar_frame.grid_propagate(False)
         # self.network_state = "Wifi"
 
@@ -114,7 +115,7 @@ class RadarFunctionality(tk.Frame):
 
 
         self.find_other_radars_button = tk.Button(self.radar_control_frame, text="Check Network", command=lambda:self.start_network_scan())
-        self.find_other_radars_button.grid(row=3, column=2)
+        self.find_other_radars_button.grid(row=3, column=2, sticky='NE')
         self.find_other_radars_button.config(width=20, font=("Arial", 20))
 
         self.canvas = None
@@ -564,10 +565,10 @@ class RadarFunctionality(tk.Frame):
         self.radars_available = list(self.radar_dict.keys())
         self.radar_selected = tk.StringVar()
         self.radar_selected.set(self.radars_available[0])
-        combo_drop = ttk.Combobox(self.radar_control_frame, textvariable=self.radar_selected, values = self.radars_available, state="readonly")
+        combo_drop = ttk.Combobox(self.radar_control_frame, textvariable=self.radar_selected, values = self.radars_available, state="readonly", justify='center')
         combo_drop.grid(column=2, row=4)
         combo_drop.config(width=20)
-        combo_drop.config(font = ("Arial", 20))
+        combo_drop.config(font = ("Arial", 21))
         return self.radar_selected.get()
 
 
@@ -808,13 +809,13 @@ class RadarFunctionality(tk.Frame):
         self.canvas = FigureCanvasTkAgg(fig, self.output_frame)
         self.canvas.draw()
         #self.canvas.get_tk_widget().grid(column=0, columnspan=2, row=0, rowspan=4, sticky="nsew")
-        self.canvas.get_tk_widget().grid(column=0, row=0, columnspan=2, rowspan=3, sticky="nsew")
+        self.canvas.get_tk_widget().grid(column=0, row=0, columnspan=2, rowspan=4, sticky="nsew")
         #canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
         self.toolbar_frame = tk.Frame(self.output_frame, width=100, height=40)
 
         self.toolbar = NavigationToolbar2Tk(self.canvas, self.toolbar_frame)
         self.toolbar.update()
-        self.toolbar_frame.grid(column=0, row=4, sticky="w")
+        self.toolbar_frame.grid(column=0, row=4, sticky="sw")
 
         self.toolbar_frame.grid_propagate(False)
 
