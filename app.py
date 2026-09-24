@@ -40,7 +40,7 @@ class App(tk.Tk):
         self.my_notebook.add(self.visualization_frame, text = "Visualization")
         self.my_notebook.add(self.radar_functionality_frame, text = "Radar Functionality")
 
-
+        self.option_add("*TCombobox*Listbox.font", ("Arial", 20))
 
         self.mainloop()
 
