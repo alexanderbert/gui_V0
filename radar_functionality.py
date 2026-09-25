@@ -356,7 +356,7 @@ class RadarFunctionality(tk.Frame):
                     if channel.recv_ready():
                         data = channel.recv(1024).decode("iso-8859-1")
                         #TODO PRINT COMMAND TO VIEW DATA
-                        #print(repr(data))
+                        print(repr(data))
 
                         #PUTTING RAW DATA INTO RAW CSV
                         self.raw_csv_queue.put(data)
