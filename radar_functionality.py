@@ -347,6 +347,12 @@ class RadarFunctionality(tk.Frame):
                 r"num:\s*(?P<num>\d+),"
             )
 
+            failure_pattern = re.compile(
+                re.compile(r"failure", re.IGNORECASE)
+            )
+
+
+
             try:
                 last_position = None
 
@@ -365,8 +371,13 @@ class RadarFunctionality(tk.Frame):
                         captured_match = re.search(r"Captured\s+(\d+)\s+packets\.", buffer)
                         if captured_match:
                             captured_count = int(captured_match.group(1))
-
                             print(f"FPGA FINISHED: captured {captured_count} packets")
+                            is_fpga_running = False
+                            break
+
+                        failure_match = failure_pattern.search(buffer)
+                        if failure_match:
+                            print("FPGA FAILURE")
                             is_fpga_running = False
                             break
 
