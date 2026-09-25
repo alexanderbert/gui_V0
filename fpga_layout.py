@@ -211,6 +211,7 @@ class RadarsAvailableFrame(tk.Frame):
         self.columnconfigure(list(range(3)), weight=1)
         self.rowconfigure(list(range(3)), weight=1)
         self.grid_propagate(False)
+        self.messagebox = None
 
 
     def radar_drop(self):

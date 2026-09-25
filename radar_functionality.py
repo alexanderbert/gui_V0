@@ -401,6 +401,8 @@ class RadarFunctionality(tk.Frame):
                                     last_position = None
                                 buffer = buffer[power_match.end():]
                                 continue
+            except:
+                print("ERROR DURING FPGASTREAM PROCESSING FOR HEATMAP")
 
             finally:
                 is_fpga_running = False
