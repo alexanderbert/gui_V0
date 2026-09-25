@@ -703,67 +703,71 @@ class RadarFunctionality(tk.Frame):
 
 
         #NEW HEATMAP CREATION
-        fig, ax = plt.subplots(figsize=(4, 6))
-        az_grid = np.linspace(azimuth.min(), azimuth.max(), 500)
-        el_grid = np.linspace(elevation.min(), elevation.max(), 500)
+        try:
+            fig, ax = plt.subplots(figsize=(4, 6))
+            az_grid = np.linspace(azimuth.min(), azimuth.max(), 500)
+            el_grid = np.linspace(elevation.min(), elevation.max(), 500)
 
-        AZ, EL = np.meshgrid(az_grid, el_grid)
+            AZ, EL = np.meshgrid(az_grid, el_grid)
 
-        POWER = griddata(
-            (azimuth,elevation),
-            x_power,
-            (AZ, EL),
-            method="linear",
-        )
-
-
-        peak_index = np.nanargmax(POWER)
-
-        peak_el, peak_az = np.unravel_index(
-            peak_index,
-            POWER.shape
-        )
-
-        peak_azimuth = AZ[peak_el, peak_az]
-        peak_elevation = EL[peak_el, peak_az]
-        peak_power = POWER[peak_el, peak_az]
-        ax.plot(
-            peak_azimuth,
-            peak_elevation,
-            marker="x",
-            markersize=12,
-            markeredgewidth=3,
-            color="black"
-        )
-
-        ax.annotate(
-            f"{peak_azimuth:.2f}, {peak_elevation:.2f}",
-            (peak_azimuth, peak_elevation),
-            xytext=(-10,-20),
-            textcoords="offset points",
-            color="black",
+            POWER = griddata(
+                (azimuth,elevation),
+                x_power,
+                (AZ, EL),
+                method="linear",
+            )
 
 
-        )
-        heatmap = ax.pcolormesh(
-            AZ,
-            EL,
-            POWER,
-            shading="auto",
-            cmap="inferno"
-            #cmap="gray
-        )
+            peak_index = np.nanargmax(POWER)
+
+            peak_el, peak_az = np.unravel_index(
+                peak_index,
+                POWER.shape
+            )
+
+            peak_azimuth = AZ[peak_el, peak_az]
+            peak_elevation = EL[peak_el, peak_az]
+            peak_power = POWER[peak_el, peak_az]
+            ax.plot(
+                peak_azimuth,
+                peak_elevation,
+                marker="x",
+                markersize=12,
+                markeredgewidth=3,
+                color="black"
+            )
+
+            ax.annotate(
+                f"{peak_azimuth:.2f}, {peak_elevation:.2f}",
+                (peak_azimuth, peak_elevation),
+                xytext=(-10,-20),
+                textcoords="offset points",
+                color="black",
+
+
+            )
+            heatmap = ax.pcolormesh(
+                AZ,
+                EL,
+                POWER,
+                shading="auto",
+                cmap="inferno"
+                #cmap="gray
+            )
 
 
 
         #plt.fig(4, 6)
 
 
-        fig.colorbar(heatmap, ax=ax, label="X Power (dB)")
-        ax.set_xlabel("Azimuth (degrees)")
-        ax.set_ylabel("Elevation (degrees)")
-        ax.set_title("X Power Heatmap")
-        plt.tight_layout()
+            fig.colorbar(heatmap, ax=ax, label="X Power (dB)")
+            ax.set_xlabel("Azimuth (degrees)")
+            ax.set_ylabel("Elevation (degrees)")
+            ax.set_title("X Power Heatmap")
+            plt.tight_layout()
+        except:
+            self.replace_output_network_widgets()
+            return
 
 
         #TODO Hide this initial version of HEATMAP FOR NOW

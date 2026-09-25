@@ -317,6 +317,7 @@ class RadarsAvailableFrame(tk.Frame):
                 channel.send(f"{password}\n")
         client.close()
         self.messagebox.config(state="normal")
+        self.messagebox.delete("1.0", tk.END)
         self.messagebox.insert(tk.END, "Reset Finished")
         self.messagebox.config(state="disabled")
 
