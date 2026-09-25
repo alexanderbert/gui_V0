@@ -280,7 +280,7 @@ class RadarsAvailableFrame(tk.Frame):
     def run_reset_radar(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}"):
         self.messagebox.config(state="normal")
         self.messagebox.delete("1.0", tk.END)
-        self.messagebox.insert("1.0", f"Resetting {hostname}...")
+        self.messagebox.insert(tk.END, f"Resetting {hostname}...")
         client.load_system_host_keys()
         client.connect(hostname=hostname, username=username, password=password, look_for_keys=False, allow_agent=False)
         transport = client.get_transport()
@@ -320,8 +320,9 @@ class RadarsAvailableFrame(tk.Frame):
                 channel.send(f"{password}\n")
         client.close()
         self.messagebox.delete("1.0", tk.END)
-        self.messagebox.insert(tk.END, f"Reset {hostname} Finished")
+        self.messagebox.insert(tk.END, f"{hostname} Reset")
         self.messagebox.config(state="disabled")
+        print("Reset FINISHED")
 
 class ButtonFrame(tk.Frame):
     def __init__(self, parent, command_dict, entry_dict, radar_available_frame, io_frame):
