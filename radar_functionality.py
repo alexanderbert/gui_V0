@@ -336,12 +336,16 @@ class RadarFunctionality(tk.Frame):
                 r"(?P<el>[+-]?\d+(?:\.\d+)?)\s+altitude"
             )
 
+            # power_pattern = re.compile(
+            #     r"X power:\s*(?P<xPow>[+-]?\d+\.\d+).*?"
+            #     r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)"
+            #     r"num:\s*(?P<num>\d+),"
+            # )
             power_pattern = re.compile(
                 r"X power:\s*(?P<xPow>[+-]?\d+\.\d+).*?"
-                r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+)"
+                r"Y power:\s*(?P<yPow>[+-]?\d+\.\d+).*?"
                 r"num:\s*(?P<num>\d+),"
             )
-
 
             try:
                 last_position = None
