@@ -531,6 +531,15 @@ class RadarFunctionality(tk.Frame):
         finally:
             client.close()
             self.status_var.set("Abort Finished")
+            self.csv_queue.put(None)
+            self.raw_csv_queue.put(None)
+            if self.csv_thread is not None:
+                self.csv_thread.join()
+            if self.raw_csv_thread is not None:
+                self.raw_csv_thread.join()
+            print("RUN FINISHED")
+            self.status_var.set("FINISHED")
+            self.progress_bar.destroy()
 
 
     def start_threading(self, funct, *args):
