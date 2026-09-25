@@ -357,7 +357,7 @@ class RadarFunctionality(tk.Frame):
                         #PUTTING RAW DATA INTO RAW CSV
                         self.raw_csv_queue.put(data)
                         buffer += data
-
+                        print(repr(buffer))
                         captured_match = re.search(r"Captured\s+(\d+)\s+packets\.", buffer)
                         if captured_match:
                             captured_count = int(captured_match.group(1))
