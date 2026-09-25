@@ -348,10 +348,10 @@ class RadarFunctionality(tk.Frame):
             )
 
             failure_pattern = re.compile(
-                re.compile(r"failure", re.IGNORECASE)
+                r"failure", re.IGNORECASE
             )
 
-
+            max_buffer_length = 0
 
             try:
                 last_position = None
@@ -367,6 +367,12 @@ class RadarFunctionality(tk.Frame):
                         #PUTTING RAW DATA INTO RAW CSV
                         self.raw_csv_queue.put(data)
                         buffer += data
+
+                        if len(buffer) > max_buffer_length:
+                            max_buffer_length = len(buffer)
+                            print(f"New max buffer size: {max_buffer_length:,} characters")
+
+
                         #print(repr(buffer))
                         captured_match = re.search(r"Captured\s+(\d+)\s+packets\.", buffer)
                         if captured_match:
@@ -412,8 +418,10 @@ class RadarFunctionality(tk.Frame):
                                     last_position = None
                                 buffer = buffer[power_match.end():]
                                 continue
-            except:
-                print("ERROR DURING FPGASTREAM PROCESSING FOR HEATMAP")
+            except Exception as e:
+                import traceback
+                print(f"ERROR DURING FPGASTREAM PROCESSING FOR HEATMAP: {e}")
+                traceback.print_exc()
 
             finally:
                 is_fpga_running = False
@@ -436,6 +444,7 @@ class RadarFunctionality(tk.Frame):
                 print("RUN FINISHED")
                 self.status_var.set("FINISHED")
                 self.progress_bar.destroy()
+                print(f"Maximum buffer size: {max_buffer_length:,} characters")
 
     def capture_packets_run(self):
         self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", length=400,
