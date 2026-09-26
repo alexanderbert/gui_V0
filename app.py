@@ -42,6 +42,15 @@ class App(tk.Tk):
 
         self.option_add("*TCombobox*Listbox.font", ("Arial", 20))
 
+        style = ttk.Style()
+        style.theme_use(
+            'clam'
+        )
+        style.configure("blue.Horizontal.TProgressbar", foreground="red", background="blue")
+        style.configure("green.Horizontal.TProgressbar", foreground="red", background="green")
+        style.configure("yellow.Horizontal.TProgressbar", foreground="red", background="yellow")
+        style.configure("red.Horizontal.TProgressbar", foreground="red", background="red")
+
         self.mainloop()
 
 App()

@@ -119,6 +119,8 @@ class RadarFunctionality(tk.Frame):
         self.find_other_radars_button.config(width=20, font=("Arial", 20))
 
         self.canvas = None
+        self.progress_bar = None
+        self.progress_bar_stage = 0
 
 
         #self.power_queue = queue.Queue()
@@ -301,7 +303,7 @@ class RadarFunctionality(tk.Frame):
             is_fpga_running = True
             time.sleep(1)
 
-            self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", length=400,
+            self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", style="yellow.Horizontal.TProgressbar", length=400,
                                                 maximum=expected_Q_Value)
             self.progress_bar.grid(column=0, columnspan=2, row=5, sticky="nsew")
             self.progress_bar['value'] = 0
@@ -410,7 +412,7 @@ class RadarFunctionality(tk.Frame):
                                     y_power = float(power_match.group("yPow"))
                                     num_value = int(power_match.group('num'))
                                     #THIS WILL UPDATE PROGRESS BAR
-                                    self.update_progressbar(num_value)
+                                    self.update_progressbar(num_value, expected_Q_Value)
 
                                     self.latest_values = (az, el, x_power, y_power)
                                     self.csv_queue.put((az, el, x_power, y_power))
@@ -443,12 +445,15 @@ class RadarFunctionality(tk.Frame):
                     self.raw_csv_thread.join()
                 print("RUN FINISHED")
                 self.status_var.set("FINISHED")
+                self.progress_bar_stage = 0
                 self.progress_bar.destroy()
                 print(f"Maximum buffer size: {max_buffer_length:,} characters")
 
     def capture_packets_run(self):
-        self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", length=400,
-                                            maximum=10000)
+        Q_VALUE = 10000
+
+        self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", style="yellow.Horizontal.TProgressbar", length=400,
+                                            maximum=Q_VALUE)
         self.progress_bar.grid(column=0, columnspan=2, row=5, sticky="nsew")
         self.progress_bar['value'] = 0
 
@@ -468,7 +473,7 @@ class RadarFunctionality(tk.Frame):
         channel.send(f"cd {os.environ['FPGAPATH']}\n")
         print(f"sent: cd {os.environ['FPGAPATH']}")
         #Need a total -Q number for pulses to be read i think
-        channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 1000 -k 8000 -Q 10000 -q -c | socat - tcp:10.42.0.1:7777\n")
+        channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 1000 -k 8000 -Q {Q_VALUE} -q -c | socat - tcp:10.42.0.1:7777\n")
         time.sleep(.5)
 
         num_pattern = re.compile(
@@ -491,20 +496,34 @@ class RadarFunctionality(tk.Frame):
 
                 if num_match:
                     num_value = int(num_match.group("num"))
-                    self.update_progressbar(num_value)
+                    self.update_progressbar(num_value, Q_VALUE)
 
         channel.close()
         client.close()
         self.status_var.set("Capture Run Finished")
+        self.progress_bar_stage = 0
         self.progress_bar.destroy()
 
-    def update_progressbar(self, value):
+    def update_progressbar(self, value, max_num):
         '''
         Updates the progress bar, update_idletasks forces a gui refresh so this might not be optimal but
         I won't know until testing. The other option would be to create a .after(x, update_progressbar) function
 
         '''
+        twenty_five = int(max_num * .25)
+        fifty = int(max_num * .5)
+        seventy_five = int(max_num * .75)
         self.progress_bar['value'] = value
+        if self.progress_bar_stage == 0 and value > twenty_five:
+            self.progress_bar.config(style="red.Horizontal.TProgressbar")
+            self.progress_bar_stage = 1
+        if self.progress_bar_stage == 1 and value > fifty:
+            self.progress_bar.config(style="blue.Horizontal.TProgressbar")
+            self.progress_bar_stage = 2
+        if self.progress_bar_stage == 2 and value > seventy_five:
+            self.progress_bar.config(style="green.Horizontal.TProgressbar")
+            self.progress_bar_stage = 3
+
         #self.update_idletasks()
 
 
@@ -562,6 +581,7 @@ class RadarFunctionality(tk.Frame):
             print("RUN FINISHED")
             self.status_var.set("FINISHED")
             self.progress_bar.destroy()
+            self.progress_bar_stage = 0
 
 
     def start_threading(self, funct, *args):
@@ -915,3 +935,4 @@ class RadarFunctionality(tk.Frame):
         self.status_label.grid()
         self.find_other_radars_button.grid()
         self.create_heatmap_button.grid()
+
