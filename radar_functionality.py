@@ -623,7 +623,7 @@ class RadarFunctionality(tk.Frame):
         combo_drop = ttk.Combobox(self.radar_control_frame, textvariable=self.radar_selected, values = self.radars_available, state="readonly", justify='center')
         combo_drop.grid(column=2, row=4)
         combo_drop.config(width=20)
-        combo_drop.config(font = ("Arial", 21))
+        combo_drop.config(font = ("Arial", 20))
         return self.radar_selected.get()
 
 
