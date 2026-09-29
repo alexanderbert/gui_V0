@@ -268,42 +268,6 @@ class RadarFunctionality(tk.Frame):
 
         self.setup_initial_input_outputs()
 
-        #TODO HIDE AND SWITCH BASED ON RUNNING
-
-        # self.az_label = tk.Label(self.output_frame, text="Az:")
-        # self.az_label.grid(column=0, row=0, sticky="nsew")
-        # self.az_label.config(font=("Arial", 20))
-        # self.az_entry = tk.Entry(self.output_frame, textvariable=self.az_var)
-        # self.az_entry.grid(column=1, row=0, sticky="nsew")
-        # self.az_entry.config(font=("Arial", 20), justify="center")
-        #
-        # self.el_label = tk.Label(self.output_frame, text= "El:")
-        # self.el_label.grid(column=0, row=1, sticky="nsew")
-        # self.el_label.config(font=("Arial", 20))
-        # self.el_entry = tk.Entry(self.output_frame, textvariable=self.el_var)
-        # self.el_entry.grid(column=1, row=1, sticky="nsew")
-        # self.el_entry.config(font=("Arial", 20), justify="center")
-        #
-        # self.x_power_label = tk.Label(self.output_frame, text="X Power:")
-        # self.x_power_label.grid(column=0, row=2, sticky="nsew")
-        # self.x_power_label.config(font=("Arial", 20))
-        # self.x_power_entry = tk.Entry(self.output_frame, textvariable=self.x_power_var)
-        # self.x_power_entry.grid(column=1, row=2, sticky="nsew")
-        # self.x_power_entry.config(font=("Arial", 20), justify="center")
-        #
-        # self.y_power_label = tk.Label(self.output_frame, text="Y Power:")
-        # self.y_power_label.grid(column=0, row=3, sticky="nsew")
-        # self.y_power_label.config(font=("Arial", 20))
-        # self.y_power_entry = tk.Entry(self.output_frame, textvariable=self.y_power_var)
-        # self.y_power_entry.grid(column=1, row=3, sticky="nsew")
-        # self.y_power_entry.config(font=("Arial", 20), justify="center")
-
-    # sample start offset -8
-    # sampling length -9 (samples, ints)
-        #- w s e b g
-        # function that uses w as an argument
-
-
         self.status_label = tk.Label(self.output_frame, text="Status:", background="white", fg="black", borderwidth=2, relief="solid")
         self.status_label.grid(column=0, row=9, sticky="nsew", pady=10)
         self.status_label.config(font=("Arial", 20))
@@ -521,7 +485,6 @@ class RadarFunctionality(tk.Frame):
 
     def capture_packets_run(self):
         Q_VALUE = 10000
-        print(f"./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -k 8000")
         self.hide_initial_i_o()
 
         self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", style="yellow.Horizontal.TProgressbar", length=400,
@@ -664,7 +627,7 @@ class RadarFunctionality(tk.Frame):
 
 
     def start_threading(self, funct, *args):
-
+        #check for fpga_heat_map vs abort and capture
         error_code = self.check_inputs(funct.__name__)
         if error_code == 0:
             thread = threading.Thread(
