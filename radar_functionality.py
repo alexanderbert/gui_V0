@@ -50,6 +50,8 @@ class RadarFunctionality(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, background = "gray85")
         self.current_radar = None
+        self.dash_eight_var = tk.StringVar()
+        self.dash_nine_var = tk.StringVar()
         self.columnconfigure(0, weight=10)
         self.columnconfigure(1, weight=10)
         self.columnconfigure(2, weight=1)
@@ -72,10 +74,10 @@ class RadarFunctionality(tk.Frame):
 
 
         self.output_frame = tk.Frame(self, background="gray85")
-        self.output_frame.grid(column=0, row=0, sticky="nsew")
+        self.output_frame.grid(column=0, row=0, rowspan=2, sticky="nsew")
         self.output_frame.grid_columnconfigure(0, weight=1)
         self.output_frame.grid_columnconfigure(1, weight=1)
-        self.output_frame.rowconfigure(list(range(0,4)), weight=1)
+        self.output_frame.rowconfigure(list(range(0,9)), weight=1)
         #self.output_frame.grid_propagate(False)
 
         self.toolbar_frame= tk.Frame(self.output_frame, background="gray85", height =20)
@@ -258,15 +260,36 @@ class RadarFunctionality(tk.Frame):
         self.y_power_entry.grid(column=1, row=3, sticky="nsew")
         self.y_power_entry.config(font=("Arial", 20), justify="center")
 
+    # sample start offset -8
+    # sampling length -9 (samples, ints)
+        self.dash_eight_label = tk.Label(self.output_frame, text="Sample Start Offset:")
+        self.dash_eight_label.grid(column=0, row=5, sticky="nsew")
+        self.dash_eight_label.config(font=("Arial", 20))
+        self.dash_eight_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
+                                     textvariable=self.dash_eight_var)
+        self.dash_eight_entry.grid(column=1, row=5, sticky="nsew")
+        self.dash_eight_var.set("")
+
+        self.dash_nine_label = tk.Label(self.output_frame, text="Sampling Length:")
+        self.dash_nine_label.grid(column=0, row=6, sticky="nsew")
+        self.dash_nine_label.config(font=("Arial", 20))
+        self.dash_nine_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
+                                    textvariable=self.dash_nine_var)
+        self.dash_nine_entry.grid(column=1, row=6, sticky="nsew")
+        self.dash_nine_var.set("24")
+
         self.status_label = tk.Label(self.output_frame, text="Status:")
-        self.status_label.grid(column=0, row=4, sticky="nsew")
+        self.status_label.grid(column=0, row=8, sticky="nsew")
         self.status_label.config(font=("Arial", 20))
         self.status_entry = tk.Entry(self.output_frame, textvariable=self.status_var)
-        self.status_entry.grid(column=1, row=4, sticky="nsew")
+        self.status_entry.grid(column=1, row=8, sticky="nsew", pady=10)
         self.status_entry.config(font=("Arial", 20), justify="center")
 
-
     def heat_map_fpga(self):
+        if not self.dash_eight_var.get().isnumeric() or not self.dash_nine_var.get().isnumeric():
+            input_warning = messagebox.showwarning("warning", "input values")
+            return 1
+
         if state.starting_azimuth_value == "startaz" or state.ending_azimuth_value == "endaz" or state.starting_el_value == "start elbeam" or state.ending_el_value == "end elbeam":
             input_warning = messagebox.showwarning("Warning",
                                                    f"Please enter values in the Positioner tab first.")
@@ -312,7 +335,9 @@ class RadarFunctionality(tk.Frame):
                 channel.send(f"cd {os.environ['FPGAPATH']}\n")
                 print(f"sent: cd {os.environ['FPGAPATH']}")
                 time.sleep(1)
-                channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 2000 -9 4000 -X -D 10\n")
+                channel.send(
+                    f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_eight_var.get())} -X -D 10\n")
+                #channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 2000 -9 4000 -X -D 10\n")
                 #channel.send(
                     #f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q 4 -8 2000 -9 4000 -X -D 10\n")
                 #print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {int(expected_Q_Value)} -8 2000 -9 4000 -X -D 10\n")
@@ -623,7 +648,7 @@ class RadarFunctionality(tk.Frame):
         combo_drop = ttk.Combobox(self.radar_control_frame, textvariable=self.radar_selected, values = self.radars_available, state="readonly", justify='center')
         combo_drop.grid(column=2, row=4)
         combo_drop.config(width=20)
-        combo_drop.config(font = ("Arial", 20))
+        combo_drop.config(font = ("Arial", 21))
         return self.radar_selected.get()
 
 
