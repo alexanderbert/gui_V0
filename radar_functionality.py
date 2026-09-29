@@ -945,6 +945,10 @@ class RadarFunctionality(tk.Frame):
         self.find_other_radars_button.grid_remove()
         self.status_entry.grid_remove()
         self.status_label.grid_remove()
+        self.dash_eight_entry.grid_remove()
+        self.dash_eight_label.grid_remove()
+        self.dash_nine_entry.grid_remove()
+        self.dash_nine_label.grid_remove()
         self.create_heatmap_button.grid_remove()
 
     def replace_output_network_widgets(self):
@@ -958,6 +962,10 @@ class RadarFunctionality(tk.Frame):
         self.y_power_label.grid()
         self.status_entry.grid()
         self.status_label.grid()
+        self.dash_eight_entry.grid()
+        self.dash_eight_label.grid()
+        self.dash_nine_entry.grid()
+        self.dash_nine_label.grid()
         self.find_other_radars_button.grid()
         self.create_heatmap_button.grid()
 
