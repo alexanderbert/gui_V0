@@ -990,7 +990,7 @@ class RadarFunctionality(tk.Frame):
         self.create_heatmap_button.grid()
 
     def setup_initial_input_outputs(self):
-        self.dash_w_label = tk.Label(self.output_frame, text="Pulse width(ms):")
+        self.dash_w_label = tk.Label(self.output_frame, text="w | Pulse width(ms):")
         self.dash_w_label.grid(column=0, row=0, sticky="nsew")
         self.dash_w_label.config(font=("Arial", 20))
         self.dash_w_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
@@ -998,7 +998,7 @@ class RadarFunctionality(tk.Frame):
         self.dash_w_entry.grid(column=1, row=0, sticky="nsew")
         self.dash_w_var.set(0.96)
 
-        self.dash_s_label = tk.Label(self.output_frame, text="Pulse setup(ms):")
+        self.dash_s_label = tk.Label(self.output_frame, text="s | Pulse setup(ms):")
         self.dash_s_label.grid(column=0, row=1, sticky="nsew")
         self.dash_s_label.config(font=("Arial", 20))
         self.dash_s_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
@@ -1006,7 +1006,7 @@ class RadarFunctionality(tk.Frame):
         self.dash_s_entry.grid(column=1, row=1, sticky="nsew")
         self.dash_s_var.set(2.0)
 
-        self.dash_e_label = tk.Label(self.output_frame, text="Pulse Holdover(ms):")
+        self.dash_e_label = tk.Label(self.output_frame, text="e | Pulse Holdover(ms):")
         self.dash_e_label.grid(column=0, row=2, sticky="nsew")
         self.dash_e_label.config(font=("Arial", 20))
         self.dash_e_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
@@ -1014,7 +1014,7 @@ class RadarFunctionality(tk.Frame):
         self.dash_e_entry.grid(column=1, row=2, sticky="nsew")
         self.dash_e_var.set(2.0)
 
-        self.dash_b_label = tk.Label(self.output_frame, text="Rx Start:")
+        self.dash_b_label = tk.Label(self.output_frame, text="b | Rx Start:")
         self.dash_b_label.grid(column=0, row=3, sticky="nsew")
         self.dash_b_label.config(font=("Arial", 20))
         self.dash_b_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
@@ -1022,7 +1022,7 @@ class RadarFunctionality(tk.Frame):
         self.dash_b_entry.grid(column=1, row=3, sticky="nsew")
         self.dash_b_var.set(0.0)
 
-        self.dash_g_label = tk.Label(self.output_frame, text="Rx stop:")
+        self.dash_g_label = tk.Label(self.output_frame, text="g | Rx stop:")
         self.dash_g_label.grid(column=0, row=4, sticky="nsew")
         self.dash_g_label.config(font=("Arial", 20))
         self.dash_g_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
@@ -1030,7 +1030,7 @@ class RadarFunctionality(tk.Frame):
         self.dash_g_entry.grid(column=1, row=4, sticky="nsew")
         self.dash_g_var.set(-1.0)
 
-        self.dash_capital_S_label = tk.Label(self.output_frame, text="Pulse per s:")
+        self.dash_capital_S_label = tk.Label(self.output_frame, text="S | Pulse per s:")
         self.dash_capital_S_label.grid(column=0, row=5, sticky="nsew")
         self.dash_capital_S_label.config(font=("Arial", 20))
         self.dash_capital_S_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
@@ -1038,7 +1038,7 @@ class RadarFunctionality(tk.Frame):
         self.dash_capital_S_entry.grid(column=1, row=5, sticky="nsew")
         self.dash_capital_S_var.set(300)
 
-        self.dash_capital_D_label = tk.Label(self.output_frame, text="Read Before:")
+        self.dash_capital_D_label = tk.Label(self.output_frame, text="D | Read Before:")
         self.dash_capital_D_label.grid(column=0, row=6, sticky="nsew")
         self.dash_capital_D_label.config(font=("Arial", 20))
         self.dash_capital_D_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
@@ -1046,7 +1046,7 @@ class RadarFunctionality(tk.Frame):
         self.dash_capital_D_entry.grid(column=1, row=6, sticky="nsew")
         self.dash_capital_S_var.set(10)
 
-        self.dash_eight_label = tk.Label(self.output_frame, text="Sample Start Offset:")
+        self.dash_eight_label = tk.Label(self.output_frame, text="8 | Sample Start Offset:")
         self.dash_eight_label.grid(column=0, row=7, sticky="nsew")
         self.dash_eight_label.config(font=("Arial", 20))
         self.dash_eight_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
@@ -1054,13 +1054,44 @@ class RadarFunctionality(tk.Frame):
         self.dash_eight_entry.grid(column=1, row=7, sticky="nsew")
         self.dash_eight_var.set(0)
 
-        self.dash_nine_label = tk.Label(self.output_frame, text="Sampling Length:")
+        self.dash_nine_label = tk.Label(self.output_frame, text="9 | Sampling Length:")
         self.dash_nine_label.grid(column=0, row=8, sticky="nsew")
         self.dash_nine_label.config(font=("Arial", 20))
         self.dash_nine_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
                                         textvariable=self.dash_nine_var)
         self.dash_nine_entry.grid(column=1, row=8, sticky="nsew")
         self.dash_nine_var.set(24)
+
+        self.siggen_start_button = tk.Button(self.output_frame, text="Siggen Start", command= lambda: self.start_siggen())
+        self.siggen_start_button.grid(column=3, row=4, sticky="nsew")
+        self.siggen_start_button.config(font=("Arial", 20))
+
+        self.siggen_end_button = tk.Button(self.output_frame, text="Siggen End", command= lambda: self.stop_siggen())
+        self.siggen_end_button.grid(column=3, row=5, sticky="nsew")
+        self.siggen_end_button.config(font=("Arial", 20))
+
+    def start_siggen(self):
+        try:
+            w_var = str(self.dash_w_var.get())
+        except:
+            input_warning = messagebox.showwarning("Warning", "Please enter valid Pulse Width")
+            return 1
+
+        stdin, stdout, stderr = subprocess.run(
+            ["bash", "siggen-program-cw-variable.sh", f"{w_var}"],
+            capture_output=True,
+            text=True,
+        )
+        print(stdout)
+
+    def stop_siggen(self):
+        stdin, stdout, stderr = subprocess.run(
+            ["bash", "siggen-program-60.sh"],
+            capture_output=True,
+            text=True,
+        )
+
+        print(stdout)
 
     def hide_initial_i_o(self):
         self.dash_w_label.grid_remove()
