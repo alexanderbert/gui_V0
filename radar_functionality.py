@@ -49,6 +49,7 @@ is_fpga_running = False
 class RadarFunctionality(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, background = "gray85")
+        self.timestamp = None
         self.current_radar = None
         self.dash_eight_var = tk.StringVar()
         self.dash_nine_var = tk.StringVar()
@@ -150,7 +151,7 @@ class RadarFunctionality(tk.Frame):
         return client
 
 
-    def csv_writer_worker(self):
+    def csv_writer_worker(self, timestamp):
         csv_file = None
         csv_writer = None
         try:
@@ -161,7 +162,7 @@ class RadarFunctionality(tk.Frame):
                     if item is None:
                         break
                     if csv_file is None:
-                        timestamp = datetime.now().strftime("%m%d_%H%M%S")
+                        #timestamp = datetime.now().strftime("%m%d_%H%M%S")
 
                         filename=os.path.join(
                             application_path,
@@ -191,8 +192,8 @@ class RadarFunctionality(tk.Frame):
             if csv_file is not None:
                 csv_file.close()
 
-    def raw_csv_writer_worker(self):
-        timestamp = datetime.now().strftime("%m%d_%H%M%S")
+    def raw_csv_writer_worker(self, timestamp):
+        #timestamp = datetime.now().strftime("%m%d_%H%M%S")
 
         filename = os.path.join(
             application_path,
@@ -299,12 +300,15 @@ class RadarFunctionality(tk.Frame):
 
 
             self.status_var.set("Starting FPGA")
+            self.timestamp = datetime.now().strftime("%m%d_%H%M%S")
             self.csv_thread = threading.Thread(
                 target=self.csv_writer_worker,
+                args=(self.timestamp,),
                 daemon=True
             )
             self.raw_csv_thread = threading.Thread(
                 target=self.raw_csv_writer_worker,
+                args=(self.timestamp,),
                 daemon=True
             )
 
@@ -335,8 +339,13 @@ class RadarFunctionality(tk.Frame):
                 channel.send(f"cd {os.environ['FPGAPATH']}\n")
                 print(f"sent: cd {os.environ['FPGAPATH']}")
                 time.sleep(1)
+                #todo
+                # Button that runs CW PULSE?
+                # w e b g s
+                # function that uses w as an argument
+
                 channel.send(
-                    f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D 10\n")
+                    f"./fpgaStream -w 0.96 -s 2.0 -e 2.0 -b 0.0 -g -1.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D 10\n")
                 #channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 2000 -9 4000 -X -D 10\n")
                 #channel.send(
                     #f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q 4 -8 2000 -9 4000 -X -D 10\n")
