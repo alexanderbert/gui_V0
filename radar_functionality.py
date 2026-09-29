@@ -811,7 +811,7 @@ class RadarFunctionality(tk.Frame):
 
 
             )
-            heatmap = ax.pcolormesh(
+            heatmap = ax.contour(
                 AZ,
                 EL,
                 POWER,
