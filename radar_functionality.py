@@ -328,7 +328,7 @@ class RadarFunctionality(tk.Frame):
 
             self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", style="yellow.Horizontal.TProgressbar", length=400,
                                                 maximum=expected_Q_Value)
-            self.progress_bar.grid(column=0, columnspan=2, row=5, sticky="nsew")
+            self.progress_bar.grid(column=0, columnspan=2, row=7, sticky="nsew")
             self.progress_bar['value'] = 0
 
             try:
@@ -336,7 +336,7 @@ class RadarFunctionality(tk.Frame):
                 print(f"sent: cd {os.environ['FPGAPATH']}")
                 time.sleep(1)
                 channel.send(
-                    f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_eight_var.get())} -X -D 10\n")
+                    f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D 10\n")
                 #channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 2000 -9 4000 -X -D 10\n")
                 #channel.send(
                     #f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q 4 -8 2000 -9 4000 -X -D 10\n")
@@ -479,7 +479,7 @@ class RadarFunctionality(tk.Frame):
 
         self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", style="yellow.Horizontal.TProgressbar", length=400,
                                             maximum=Q_VALUE)
-        self.progress_bar.grid(column=0, columnspan=2, row=5, sticky="nsew")
+        self.progress_bar.grid(column=0, columnspan=2, row=7, sticky="nsew")
         self.progress_bar['value'] = 0
 
         self.status_var.set("Capture Run Started")
