@@ -49,10 +49,44 @@ is_fpga_running = False
 class RadarFunctionality(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, background = "gray85")
+
+        self.dash_w_label = None
+        self.dash_w_entry = None
+        self.dash_s_label = None
+        self.dash_s_entry = None
+        self.dash_e_label = None
+        self.dash_e_entry = None
+        self.dash_b_label = None
+        self.dash_b_entry = None
+        self.dash_g_label = None
+        self.dash_g_entry = None
+        self.dash_capital_S_label = None
+        self.dash_capital_S_entry = None
+        self.dash_capital_D_label = None
+        self.dash_capital_D_entry = None
+        self.az_label = None
+        self.az_entry = None
+        self.el_label = None
+        self.el_entry = None
+        self.x_power_label = None
+        self.x_power_entry = None
+        self.y_power_label = None
+        self.y_power_entry = None
+
         self.timestamp = None
         self.current_radar = None
-        self.dash_eight_var = tk.StringVar()
-        self.dash_nine_var = tk.StringVar()
+
+
+        self.dash_w_var = tk.DoubleVar()
+        self.dash_s_var = tk.DoubleVar()
+        self.dash_e_var = tk.DoubleVar()
+        self.dash_b_var = tk.DoubleVar()
+        self.dash_g_var = tk.DoubleVar()
+        self.dash_capital_S_var = tk.IntVar()
+        self.dash_eight_var = tk.IntVar()
+        self.dash_nine_var = tk.IntVar()
+        self.dash_capital_D_var = tk.IntVar()
+
         self.columnconfigure(0, weight=10)
         self.columnconfigure(1, weight=10)
         self.columnconfigure(2, weight=1)
@@ -76,9 +110,9 @@ class RadarFunctionality(tk.Frame):
 
         self.output_frame = tk.Frame(self, background="gray85")
         self.output_frame.grid(column=0, row=0, rowspan=2, sticky="nsew")
-        self.output_frame.grid_columnconfigure(0, weight=1)
-        self.output_frame.grid_columnconfigure(1, weight=1)
-        self.output_frame.rowconfigure(list(range(0,9)), weight=1)
+        self.output_frame.grid_columnconfigure(list(range(0,4)), weight=1)
+        # self.output_frame.grid_columnconfigure(1, weight=1)
+        self.output_frame.rowconfigure(list(range(0,10)), weight=1)
         #self.output_frame.grid_propagate(False)
 
         self.toolbar_frame= tk.Frame(self.output_frame, background="gray85", height =20)
@@ -232,71 +266,70 @@ class RadarFunctionality(tk.Frame):
         self.y_power_var = tk.StringVar(value="0")
         self.status_var = tk.StringVar(value="Not Running")
 
+        self.setup_initial_input_outputs()
 
-        self.az_label = tk.Label(self.output_frame, text="Az:")
-        self.az_label.grid(column=0, row=0, sticky="nsew")
-        self.az_label.config(font=("Arial", 20))
-        self.az_entry = tk.Entry(self.output_frame, textvariable=self.az_var)
-        self.az_entry.grid(column=1, row=0, sticky="nsew")
-        self.az_entry.config(font=("Arial", 20), justify="center")
+        #TODO HIDE AND SWITCH BASED ON RUNNING
 
-        self.el_label = tk.Label(self.output_frame, text= "El:")
-        self.el_label.grid(column=0, row=1, sticky="nsew")
-        self.el_label.config(font=("Arial", 20))
-        self.el_entry = tk.Entry(self.output_frame, textvariable=self.el_var)
-        self.el_entry.grid(column=1, row=1, sticky="nsew")
-        self.el_entry.config(font=("Arial", 20), justify="center")
-
-        self.x_power_label = tk.Label(self.output_frame, text="X Power:")
-        self.x_power_label.grid(column=0, row=2, sticky="nsew")
-        self.x_power_label.config(font=("Arial", 20))
-        self.x_power_entry = tk.Entry(self.output_frame, textvariable=self.x_power_var)
-        self.x_power_entry.grid(column=1, row=2, sticky="nsew")
-        self.x_power_entry.config(font=("Arial", 20), justify="center")
-
-        self.y_power_label = tk.Label(self.output_frame, text="Y Power:")
-        self.y_power_label.grid(column=0, row=3, sticky="nsew")
-        self.y_power_label.config(font=("Arial", 20))
-        self.y_power_entry = tk.Entry(self.output_frame, textvariable=self.y_power_var)
-        self.y_power_entry.grid(column=1, row=3, sticky="nsew")
-        self.y_power_entry.config(font=("Arial", 20), justify="center")
+        # self.az_label = tk.Label(self.output_frame, text="Az:")
+        # self.az_label.grid(column=0, row=0, sticky="nsew")
+        # self.az_label.config(font=("Arial", 20))
+        # self.az_entry = tk.Entry(self.output_frame, textvariable=self.az_var)
+        # self.az_entry.grid(column=1, row=0, sticky="nsew")
+        # self.az_entry.config(font=("Arial", 20), justify="center")
+        #
+        # self.el_label = tk.Label(self.output_frame, text= "El:")
+        # self.el_label.grid(column=0, row=1, sticky="nsew")
+        # self.el_label.config(font=("Arial", 20))
+        # self.el_entry = tk.Entry(self.output_frame, textvariable=self.el_var)
+        # self.el_entry.grid(column=1, row=1, sticky="nsew")
+        # self.el_entry.config(font=("Arial", 20), justify="center")
+        #
+        # self.x_power_label = tk.Label(self.output_frame, text="X Power:")
+        # self.x_power_label.grid(column=0, row=2, sticky="nsew")
+        # self.x_power_label.config(font=("Arial", 20))
+        # self.x_power_entry = tk.Entry(self.output_frame, textvariable=self.x_power_var)
+        # self.x_power_entry.grid(column=1, row=2, sticky="nsew")
+        # self.x_power_entry.config(font=("Arial", 20), justify="center")
+        #
+        # self.y_power_label = tk.Label(self.output_frame, text="Y Power:")
+        # self.y_power_label.grid(column=0, row=3, sticky="nsew")
+        # self.y_power_label.config(font=("Arial", 20))
+        # self.y_power_entry = tk.Entry(self.output_frame, textvariable=self.y_power_var)
+        # self.y_power_entry.grid(column=1, row=3, sticky="nsew")
+        # self.y_power_entry.config(font=("Arial", 20), justify="center")
 
     # sample start offset -8
     # sampling length -9 (samples, ints)
-        self.dash_eight_label = tk.Label(self.output_frame, text="Sample Start Offset:")
-        self.dash_eight_label.grid(column=0, row=5, sticky="nsew")
-        self.dash_eight_label.config(font=("Arial", 20))
-        self.dash_eight_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
-                                     textvariable=self.dash_eight_var)
-        self.dash_eight_entry.grid(column=1, row=5, sticky="nsew")
-        self.dash_eight_var.set("")
+        #- w s e b g
+        # function that uses w as an argument
 
-        self.dash_nine_label = tk.Label(self.output_frame, text="Sampling Length:")
-        self.dash_nine_label.grid(column=0, row=6, sticky="nsew")
-        self.dash_nine_label.config(font=("Arial", 20))
-        self.dash_nine_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
-                                    textvariable=self.dash_nine_var)
-        self.dash_nine_entry.grid(column=1, row=6, sticky="nsew")
-        self.dash_nine_var.set("24")
 
-        self.status_label = tk.Label(self.output_frame, text="Status:")
-        self.status_label.grid(column=0, row=8, sticky="nsew")
+        self.status_label = tk.Label(self.output_frame, text="Status:", background="white", fg="black", borderwidth=2, relief="solid")
+        self.status_label.grid(column=0, row=9, sticky="nsew", pady=10)
         self.status_label.config(font=("Arial", 20))
-        self.status_entry = tk.Entry(self.output_frame, textvariable=self.status_var)
-        self.status_entry.grid(column=1, row=8, sticky="nsew", pady=10)
+        self.status_entry = tk.Entry(self.output_frame, textvariable=self.status_var, background="white", fg="black")
+        self.status_entry.grid(column=1, row=9, sticky="nsew", pady=10)
         self.status_entry.config(font=("Arial", 20), justify="center")
 
     def heat_map_fpga(self):
-        if not self.dash_eight_var.get().isnumeric() or not self.dash_nine_var.get().isnumeric():
-            input_warning = messagebox.showwarning("warning", "input values")
-            return 1
+        # try:
+        #     print(f"-w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()}")
+        # except:
+        #     input_warning = messagebox.showwarning("Warning", "Inputs entered incorrectly.")
+        #     return 1
+        # if not self.dash_eight_var.get() or not self.dash_nine_var.get():
+        #     input_warning = messagebox.showwarning("warning", "input values")
+        #     return 1
+        #
+        # if state.starting_azimuth_value == "startaz" or state.ending_azimuth_value == "endaz" or state.starting_el_value == "start elbeam" or state.ending_el_value == "end elbeam":
+        #     input_warning = messagebox.showwarning("Warning",
+        #                                            f"Please enter values in the Positioner tab first.")
+        # else:
 
-        if state.starting_azimuth_value == "startaz" or state.ending_azimuth_value == "endaz" or state.starting_el_value == "start elbeam" or state.ending_el_value == "end elbeam":
-            input_warning = messagebox.showwarning("Warning",
-                                                   f"Please enter values in the Positioner tab first.")
-        else:
 
-
+            #HIDE INPUT / OUTPUTS
+            self.hide_initial_i_o()
+            self.display_fpga_output()
 
 
             self.status_var.set("Starting FPGA")
@@ -332,7 +365,7 @@ class RadarFunctionality(tk.Frame):
 
             self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", style="yellow.Horizontal.TProgressbar", length=400,
                                                 maximum=expected_Q_Value)
-            self.progress_bar.grid(column=0, columnspan=2, row=7, sticky="nsew")
+            self.progress_bar.grid(column=0, columnspan=2, row=5, sticky="nsew")
             self.progress_bar['value'] = 0
 
             try:
@@ -343,9 +376,10 @@ class RadarFunctionality(tk.Frame):
                 # Button that runs CW PULSE?
                 # w e b g s
                 # function that uses w as an argument
-
                 channel.send(
-                    f"./fpgaStream -w 0.96 -s 2.0 -e 2.0 -b 0.0 -g -1.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D 10\n")
+                    f"./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()}\n")
+                # channel.send(
+                #     f"./fpgaStream -w 0.96 -s 2.0 -e 2.0 -b 0.0 -g -1.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D 10\n")
                 #channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 2000 -9 4000 -X -D 10\n")
                 #channel.send(
                     #f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q 4 -8 2000 -9 4000 -X -D 10\n")
@@ -482,13 +516,17 @@ class RadarFunctionality(tk.Frame):
                 self.progress_bar_stage = 0
                 self.progress_bar.destroy()
                 print(f"Maximum buffer size: {max_buffer_length:,} characters")
+                self.hide_fpga_output()
+                self.replace_initial_i_o()
 
     def capture_packets_run(self):
         Q_VALUE = 10000
+        print(f"./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -k 8000")
+        self.hide_initial_i_o()
 
         self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", style="yellow.Horizontal.TProgressbar", length=400,
                                             maximum=Q_VALUE)
-        self.progress_bar.grid(column=0, columnspan=2, row=7, sticky="nsew")
+        self.progress_bar.grid(column=0, columnspan=2, row=5, sticky="nsew")
         self.progress_bar['value'] = 0
 
         self.status_var.set("Capture Run Started")
@@ -507,7 +545,9 @@ class RadarFunctionality(tk.Frame):
         channel.send(f"cd {os.environ['FPGAPATH']}\n")
         print(f"sent: cd {os.environ['FPGAPATH']}")
         #Need a total -Q number for pulses to be read i think
-        channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 1000 -k 8000 -Q {Q_VALUE} -q -c | socat - tcp:10.42.0.1:7777\n")
+        #channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 1000 -k 8000 -Q {Q_VALUE} -q -c | socat - tcp:10.42.0.1:7777\n")
+        channel.send(
+            f"./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -k 8000 -Q {Q_VALUE} -q -c | socat - tcp:10.42.0.1:7777\n")
         time.sleep(.5)
 
         num_pattern = re.compile(
@@ -537,6 +577,7 @@ class RadarFunctionality(tk.Frame):
         self.status_var.set("Capture Run Finished")
         self.progress_bar_stage = 0
         self.progress_bar.destroy()
+        self.replace_initial_i_o()
 
     def update_progressbar(self, value, max_num):
         '''
@@ -562,6 +603,10 @@ class RadarFunctionality(tk.Frame):
 
 
     def kill_fpga(self):
+        if self.az_label is not None:
+            self.hide_fpga_output()
+        self.progress_bar.destroy()
+        self.replace_initial_i_o()
         global is_fpga_running
         is_fpga_running = False
         self.status_var.set("Running Abort")
@@ -614,17 +659,20 @@ class RadarFunctionality(tk.Frame):
                 self.raw_csv_thread.join()
             print("RUN FINISHED")
             self.status_var.set("FINISHED")
-            self.progress_bar.destroy()
+
             self.progress_bar_stage = 0
 
 
     def start_threading(self, funct, *args):
-        thread = threading.Thread(
-            target= funct,
-            args= args,
-            daemon=True
-        )
-        thread.start()
+
+        error_code = self.check_inputs(funct.__name__)
+        if error_code == 0:
+            thread = threading.Thread(
+                target= funct,
+                args= args,
+                daemon=True
+            )
+            thread.start()
 
     def fl_network_mode(self):
         self.current_radar = self.radar_dict[self.radar_selected.get()]
@@ -978,3 +1026,170 @@ class RadarFunctionality(tk.Frame):
         self.find_other_radars_button.grid()
         self.create_heatmap_button.grid()
 
+    def setup_initial_input_outputs(self):
+        self.dash_w_label = tk.Label(self.output_frame, text="Pulse width(ms):")
+        self.dash_w_label.grid(column=0, row=0, sticky="nsew")
+        self.dash_w_label.config(font=("Arial", 20))
+        self.dash_w_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
+                                     textvariable=self.dash_w_var)
+        self.dash_w_entry.grid(column=1, row=0, sticky="nsew")
+        self.dash_w_var.set(0.96)
+
+        self.dash_s_label = tk.Label(self.output_frame, text="Pulse setup(ms):")
+        self.dash_s_label.grid(column=0, row=1, sticky="nsew")
+        self.dash_s_label.config(font=("Arial", 20))
+        self.dash_s_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
+                                     textvariable=self.dash_s_var)
+        self.dash_s_entry.grid(column=1, row=1, sticky="nsew")
+        self.dash_s_var.set(2.0)
+
+        self.dash_e_label = tk.Label(self.output_frame, text="Pulse Holdover(ms):")
+        self.dash_e_label.grid(column=0, row=2, sticky="nsew")
+        self.dash_e_label.config(font=("Arial", 20))
+        self.dash_e_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
+                                     textvariable=self.dash_e_var)
+        self.dash_e_entry.grid(column=1, row=2, sticky="nsew")
+        self.dash_e_var.set(2.0)
+
+        self.dash_b_label = tk.Label(self.output_frame, text="Rx Start:")
+        self.dash_b_label.grid(column=0, row=3, sticky="nsew")
+        self.dash_b_label.config(font=("Arial", 20))
+        self.dash_b_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
+                                     textvariable=self.dash_b_var)
+        self.dash_b_entry.grid(column=1, row=3, sticky="nsew")
+        self.dash_b_var.set(0.0)
+
+        self.dash_g_label = tk.Label(self.output_frame, text="Rx stop:")
+        self.dash_g_label.grid(column=0, row=4, sticky="nsew")
+        self.dash_g_label.config(font=("Arial", 20))
+        self.dash_g_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
+                                     textvariable=self.dash_g_var)
+        self.dash_g_entry.grid(column=1, row=4, sticky="nsew")
+        self.dash_g_var.set(-1.0)
+
+        self.dash_capital_S_label = tk.Label(self.output_frame, text="Pulse per s:")
+        self.dash_capital_S_label.grid(column=0, row=5, sticky="nsew")
+        self.dash_capital_S_label.config(font=("Arial", 20))
+        self.dash_capital_S_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
+                                             textvariable=self.dash_capital_S_var)
+        self.dash_capital_S_entry.grid(column=1, row=5, sticky="nsew")
+        self.dash_capital_S_var.set(300)
+
+        self.dash_capital_D_label = tk.Label(self.output_frame, text="Read Before:")
+        self.dash_capital_D_label.grid(column=0, row=6, sticky="nsew")
+        self.dash_capital_D_label.config(font=("Arial", 20))
+        self.dash_capital_D_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
+                                             textvariable=self.dash_capital_D_var)
+        self.dash_capital_D_entry.grid(column=1, row=6, sticky="nsew")
+        self.dash_capital_S_var.set(10)
+
+        self.dash_eight_label = tk.Label(self.output_frame, text="Sample Start Offset:")
+        self.dash_eight_label.grid(column=0, row=7, sticky="nsew")
+        self.dash_eight_label.config(font=("Arial", 20))
+        self.dash_eight_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
+                                         textvariable=self.dash_eight_var)
+        self.dash_eight_entry.grid(column=1, row=7, sticky="nsew")
+        self.dash_eight_var.set(0)
+
+        self.dash_nine_label = tk.Label(self.output_frame, text="Sampling Length:")
+        self.dash_nine_label.grid(column=0, row=8, sticky="nsew")
+        self.dash_nine_label.config(font=("Arial", 20))
+        self.dash_nine_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
+                                        textvariable=self.dash_nine_var)
+        self.dash_nine_entry.grid(column=1, row=8, sticky="nsew")
+        self.dash_nine_var.set(24)
+
+    def hide_initial_i_o(self):
+        self.dash_w_label.grid_remove()
+        self.dash_w_entry.grid_remove()
+        self.dash_s_label.grid_remove()
+        self.dash_s_entry.grid_remove()
+        self.dash_e_label.grid_remove()
+        self.dash_e_entry.grid_remove()
+        self.dash_b_label.grid_remove()
+        self.dash_b_entry.grid_remove()
+        self.dash_g_label.grid_remove()
+        self.dash_g_entry.grid_remove()
+        self.dash_capital_S_label.grid_remove()
+        self.dash_capital_S_entry.grid_remove()
+        self.dash_capital_D_label.grid_remove()
+        self.dash_capital_D_entry.grid_remove()
+        self.dash_eight_label.grid_remove()
+        self.dash_eight_entry.grid_remove()
+        self.dash_nine_label.grid_remove()
+        self.dash_nine_entry.grid_remove()
+
+    def replace_initial_i_o(self):
+        self.dash_w_label.grid()
+        self.dash_w_entry.grid()
+        self.dash_s_label.grid()
+        self.dash_s_entry.grid()
+        self.dash_e_label.grid()
+        self.dash_e_entry.grid()
+        self.dash_b_label.grid()
+        self.dash_b_entry.grid()
+        self.dash_g_label.grid()
+        self.dash_g_entry.grid()
+        self.dash_capital_S_label.grid()
+        self.dash_capital_S_entry.grid()
+        self.dash_capital_D_label.grid()
+        self.dash_capital_D_entry.grid()
+        self.dash_eight_label.grid()
+        self.dash_eight_entry.grid()
+        self.dash_nine_label.grid()
+        self.dash_nine_entry.grid()
+
+    def display_fpga_output(self):
+        self.az_label = tk.Label(self.output_frame, text="Az:")
+        self.az_label.grid(column=0, row=0, sticky="nsew")
+        self.az_label.config(font=("Arial", 20))
+        self.az_entry = tk.Entry(self.output_frame, textvariable=self.az_var)
+        self.az_entry.grid(column=1, row=0, sticky="nsew")
+        self.az_entry.config(font=("Arial", 20), justify="center")
+
+        self.el_label = tk.Label(self.output_frame, text= "El:")
+        self.el_label.grid(column=0, row=1, sticky="nsew")
+        self.el_label.config(font=("Arial", 20))
+        self.el_entry = tk.Entry(self.output_frame, textvariable=self.el_var)
+        self.el_entry.grid(column=1, row=1, sticky="nsew")
+        self.el_entry.config(font=("Arial", 20), justify="center")
+
+        self.x_power_label = tk.Label(self.output_frame, text="X Power:")
+        self.x_power_label.grid(column=0, row=2, sticky="nsew")
+        self.x_power_label.config(font=("Arial", 20))
+        self.x_power_entry = tk.Entry(self.output_frame, textvariable=self.x_power_var)
+        self.x_power_entry.grid(column=1, row=2, sticky="nsew")
+        self.x_power_entry.config(font=("Arial", 20), justify="center")
+
+        self.y_power_label = tk.Label(self.output_frame, text="Y Power:")
+        self.y_power_label.grid(column=0, row=3, sticky="nsew")
+        self.y_power_label.config(font=("Arial", 20))
+        self.y_power_entry = tk.Entry(self.output_frame, textvariable=self.y_power_var)
+        self.y_power_entry.grid(column=1, row=3, sticky="nsew")
+        self.y_power_entry.config(font=("Arial", 20), justify="center")
+
+    def hide_fpga_output(self):
+        self.az_label.grid_remove()
+        self.az_entry.grid_remove()
+        self.el_label.grid_remove()
+        self.el_entry.grid_remove()
+        self.x_power_label.grid_remove()
+        self.x_power_entry.grid_remove()
+        self.y_power_label.grid_remove()
+        self.y_power_entry.grid_remove()
+
+    def check_inputs(self, mode):
+        try:
+            print(f"-w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()}")
+        except:
+            input_warning = messagebox.showwarning("Warning", "Inputs entered incorrectly.")
+            return 1
+        if not self.dash_eight_var.get() or not self.dash_nine_var.get():
+            input_warning = messagebox.showwarning("warning", "input values")
+            return 1
+        if mode == "heat_map_fpga":
+            if state.starting_azimuth_value == "startaz" or state.ending_azimuth_value == "endaz" or state.starting_el_value == "start elbeam" or state.ending_el_value == "end elbeam":
+                input_warning = messagebox.showwarning("Warning",
+                                                       f"Please enter values in the Positioner tab first.")
+                return 1
+        return 0
