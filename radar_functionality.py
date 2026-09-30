@@ -550,19 +550,19 @@ class RadarFunctionality(tk.Frame):
         I won't know until testing. The other option would be to create a .after(x, update_progressbar) function
 
         '''
-        twenty_five = int(max_num * .25)
-        fifty = int(max_num * .5)
-        seventy_five = int(max_num * .75)
+        # twenty_five = int(max_num * .25)
+        # fifty = int(max_num * .5)
+        # seventy_five = int(max_num * .75)
         self.progress_bar['value'] = value
-        if self.progress_bar_stage == 0 and value > twenty_five:
-            self.progress_bar.config(style="red.Horizontal.TProgressbar")
-            self.progress_bar_stage = 1
-        if self.progress_bar_stage == 1 and value > fifty:
-            self.progress_bar.config(style="blue.Horizontal.TProgressbar")
-            self.progress_bar_stage = 2
-        if self.progress_bar_stage == 2 and value > seventy_five:
-            self.progress_bar.config(style="green.Horizontal.TProgressbar")
-            self.progress_bar_stage = 3
+        # if self.progress_bar_stage == 0 and value > twenty_five:
+        #     self.progress_bar.config(style="red.Horizontal.TProgressbar")
+        #     self.progress_bar_stage = 1
+        # if self.progress_bar_stage == 1 and value > fifty:
+        #     self.progress_bar.config(style="blue.Horizontal.TProgressbar")
+        #     self.progress_bar_stage = 2
+        # if self.progress_bar_stage == 2 and value > seventy_five:
+        #     self.progress_bar.config(style="green.Horizontal.TProgressbar")
+        #     self.progress_bar_stage = 3
 
         #self.update_idletasks()
 
@@ -768,7 +768,7 @@ class RadarFunctionality(tk.Frame):
         )
 
         if not csv_file:
-            self.replace_output_network_widgets()
+            self.replace_initial_i_o()
             return
 
 
