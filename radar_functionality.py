@@ -1068,11 +1068,11 @@ class RadarFunctionality(tk.Frame):
         self.dash_nine_entry.grid(column=1, row=8, sticky="nsew")
         self.dash_nine_var.set(24)
 
-        self.siggen_start_button = tk.Button(self.fpga_control_frame, width=10, text="Siggen Start", command= lambda: self.start_siggen())
+        self.siggen_start_button = tk.Button(self.fpga_control_frame, width=10, text="Siggen Start", command= lambda: self.start_threading(self.start_siggen))
         self.siggen_start_button.grid(column=0, row=5)
         self.siggen_start_button.config(width=20, font=("Arial", 20))
 
-        self.siggen_end_button = tk.Button(self.fpga_control_frame, width = 10, text="Siggen End", command= lambda: self.stop_siggen())
+        self.siggen_end_button = tk.Button(self.fpga_control_frame, width = 10, text="Siggen End", command= lambda: self.start_threading(self.stop_siggen))
         self.siggen_end_button.grid(column=0, row=6)
         self.siggen_end_button.config(width=20, font=("Arial", 20))
 
@@ -1082,22 +1082,26 @@ class RadarFunctionality(tk.Frame):
         except:
             input_warning = messagebox.showwarning("Warning", "Please enter valid Pulse Width")
             return 1
-
-        stdin, stdout, stderr = subprocess.run(
-            ["bash", "siggen-program-cw-variable.sh", f"{w_var}"],
-            capture_output=True,
-            text=True,
-        )
-        print(stdout)
+        client, channel = self.fl_network_mode()
+        client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-cw-variable.sh {w_var}\n")
+        # stdin, stdout, stderr = subprocess.run(
+        #     ["bash", "/home/sq/sq/stormquant-beta/scripts/siggen-program-cw-variable.sh", f"{w_var}"],
+        #     capture_output=True,
+        #     text=True,
+        # )
+        # print(stdout)
+        client.close()
 
     def stop_siggen(self):
-        stdin, stdout, stderr = subprocess.run(
-            ["bash", "siggen-program-60.sh"],
-            capture_output=True,
-            text=True,
-        )
+        # stdin, stdout, stderr = subprocess.run(
+        #     ["bash", "siggen-program-60.sh"],
+        #     capture_output=True,
+        #     text=True,
+        # )
+        client, channel = self.fl_network_mode()
+        client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-60.sh\n")
+        client.close()
 
-        print(stdout)
 
     def hide_initial_i_o(self):
         self.dash_w_label.grid_remove()
