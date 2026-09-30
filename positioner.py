@@ -844,36 +844,36 @@ class ScanFrame(tk.Frame):
 
     def create_layout(self):
 
-        self.start_azimuth_label = tk.Label(self, text="Start Azimuth", font = ("Arial", 20), foreground="white", background="gray63")
+        self.start_azimuth_label = tk.Label(self, text="Start Az", font = ("Arial", 20), foreground="white", background="gray7")
         self.start_azimuth_label.grid(column=0, row=0, sticky="NSW")
 
-        self.start_azimuth_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.start_azimuth_var)
+        self.start_azimuth_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.start_azimuth_var, justify="center")
         self.start_azimuth_entry.delete(0, tk.END)
         self.start_azimuth_entry.insert(0, "startaz")
         self.start_azimuth_entry.grid(column=1, row=0, sticky="NSW")
         self.start_azimuth_entry.bind("<Button-1>", self.on_click_clear)
 
-        self.end_azimuth_label = tk.Label(self, text="End Azimuth", font = ("Arial", 20), foreground="white", background="gray7")
+        self.end_azimuth_label = tk.Label(self, text="End Az", font = ("Arial", 20), foreground="white", background="gray7")
         self.end_azimuth_label.grid(column=0, row=1, sticky="NSW")
 
-        self.end_azimuth_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.end_azimuth_var)
+        self.end_azimuth_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.end_azimuth_var, justify="center")
         self.end_azimuth_entry.delete(0, tk.END)
         self.end_azimuth_entry.insert(0, "endaz")
         self.end_azimuth_entry.grid(column=1, row=1, sticky="NSW")
         self.end_azimuth_entry.bind("<Button-1>", self.on_click_clear)
 
-        self.start_elbeam_label = tk.Label(self, text="Start Elbeam", font = ("Arial", 20), foreground="white", background="gray7")
+        self.start_elbeam_label = tk.Label(self, text="Start El", font = ("Arial", 20), foreground="white", background="gray7")
         self.start_elbeam_label.grid(column=0, row=2, sticky="NSW")
-        self.start_elbeam_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.start_elbeam_var)
+        self.start_elbeam_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.start_elbeam_var, justify="center")
         self.start_elbeam_entry.delete(0, tk.END)
         self.start_elbeam_entry.insert(0, "start elbeam")
         self.start_elbeam_entry.grid(column=1, row = 2, sticky = "NSW")
         self.start_elbeam_entry.bind("<Button-1>", self.on_click_clear)
 
-        self.end_elbeam_label=tk.Label(self, text="End Elbeam", font=("Arial", 20), foreground="white", background="gray7")
+        self.end_elbeam_label=tk.Label(self, text="End El", font=("Arial", 20), foreground="white", background="gray7")
         self.end_elbeam_label.grid(column=0, row=3, sticky="NSW")
 
-        self.end_elbeam_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.end_elbeam_var)
+        self.end_elbeam_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.end_elbeam_var, justify="center")
         self.end_elbeam_entry.delete(0, tk.END)
         self.end_elbeam_entry.insert(0, "end elbeam")
         self.end_elbeam_entry.grid(column=1, row = 3, sticky = "NSW")
@@ -882,7 +882,7 @@ class ScanFrame(tk.Frame):
         self.speed_label = tk.Label(self, text="Speed", font=("Arial", 20), foreground="white", background="gray7")
         self.speed_label.grid(column=2, row=0, sticky="NSW")
 
-        self.speed_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.speed_var)
+        self.speed_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.speed_var, justify="center")
         self.speed_entry.delete(0, tk.END)
         self.speed_entry.insert(0, "20")
         self.speed_entry.grid(column=3, row=0, sticky="NSW")
@@ -890,7 +890,7 @@ class ScanFrame(tk.Frame):
         self.increment_label = tk.Label(self, text="Increment", font=("Arial", 20), foreground="white", background="gray7")
         self.increment_label.grid(column=2, row=1, sticky="NSW")
 
-        self.increment_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.increment_var)
+        self.increment_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.increment_var, justify="center")
         self.increment_entry.delete(0, tk.END)
         self.increment_entry.insert(0, "1.5")
         self.increment_entry.grid(column=3, row=1, sticky="NSW")
@@ -898,7 +898,7 @@ class ScanFrame(tk.Frame):
         self.repeat_label = tk.Label(self, text="Repeat", font=("Arial", 20), foreground="white", background="gray7")
         self.repeat_label.grid(column=2, row=2, sticky="NSW")
 
-        self.repeat_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.repeat_var)
+        self.repeat_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.repeat_var, justify="center")
         self.repeat_entry.delete(0, tk.END)
         self.repeat_entry.insert(0, "1")
         self.repeat_entry.grid(column=3, row=2, sticky="NSW")
@@ -906,7 +906,7 @@ class ScanFrame(tk.Frame):
         self.slipdetect_label = tk.Label(self, text="Slip Detect", font=("Arial", 20), foreground="white", background="gray7")
         self.slipdetect_label.grid(column=2, row=3, sticky="NSW")
 
-        self.slipdetect_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.slipdetect_var)
+        self.slipdetect_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.slipdetect_var, justify="center")
         self.slipdetect_entry.delete(0, tk.END)
         self.slipdetect_entry.insert(0, "1")
         self.slipdetect_entry.grid(column=3, row=3, sticky="NSW")
