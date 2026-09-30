@@ -327,7 +327,7 @@ class RadarFunctionality(tk.Frame):
             print("After connection to fl network")
             global is_fpga_running
             is_fpga_running = True
-            time.sleep(1)
+            time.sleep(.2)
 
             self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate", style="yellow.Horizontal.TProgressbar", length=400,
                                                 maximum=expected_Q_Value)
@@ -337,7 +337,7 @@ class RadarFunctionality(tk.Frame):
             try:
                 channel.send(f"cd {os.environ['FPGAPATH']}\n")
                 print(f"sent: cd {os.environ['FPGAPATH']}")
-                time.sleep(1)
+                time.sleep(.2)
                 #todo
                 # Button that runs CW PULSE?
                 # w e b g s
@@ -350,7 +350,7 @@ class RadarFunctionality(tk.Frame):
                 #channel.send(
                     #f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q 4 -8 2000 -9 4000 -X -D 10\n")
                 #print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {int(expected_Q_Value)} -8 2000 -9 4000 -X -D 10\n")
-                time.sleep(1)
+                time.sleep(.2)
                 print(f"FPGA RUNNING STATE: {is_fpga_running}")
 
 
@@ -506,7 +506,7 @@ class RadarFunctionality(tk.Frame):
 
         client, channel = self.fl_network_mode()
         print("After connection to fl network")
-        time.sleep(1)
+        time.sleep(.2)
         channel.send(f"cd {os.environ['FPGAPATH']}\n")
         print(f"sent: cd {os.environ['FPGAPATH']}")
         #Need a total -Q number for pulses to be read i think
