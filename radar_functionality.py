@@ -96,24 +96,26 @@ class RadarFunctionality(tk.Frame):
 
 
         #INNER FRAMES
-        self.fpga_control_frame = tk.Frame(self)
+        self.fpga_control_frame = tk.Frame(self, background ="gray85")
         self.fpga_control_frame.grid(row=0, column=2, sticky="nsew")
         self.fpga_control_frame.grid_columnconfigure(0, weight=1)
-        self.fpga_control_frame.grid_columnconfigure(1, weight=1)
+        self.fpga_control_frame.grid_rowconfigure(list(range(0,7)), weight=1)
+        #self.fpga_control_frame.grid_columnconfigure(1, weight=1)
 
 
-        self.radar_control_frame = tk.Frame(self)
+        self.radar_control_frame = tk.Frame(self, background ="gray85")
         self.radar_control_frame.grid(row=1, column=2, sticky="nsew")
         self.radar_control_frame.grid_columnconfigure(0, weight=1)
-        # self.radar_control_frame.grid_rowconfigure(list(range(0,3)), weight=1)
+        self.radar_control_frame.grid_rowconfigure(list(range(0,4)), weight=1)
 
 
         self.output_frame = tk.Frame(self, background="gray85")
         self.output_frame.grid(column=0, row=0, rowspan=2, sticky="nsew")
-        self.output_frame.grid_columnconfigure(list(range(0,4)), weight=1)
+        self.output_frame.grid_columnconfigure(list(range(0,3)), weight=2)
+        #self.output_frame.grid_columnconfigure(4, weight=1)
         # self.output_frame.grid_columnconfigure(1, weight=1)
         self.output_frame.rowconfigure(list(range(0,10)), weight=1)
-        #self.output_frame.grid_propagate(False)
+        # self.output_frame.grid_propagate(False)
 
         self.toolbar_frame= tk.Frame(self.output_frame, background="gray85", height =20)
         self.toolbar_frame.grid_propagate(False)
@@ -128,7 +130,7 @@ class RadarFunctionality(tk.Frame):
         
         #infrastructure
         self.run_heatmap_fpga_button= tk.Button(self.fpga_control_frame, text="RUN", command=lambda:self.start_threading(self.heat_map_fpga))
-        self.run_heatmap_fpga_button.grid(row=0, column=2)
+        self.run_heatmap_fpga_button.grid(row=0, column=0)
         self.run_heatmap_fpga_button.config(width=20, font=("Arial", 20))
         #
         # self.run_capture_fpga_button= tk.Button(self.fpga_control_frame, text="Capture FPGA", command=lambda:self.capture_fpga())
@@ -137,22 +139,22 @@ class RadarFunctionality(tk.Frame):
 
         #Dont need a stop button because the runs with self terminate
         self.abort_fpga_button= tk.Button(self.fpga_control_frame, text="Abort", command=lambda:self.start_threading(self.kill_fpga))
-        self.abort_fpga_button.grid(row=2, column=2)
+        self.abort_fpga_button.grid(column=0, row=2)
         self.abort_fpga_button.config(width=20, font=("Arial", 20))
 
         self.create_heatmap_button= tk.Button(self.fpga_control_frame, text="Create Heatmap", command=lambda:self.create_heatmap())
-        self.create_heatmap_button.grid(row=1, column=2)
+        self.create_heatmap_button.grid(column=0, row=1)
         self.create_heatmap_button.config(width=20, font=("Arial", 20))
 
         self.capture_packets_button = tk.Button(self.fpga_control_frame, text="CAPTURE ONLY", command=lambda:self.start_threading(self.capture_packets_run))
-        self.capture_packets_button.grid(column=2, row =4)
+        self.capture_packets_button.grid(column=0, row =3)
         self.capture_packets_button.config(width=20, font=("Arial", 20))
 
         self.close_heatmap_button = None
 
 
         self.find_other_radars_button = tk.Button(self.radar_control_frame, text="Check Network", command=lambda:self.start_network_scan())
-        self.find_other_radars_button.grid(row=3, column=2, sticky='NE')
+        self.find_other_radars_button.grid(row=1, column=0)
         self.find_other_radars_button.config(width=20, font=("Arial", 20))
 
         self.canvas = None
@@ -568,7 +570,8 @@ class RadarFunctionality(tk.Frame):
     def kill_fpga(self):
         if self.az_label is not None:
             self.hide_fpga_output()
-        self.progress_bar.destroy()
+        if self.progress_bar is not None:
+            self.progress_bar.destroy()
         self.replace_initial_i_o()
         global is_fpga_running
         is_fpga_running = False
@@ -666,7 +669,7 @@ class RadarFunctionality(tk.Frame):
         self.radar_selected = tk.StringVar()
         self.radar_selected.set(self.radars_available[0])
         combo_drop = ttk.Combobox(self.radar_control_frame, textvariable=self.radar_selected, values = self.radars_available, state="readonly", justify='center')
-        combo_drop.grid(column=2, row=4)
+        combo_drop.grid(column=0, row=2)
         combo_drop.config(width=20)
         combo_drop.config(font = ("Arial", 21))
         return self.radar_selected.get()
@@ -928,7 +931,7 @@ class RadarFunctionality(tk.Frame):
         self.canvas.get_tk_widget().grid(column=0, row=0, sticky="nsew")
 
         self.close_heatmap_button= tk.Button(self.fpga_control_frame, text="Close Heatmap", command=lambda:self.close_heatmap())
-        self.close_heatmap_button.grid(column=2, row=4)
+        self.close_heatmap_button.grid(column=0, row=4)
         self.close_heatmap_button.config(width=20, font=("Arial", 20))
         return self.canvas
 
@@ -1062,13 +1065,13 @@ class RadarFunctionality(tk.Frame):
         self.dash_nine_entry.grid(column=1, row=8, sticky="nsew")
         self.dash_nine_var.set(24)
 
-        self.siggen_start_button = tk.Button(self.output_frame, text="Siggen Start", command= lambda: self.start_siggen())
-        self.siggen_start_button.grid(column=3, row=4, sticky="nsew")
-        self.siggen_start_button.config(font=("Arial", 20))
+        self.siggen_start_button = tk.Button(self.fpga_control_frame, width=10, text="Siggen Start", command= lambda: self.start_siggen())
+        self.siggen_start_button.grid(column=0, row=5)
+        self.siggen_start_button.config(width=20, font=("Arial", 20))
 
-        self.siggen_end_button = tk.Button(self.output_frame, text="Siggen End", command= lambda: self.stop_siggen())
-        self.siggen_end_button.grid(column=3, row=5, sticky="nsew")
-        self.siggen_end_button.config(font=("Arial", 20))
+        self.siggen_end_button = tk.Button(self.fpga_control_frame, width = 10, text="Siggen End", command= lambda: self.stop_siggen())
+        self.siggen_end_button.grid(column=0, row=6)
+        self.siggen_end_button.config(width=20, font=("Arial", 20))
 
     def start_siggen(self):
         try:
