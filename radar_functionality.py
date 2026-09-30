@@ -748,7 +748,10 @@ class RadarFunctionality(tk.Frame):
         calculation is currently based off of X POWER.
         :return:
         '''
-        self.remove_output_network_widgets()
+        if self.az_label is not None:
+            self.remove_output_network_widgets()
+        else:
+            self.hide_initial_i_o()
 
         azimuth_raw = []
         elevation_raw = []
@@ -854,7 +857,7 @@ class RadarFunctionality(tk.Frame):
             ax.set_title("X Power Heatmap")
             plt.tight_layout()
         except:
-            self.replace_output_network_widgets()
+            self.replace_initial_i_o()
             return
 
 
@@ -952,7 +955,7 @@ class RadarFunctionality(tk.Frame):
 
             self.close_heatmap_button = None
 
-        self.replace_output_network_widgets()
+        self.replace_initial_i_o()
 
         #self.initial_output_frame()
 
