@@ -631,14 +631,22 @@ class RadarFunctionality(tk.Frame):
 
     def start_threading(self, funct, *args):
         #check for fpga_heat_map vs abort and capture
-        error_code = self.check_inputs(funct.__name__)
-        if error_code == 0:
+        if funct.__name__ == "start_siggen" or funct.__name__ == "stop_siggen":
             thread = threading.Thread(
                 target= funct,
                 args= args,
                 daemon=True
             )
             thread.start()
+        else:
+            error_code = self.check_inputs(funct.__name__)
+            if error_code == 0:
+                thread = threading.Thread(
+                    target= funct,
+                    args= args,
+                    daemon=True
+                )
+                thread.start()
 
     def fl_network_mode(self):
         self.current_radar = self.radar_dict[self.radar_selected.get()]
