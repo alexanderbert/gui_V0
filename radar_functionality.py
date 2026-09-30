@@ -123,7 +123,7 @@ class RadarFunctionality(tk.Frame):
 
 
         #Variables
-        self.radar_dict = {"Select A Radar": "---------"}
+        self.radar_dict = {"Select A Radar": "---------", "sq-radar-4": "192.168.69.188"}
         #self.radar_selected = None
         self.radars_available = None
         self.radar_drop()
@@ -299,6 +299,7 @@ class RadarFunctionality(tk.Frame):
 
 
             self.status_var.set("Starting FPGA")
+            self.status_entry.config(background="green")
             self.timestamp = datetime.now().strftime("%m%d_%H%M%S")
             self.csv_thread = threading.Thread(
                 target=self.csv_writer_worker,
@@ -479,6 +480,7 @@ class RadarFunctionality(tk.Frame):
                     self.raw_csv_thread.join()
                 print("RUN FINISHED")
                 self.status_var.set("FINISHED")
+                self.status_entry.config(background="white")
                 self.progress_bar_stage = 0
                 self.progress_bar.destroy()
                 print(f"Maximum buffer size: {max_buffer_length:,} characters")
@@ -495,6 +497,7 @@ class RadarFunctionality(tk.Frame):
         self.progress_bar['value'] = 0
 
         self.status_var.set("Capture Run Started")
+        self.status_entry.config(background="green")
         global is_fpga_running
         is_fpga_running = True
         #Todo make sure this works correctly. No cues but based off of -Q 10000
@@ -540,6 +543,7 @@ class RadarFunctionality(tk.Frame):
         channel.close()
         client.close()
         self.status_var.set("Capture Run Finished")
+        self.status_entry.config(background="white")
         self.progress_bar_stage = 0
         self.progress_bar.destroy()
         self.replace_initial_i_o()
@@ -625,51 +629,74 @@ class RadarFunctionality(tk.Frame):
                 self.raw_csv_thread.join()
             print("RUN FINISHED")
             self.status_var.set("FINISHED")
+            self.status_entry.config(background="white")
 
             self.progress_bar_stage = 0
 
 
     def start_threading(self, funct, *args):
         #check for fpga_heat_map vs abort and capture
-        if funct.__name__ == "start_siggen" or funct.__name__ == "stop_siggen":
-            thread = threading.Thread(
-                target= funct,
-                args= args,
-                daemon=True
-            )
-            thread.start()
+        if self.current_radar == "---------" or self.current_radar is None:
+            self.status_var.set("Please Select A Radar")
+            self.status_entry.config(background="yellow")
+            return
         else:
-            error_code = self.check_inputs(funct.__name__)
-            if error_code == 0:
+            if funct.__name__ == "start_siggen" or funct.__name__ == "stop_siggen":
                 thread = threading.Thread(
                     target= funct,
                     args= args,
                     daemon=True
                 )
                 thread.start()
+            else:
+                error_code = self.check_inputs(funct.__name__)
+                if error_code == 0:
+                    thread = threading.Thread(
+                        target= funct,
+                        args= args,
+                        daemon=True
+                    )
+                    thread.start()
+
+    # def alex_network_mode(self):
+    #     self.curent_radar = self.radar_dict[self.radar_selected.get()]
+    #     print(self.current_radar)
+    #     try:
+    #         client = self.create_ssh_client()
+    #         client.connect(hostname=f"{self.current_radar}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
+    #                    password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
+    #         transport = client.get_transport()
+    #         channel = transport.open_session()
+    #         channel.get_pty()
+    #         channel = client.invoke_shell()
+    #         time.sleep(.1)
+    #         logging.info("CONNECTED TO ALEX")
+    #         return client, channel
+    #     except:
+    #         self.status_var.set("Network Error")
+    #         self.status_entry.config(background="red")
+    #
+    #
 
     def fl_network_mode(self):
         self.current_radar = self.radar_dict[self.radar_selected.get()]
         print(self.current_radar)
-        if self.current_radar == "---------":
-            self.status_var.set("Please Select A Radar")
-            return None
-        else:
-            try:
-                client = self.create_ssh_client()
-                client.connect(hostname=f"{self.current_radar}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
+        try:
+            client = self.create_ssh_client()
+            client.connect(hostname=f"{self.current_radar}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
                                password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False)
-                # print(f"{self.positioner_selected_for_use} inside status")
-                # print(f"{selected_positioner_global} GLOBAL status")
-                transport = client.get_transport()
-                channel = transport.open_session()
-                channel.get_pty()
-                channel = client.invoke_shell()
-                time.sleep(.1)
-                logging.info("CONNECTED TO FLORIDA NETWORK")
-                return client, channel
-            except:
-                self.status_var.set("Network Error")
+             # print(f"{self.positioner_selected_for_use} inside status")
+            # print(f"{selected_positioner_global} GLOBAL status")
+            transport = client.get_transport()
+            channel = transport.open_session()
+            channel.get_pty()
+            channel = client.invoke_shell()
+            time.sleep(.1)
+            logging.info("CONNECTED TO FLORIDA NETWORK")
+            return client, channel
+        except:
+            self.status_var.set("Network Error")
+            self.status_entry.config(background="red")
 
 
     def radar_drop(self):
@@ -688,6 +715,7 @@ class RadarFunctionality(tk.Frame):
         #self.status_textbox.config(state="normal")
         print(f"inside other radars {state.network_state}")
         self.status_var.set("Searching Network")
+        self.status_entry.config(background="white")
         self.find_other_radars_button.config(text="Searching for radars")
         self.find_other_radars_button.config(state="disabled")
         nm = nmap.PortScanner()
@@ -719,6 +747,7 @@ class RadarFunctionality(tk.Frame):
         self.find_other_radars_button.config(state="normal")
         self.find_other_radars_button.config(text="Find Radars")
         self.status_var.set("Finished Searching Network")
+        self.status_entry.config(background="steel blue")
 
 
     def start_network_scan(self):
