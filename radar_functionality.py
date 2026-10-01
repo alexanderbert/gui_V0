@@ -515,7 +515,7 @@ class RadarFunctionality(tk.Frame):
         is_fpga_running = True
         #Todo make sure this works correctly. No cues but based off of -Q 10000
         try:
-            target_directory = "/captureMode"
+            target_directory = "./captureMode"
             subprocess.run(['socat','tcp-l:7777,reuseaddr,fork','system:\'cpio -i\''],cwd=target_directory, check=True)
         except subprocess.CalledProcessError as e:
             print(f"Command failed with exit code {e.returncode}")
@@ -551,7 +551,7 @@ class RadarFunctionality(tk.Frame):
 
                 if num_match:
                     num_value = int(num_match.group("num"))
-                    self.update_progressbar(num_value, Q_VALUE)
+                    self.update_progressbar(num_value)
 
         channel.close()
         client.close()
@@ -651,12 +651,13 @@ class RadarFunctionality(tk.Frame):
         #check for fpga_heat_map vs abort and capture
         self.current_radar = self.radar_dict[self.radar_selected.get()]
         print(self.current_radar)
+        print(funct.__name__)
         if self.current_radar == "---------" or self.current_radar is None:
             self.status_var.set("Please Select A Radar")
             self.status_entry.config(background="yellow")
             return
         else:
-            if funct.__name__ == "start_siggen" or funct.__name__ == "stop_siggen":
+            if funct.__name__ == "continuous_waveform" or funct.__name__ == "standard_60_waveform":
                 thread = threading.Thread(
                     target= funct,
                     args= args,
@@ -1147,24 +1148,29 @@ class RadarFunctionality(tk.Frame):
         except:
             input_warning = messagebox.showwarning("Warning", "Please enter valid Pulse Width")
             return 1
+        self.continuous_waveform_button.config(bg="green")
+        self.standard_60_waveform_button.config(bg="light gray")
         client, channel = self.fl_network_mode()
-        client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-cw-variable.sh {w_var}\n")
-        # stdin, stdout, stderr = subprocess.run(
-        #     ["bash", "/home/sq/sq/stormquant-beta/scripts/siggen-program-cw-variable.sh", f"{w_var}"],
-        #     capture_output=True,
-        #     text=True,
-        # )
-        # print(stdout)
+        #client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-cw-variable.sh {w_var}\n")
+        stdin, stdout, stderr = client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-cw-variable.sh {w_var}\n")
+        print("STDOUT:")
+        print(stdout.read().decode())
+
+        print("STDERR:")
+        print(stderr.read().decode())
+
         client.close()
 
     def standard_60_waveform(self):
-        # stdin, stdout, stderr = subprocess.run(
-        #     ["bash", "siggen-program-60.sh"],
-        #     capture_output=True,
-        #     text=True,
-        # )
+        self.continuous_waveform_button.config(bg="light gray")
+        self.standard_60_waveform_button.config(bg="green")
         client, channel = self.fl_network_mode()
-        client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-60.sh\n")
+        stdin, stdout, stderr = client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-60.sh\n")
+        print("STDOUT:")
+        print(stdout.read().decode())
+
+        print("STDERR:")
+        print(stderr.read().decode())
         client.close()
 
 
