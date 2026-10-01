@@ -997,7 +997,7 @@ class RadarFunctionality(tk.Frame):
         self.canvas.get_tk_widget().grid(column=0, row=0, sticky="nsew")
 
         self.close_heatmap_button= tk.Button(self.fpga_control_frame, text="Close Heatmap", command=lambda:self.close_heatmap())
-        self.close_heatmap_button.grid(column=0, row=4)
+        self.close_heatmap_button.grid(column=0, row=2)
         self.close_heatmap_button.config(width=20, font=("Arial", 20))
         return self.canvas
 
@@ -1014,7 +1014,8 @@ class RadarFunctionality(tk.Frame):
 
         # Remove close button
         if self.close_heatmap_button is not None:
-            self.close_heatmap_button.destroy()
+            self.close_heatmap_button.grid_remove()
+            self.create_heatmap_button.grid()
 
             self.close_heatmap_button = None
 
@@ -1038,7 +1039,7 @@ class RadarFunctionality(tk.Frame):
         self.dash_eight_label.grid_remove()
         self.dash_nine_entry.grid_remove()
         self.dash_nine_label.grid_remove()
-        #self.create_heatmap_button.grid_remove()
+        self.create_heatmap_button.grid_remove()
 
     def replace_output_network_widgets(self):
         self.az_entry.grid()
@@ -1056,7 +1057,7 @@ class RadarFunctionality(tk.Frame):
         self.dash_nine_entry.grid()
         self.dash_nine_label.grid()
         self.find_other_radars_button.grid()
-        #self.create_heatmap_button.grid()
+        self.close_heatmap_button.grid_remove()
 
     def setup_initial_input_outputs(self):
         self.dash_w_label = tk.Label(self.output_frame, text="w | Pulse width(ms):")
