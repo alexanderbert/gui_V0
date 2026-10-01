@@ -460,6 +460,14 @@ class RadarFunctionality(tk.Frame):
                                     last_position = None
                                 buffer = buffer[power_match.end():]
                                 continue
+                    elif channel.recv_stderr_ready():
+                        print("FPGA FAILURE")
+                        err = channel.recv_stderr(1024).decode("iso-8859-1")
+                        print("STDERR:", err)
+                    elif channel.exit_status_ready():
+                        print("Exit status:", channel.recv_exit_status())
+
+
             except Exception as e:
                 import traceback
                 print(f"ERROR DURING FPGASTREAM PROCESSING FOR HEATMAP: {e}")
@@ -1097,7 +1105,7 @@ class RadarFunctionality(tk.Frame):
         self.dash_capital_D_entry = tk.Entry(self.output_frame, font=("Arial", 20), justify="center",
                                              textvariable=self.dash_capital_D_var)
         self.dash_capital_D_entry.grid(column=1, row=6, sticky="nsew")
-        self.dash_capital_S_var.set(10)
+        self.dash_capital_D_var.set(10)
 
         self.dash_eight_label = tk.Label(self.output_frame, text="8 | Sample Start Offset:")
         self.dash_eight_label.grid(column=0, row=7, sticky="nsew")
