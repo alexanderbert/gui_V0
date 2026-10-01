@@ -348,7 +348,7 @@ class RadarFunctionality(tk.Frame):
                 # w e b g s
                 # function that uses w as an argument
                 channel.send(
-                    f"./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()}\n")
+                    f"./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()} -y 5.8 -V 6.3 -C 0.05 -u\n")
                 # channel.send(
                 #     f"./fpgaStream -w 0.96 -s 2.0 -e 2.0 -b 0.0 -g -1.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D 10\n")
                 #channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 2000 -9 4000 -X -D 10\n")
@@ -796,7 +796,8 @@ class RadarFunctionality(tk.Frame):
         self.after(20, self.update_textboxes)
 
     def create_heatmap(self):
-
+        #self.current_radar = self.radar_dict[self.radar_selected.get()]
+        print(self.current_radar)
         '''
         Will Create a heatmap based on data accumulated by heat_map_fpga.
         Does not have protections against faulty data.
