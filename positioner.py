@@ -1388,6 +1388,7 @@ class RadarsAvailableFrame(tk.Frame):
             except:
                 print(f"No connection to {host}")
         logging.info("RUNNING find_other_radars")
+        self.status_entry_field.config(bg="steel blue")
         self.positioner_status_var.set("Finished Scanning")
 
     def start_network_scan(self):
