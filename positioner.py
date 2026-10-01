@@ -884,7 +884,7 @@ class ScanFrame(tk.Frame):
 
         self.speed_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.speed_var, justify="center")
         self.speed_entry.delete(0, tk.END)
-        self.speed_entry.insert(0, "20")
+        self.speed_entry.insert(0, "60")
         self.speed_entry.grid(column=3, row=0, sticky="NSW")
 
         self.increment_label = tk.Label(self, text="Increment", font=("Arial", 20), foreground="white", background="gray7")
@@ -892,7 +892,7 @@ class ScanFrame(tk.Frame):
 
         self.increment_entry = ttk.Entry(self, width=10, font = ("Arial", 20), textvariable=self.increment_var, justify="center")
         self.increment_entry.delete(0, tk.END)
-        self.increment_entry.insert(0, "1.5")
+        self.increment_entry.insert(0, "0.25")
         self.increment_entry.grid(column=3, row=1, sticky="NSW")
 
         self.repeat_label = tk.Label(self, text="Repeat", font=("Arial", 20), foreground="white", background="gray7")
