@@ -1342,6 +1342,11 @@ class RadarsAvailableFrame(tk.Frame):
         self.io_frame = io_frame
         self.columnconfigure(0, weight=1)
         self.rowconfigure(list(range(2)), weight=1)
+        self.positioner_status_var = tk.StringVar()
+
+        self.status_entry_field = tk.Entry(self, textvariable=self.positioner_status_var, background="white", fg="black")
+        self.status_entry_field.grid(column=0, row=2, sticky="NSEW")
+        self.status_entry_field.config(font=("Arial", 20), justify="center")
 
 
         self.network_check_button = tk.Button(self, text="Find Radars" , command= lambda: RadarsAvailableFrame.start_network_scan(self))
@@ -1368,13 +1373,13 @@ class RadarsAvailableFrame(tk.Frame):
         nm.scan(hosts=state.network_state, arguments="-sn")
         host_ip = state.network_state
         logging.info(f"Positioner connect: running on {host_ip}")
+        self.positioner_status_var.set("Scanning Network...")
         for host in nm.all_hosts():
             try:
                 logging.info(f"Scanning {host}")
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.load_system_host_keys()
-                self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
-                self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, host)
+                self.positioner_status_var.set(f"Scanning {host}")
                 client.connect(hostname=f"{host}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=3, auth_timeout=5)
                 stdin, stdout, stderr = client.exec_command("hostname")
                 radar_hostname = stdout.read().decode("utf-8")
@@ -1383,8 +1388,7 @@ class RadarsAvailableFrame(tk.Frame):
             except:
                 print(f"No connection to {host}")
         logging.info("RUNNING find_other_radars")
-        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
-        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, "Finished Scanning")
+        self.positioner_status_var.set("Finished Scanning")
 
     def start_network_scan(self):
         thread = threading.Thread(
@@ -1397,8 +1401,9 @@ class RadarsAvailableFrame(tk.Frame):
         try:
             if ip_address not in self.radar_dict.values():
                 self.radar_dict[hostname] = ip_address
-                self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
-                self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, f"Found: {ip_address}")
+                #
+                # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
+                # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, f"Found: {ip_address}")
         except:
             print("ERROR")
         self.radar_drop()
@@ -1418,13 +1423,15 @@ class ButtonFrame(tk.Frame):
         self.create_buttons()
 
     def update_status(self, message):
-        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.config(font=("Arial", 16),
-                                                                                  foreground="white")
-        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.config(state="normal")
-        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
-        self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, message)
+        self.io_frame.input_frame.output_frame.terminal_frame.positioner_status_var.set(message)
+        # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.config(font=("Arial", 16),
+        #                                                                           foreground="white")
+        # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.config(state="normal")
+        # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
+        # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, message)
 
     def stop_scan_all(self):
+        self.io_frame.input_frame.output_frame.terminal_frame.positioner_status_var.set("Stopping Scan")
         # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.delete("1.0", tk.END)
         # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.config(font=("Arial", 16), foreground="white")
         # self.io_frame.input_frame.output_frame.terminal_frame.pos_text_box.insert(tk.END, f"Stopping Scan.\nPlease standby as the positioner \ncompletes the rotation.")
@@ -1445,6 +1452,14 @@ class ButtonFrame(tk.Frame):
 
     def connect_positioner_initial_state(self):
         #Todo kill this behavior for now and go right into normal mode
+        # print(self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get()))
+        # print(f"Radar Selected: {self.radar_available_frame.radar_selected.get()}")
+
+        # if self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get()) == "--------":
+        #     self.radar_available_frame.positioner_status_var.set("Select Radar")
+        #     self.radar_available_frame.status_entry_field.configure(bg="yellow")
+        #     return 1
+        print("inside connect_positioner_initial_state")
         logging.info(f"running connect_positioner_initial_state")
         initial_state = self.io_frame.input_frame.output_frame.terminal_frame.set_positioner(self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get()))
         logging.info(f"CONNECT POSITIONER INITIAL STATE: {initial_state}, false should activate homing mode interface")
@@ -1455,11 +1470,24 @@ class ButtonFrame(tk.Frame):
         # else:
         #     logging.info("INITIAL STATE: NORMAL MODE")
 
+    def initial_status_check(self, func):
+        print(func.__name__)
+        if self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get()) == "--------":
+            self.radar_available_frame.positioner_status_var.set("Select Radar")
+            self.radar_available_frame.status_entry_field.configure(bg="yellow")
+            return 1
+        else:
+            func()
+
+
+
+
+
 
 
     def create_buttons(self):
         #self.connect_positioner_button = tk.Button(self, text="Connect Positioner", command=lambda: self.io_frame.input_frame.output_frame.terminal_frame.set_positioner(self.radar_available_frame.radar_dict.get(self.radar_available_frame.radar_selected.get())))
-        self.connect_positioner_button = tk.Button(self, text="Connect Positioner", command = lambda: self.connect_positioner_initial_state())
+        self.connect_positioner_button = tk.Button(self, text="Connect Positioner", command = lambda: self.initial_status_check(self.connect_positioner_initial_state))
         self.connect_positioner_button.grid(column=0,  row=0)
         self.connect_positioner_button.config(width=15, font=("Arial", 20))
 
@@ -1470,25 +1498,25 @@ class ButtonFrame(tk.Frame):
         # self.button_reset.config(width=10, font=("Arial", 20))
 
         #self.stop_scan_button = tk.Button(self, text="Stop Scan", command=lambda: self.io_frame.input_frame.output_frame.terminal_frame.stop_scan())
-        self.stop_scan_button = tk.Button(self, text="Stop Scan", command= lambda: self.stop_scan_all())
+        self.stop_scan_button = tk.Button(self, text="Stop Scan", command= lambda: self.initial_status_check(self.stop_scan_all))
         self.stop_scan_button.grid(column=0, row=3)
         self.stop_scan_button.config(width=15, font=("Arial", 20))
 
 
         #self.get_status = tk.Button(self, text = "Positioner Status", command = lambda: self.io_frame.input_frame.output_frame.terminal_frame.get_positioner_status())
         self.get_status = tk.Button(self, text="Positioner Status",
-                                    command=lambda: self.io_frame.input_frame.output_frame.terminal_frame.get_positioner_status())
+                                    command=lambda: self.initial_status_check(self.io_frame.input_frame.output_frame.terminal_frame.get_positioner_status))
         self.get_status.grid(column=0, row=1)
         self.get_status.config(width=15, font=("Arial", 20))
 
-        self.get_position = tk.Button(self, text="Current Position", command=lambda: self.io_frame.input_frame.output_frame.terminal_frame.get_current_position())
+        self.get_position = tk.Button(self, text="Current Position", command=lambda: self.initial_status_check(self.io_frame.input_frame.output_frame.terminal_frame.get_current_position))
         self.get_position.grid(column=0, row=2)
         self.get_position.config(width=15, font=("Arial", 20))
 
         #self.reset_positioner = tk.Button(self, text="Reset Positioner",command=lambda: self.io_frame.input_frame.output_frame.terminal_frame.reset_positioner())
         #CHANGE RESET BUTTON TO ALSO CHANGE BUTTON LAYOUT
         self.reset_positioner = tk.Button(self, text="Reset Positioner",
-                                          command=lambda: self.start_homing_mode_and_reset())
+                                          command=lambda: self.initial_status_check(self.start_homing_mode_and_reset))
         self.reset_positioner.grid(column=0, row=4)
         self.reset_positioner.config(width=15, font=("Arial", 20))
 
