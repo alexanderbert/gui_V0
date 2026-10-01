@@ -124,6 +124,7 @@ class RadarFunctionality(tk.Frame):
 
         #Variables
         self.radar_dict = {"Select A Radar": "---------", "sq-radar-4": "192.168.69.188"}
+        #self.radar_dict = {"Select A Radar": "---------"}
         #self.radar_selected = None
         self.radars_available = None
         self.radar_drop()
@@ -450,7 +451,8 @@ class RadarFunctionality(tk.Frame):
                                     y_power = float(power_match.group("yPow"))
                                     num_value = int(power_match.group('num'))
                                     #THIS WILL UPDATE PROGRESS BAR
-                                    self.update_progressbar(num_value, expected_Q_Value)
+                                    #self.update_progressbar(num_value, expected_Q_Value)
+                                    self.update_progressbar(num_value)
 
                                     self.latest_values = (az, el, x_power, y_power)
                                     self.csv_queue.put((az, el, x_power, y_power))
@@ -551,11 +553,11 @@ class RadarFunctionality(tk.Frame):
         self.progress_bar.destroy()
         self.replace_initial_i_o()
 
-    def update_progressbar(self, value, max_num):
+    def update_progressbar(self, value):
         '''
         Updates the progress bar, update_idletasks forces a gui refresh so this might not be optimal but
         I won't know until testing. The other option would be to create a .after(x, update_progressbar) function
-
+        INCLUDE MAx num for color change?
         '''
         # twenty_five = int(max_num * .25)
         # fifty = int(max_num * .5)
