@@ -153,7 +153,7 @@ class RadarFunctionality(tk.Frame):
         self.close_heatmap_button = None
 
 
-        self.find_other_radars_button = tk.Button(self.radar_control_frame, text="Check Network", command=lambda:self.start_network_scan())
+        self.find_other_radars_button = tk.Button(self.radar_control_frame, text="Find Radars", command=lambda:self.start_network_scan())
         self.find_other_radars_button.grid(row=1, column=0)
         self.find_other_radars_button.config(width=20, font=("Arial", 20))
 
@@ -299,7 +299,7 @@ class RadarFunctionality(tk.Frame):
 
 
             self.status_var.set("Starting FPGA")
-            self.status_entry.config(background="green")
+            self.status_entry.config(background="green yellow")
             self.timestamp = datetime.now().strftime("%m%d_%H%M%S")
             self.csv_thread = threading.Thread(
                 target=self.csv_writer_worker,
@@ -325,6 +325,9 @@ class RadarFunctionality(tk.Frame):
             except:
                 pass
             client, channel = self.fl_network_mode()
+            #client, channel = self.alex_network_mode()
+            #stdin, stdout, stderr = client.exec_command("ls")
+            #print(stdout.read().decode('utf-8'))
             print("After connection to fl network")
             global is_fpga_running
             is_fpga_running = True
@@ -483,7 +486,7 @@ class RadarFunctionality(tk.Frame):
                 self.status_entry.config(background="white")
                 self.progress_bar_stage = 0
                 self.progress_bar.destroy()
-                print(f"Maximum buffer size: {max_buffer_length:,} characters")
+                #print(f"Maximum buffer size: {max_buffer_length:,} characters")
                 self.hide_fpga_output()
                 self.replace_initial_i_o()
 
@@ -636,6 +639,8 @@ class RadarFunctionality(tk.Frame):
 
     def start_threading(self, funct, *args):
         #check for fpga_heat_map vs abort and capture
+        self.current_radar = self.radar_dict[self.radar_selected.get()]
+        print(self.current_radar)
         if self.current_radar == "---------" or self.current_radar is None:
             self.status_var.set("Please Select A Radar")
             self.status_entry.config(background="yellow")
@@ -657,6 +662,8 @@ class RadarFunctionality(tk.Frame):
                         daemon=True
                     )
                     thread.start()
+                else:
+                    self.status_var.set("Check Inputs")
 
     # def alex_network_mode(self):
     #     self.curent_radar = self.radar_dict[self.radar_selected.get()]
@@ -675,8 +682,8 @@ class RadarFunctionality(tk.Frame):
     #     except:
     #         self.status_var.set("Network Error")
     #         self.status_entry.config(background="red")
-    #
-    #
+
+
 
     def fl_network_mode(self):
         self.current_radar = self.radar_dict[self.radar_selected.get()]
@@ -751,6 +758,7 @@ class RadarFunctionality(tk.Frame):
 
 
     def start_network_scan(self):
+        self.status_entry.config(background="yellow")
         thread = threading.Thread(
             target = self.find_other_radars,
             daemon = True

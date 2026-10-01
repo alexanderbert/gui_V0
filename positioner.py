@@ -1344,7 +1344,7 @@ class RadarsAvailableFrame(tk.Frame):
         self.rowconfigure(list(range(2)), weight=1)
 
 
-        self.network_check_button = tk.Button(self, text="Network Check" , command= lambda: RadarsAvailableFrame.start_network_scan(self))
+        self.network_check_button = tk.Button(self, text="Find Radars" , command= lambda: RadarsAvailableFrame.start_network_scan(self))
         self.network_check_button.grid(column=0, row=1, sticky="SEW")
         self.network_check_button.config(width=10, font=("Arial", 20))
 

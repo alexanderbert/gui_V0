@@ -500,7 +500,7 @@ class ButtonFrame(tk.Frame):
         self.capture_button.config(text= "Capture", width=10, font=("Arial", 20))
 
         #self.network_check_button = tk.Button(self, text="Network Check" , command= lambda: RadarsAvailableFrame.find_other_radars(self.radar_available_frame))
-        self.network_check_button = tk.Button(self, text="Network Check",
+        self.network_check_button = tk.Button(self, text="Find Radars",
                                               command=lambda: RadarsAvailableFrame.start_network_scan(
                                                   self.radar_available_frame))
         self.network_check_button.grid(column=0, row=4)
