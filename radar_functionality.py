@@ -1149,7 +1149,7 @@ class RadarFunctionality(tk.Frame):
             input_warning = messagebox.showwarning("Warning", "Please enter valid Pulse Width")
             return 1
         self.continuous_waveform_button.config(bg="green")
-        self.standard_60_waveform_button.config(bg="light gray")
+        self.standard_60_waveform_button.config(bg="gray85")
         client, channel = self.fl_network_mode()
         #client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-cw-variable.sh {w_var}\n")
         stdin, stdout, stderr = client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-cw-variable.sh {w_var}\n")
@@ -1162,7 +1162,7 @@ class RadarFunctionality(tk.Frame):
         client.close()
 
     def standard_60_waveform(self):
-        self.continuous_waveform_button.config(bg="light gray")
+        self.continuous_waveform_button.config(bg="gray85")
         self.standard_60_waveform_button.config(bg="green")
         client, channel = self.fl_network_mode()
         stdin, stdout, stderr = client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-60.sh\n")
