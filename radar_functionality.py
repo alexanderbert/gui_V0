@@ -892,6 +892,14 @@ class RadarFunctionality(tk.Frame):
 
 
             )
+            heatmap = ax.pcolormesh(
+                AZ,
+                EL,
+                POWER,
+                shading="auto",
+                cmap="inferno",
+            )
+
             heatmap = ax.contour(
                 AZ,
                 EL,
@@ -1030,7 +1038,7 @@ class RadarFunctionality(tk.Frame):
         self.dash_eight_label.grid_remove()
         self.dash_nine_entry.grid_remove()
         self.dash_nine_label.grid_remove()
-        self.create_heatmap_button.grid_remove()
+        #self.create_heatmap_button.grid_remove()
 
     def replace_output_network_widgets(self):
         self.az_entry.grid()
@@ -1048,7 +1056,7 @@ class RadarFunctionality(tk.Frame):
         self.dash_nine_entry.grid()
         self.dash_nine_label.grid()
         self.find_other_radars_button.grid()
-        self.create_heatmap_button.grid()
+        #self.create_heatmap_button.grid()
 
     def setup_initial_input_outputs(self):
         self.dash_w_label = tk.Label(self.output_frame, text="w | Pulse width(ms):")
@@ -1123,15 +1131,15 @@ class RadarFunctionality(tk.Frame):
         self.dash_nine_entry.grid(column=1, row=8, sticky="nsew")
         self.dash_nine_var.set(24)
 
-        self.siggen_start_button = tk.Button(self.fpga_control_frame, width=10, text="Siggen Start", command= lambda: self.start_threading(self.start_siggen))
-        self.siggen_start_button.grid(column=0, row=5)
-        self.siggen_start_button.config(width=20, font=("Arial", 20))
+        self.continuous_waveform_button = tk.Button(self.fpga_control_frame, width=10, text="Continuous Waveform", command= lambda: self.start_threading(self.continuous_waveform))
+        self.continuous_waveform_button.grid(column=0, row=5)
+        self.continuous_waveform_button.config(width=20, font=("Arial", 20))
 
-        self.siggen_end_button = tk.Button(self.fpga_control_frame, width = 10, text="Siggen End", command= lambda: self.start_threading(self.stop_siggen))
-        self.siggen_end_button.grid(column=0, row=6)
-        self.siggen_end_button.config(width=20, font=("Arial", 20))
+        self.standard_60_waveform_button = tk.Button(self.fpga_control_frame, width = 10, text="60 Waveform", command= lambda: self.start_threading(self.standard_60_waveform))
+        self.standard_60_waveform_button.grid(column=0, row=6)
+        self.standard_60_waveform_button.config(width=20, font=("Arial", 20))
 
-    def start_siggen(self):
+    def continuous_waveform(self):
         try:
             w_var = str(self.dash_w_var.get())
         except:
@@ -1147,7 +1155,7 @@ class RadarFunctionality(tk.Frame):
         # print(stdout)
         client.close()
 
-    def stop_siggen(self):
+    def standard_60_waveform(self):
         # stdin, stdout, stderr = subprocess.run(
         #     ["bash", "siggen-program-60.sh"],
         #     capture_output=True,
