@@ -343,18 +343,10 @@ class RadarFunctionality(tk.Frame):
                 channel.send(f"cd {os.environ['FPGAPATH']}\n")
                 print(f"sent: cd {os.environ['FPGAPATH']}")
                 time.sleep(.2)
-                #todo
-                # Button that runs CW PULSE?
-                # w e b g s
-                # function that uses w as an argument
+                #10/2
                 channel.send(
-                    f"./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()} -y 5.8 -V 6.3 -C 0.05 -u\n")
-                # channel.send(
-                #     f"./fpgaStream -w 0.96 -s 2.0 -e 2.0 -b 0.0 -g -1.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D 10\n")
-                #channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {state.S_FLAG_VALUE} -Q {expected_Q_Value} -8 2000 -9 4000 -X -D 10\n")
-                #channel.send(
-                    #f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q 4 -8 2000 -9 4000 -X -D 10\n")
-                #print(f"SENT: ./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S {S_FLAG_VALUE} -Q {int(expected_Q_Value)} -8 2000 -9 4000 -X -D 10\n")
+                    f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} 
+                    -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()} -y 6.25 -V {1 / self.dash_w_var.get()} -C 0.05 -u\n""")
                 time.sleep(.2)
                 print(f"FPGA RUNNING STATE: {is_fpga_running}")
 
@@ -362,13 +354,6 @@ class RadarFunctionality(tk.Frame):
             except:
                 pass
             buffer = ""
-
-            # Grabs the line with Power and the line above it for azimuth and altitude
-            # position_pattern = re.compile(
-            #     r"position:\s*(?P<az>[+-]?\d+\.\d+)\s+azimuth,\s*"
-            #     r"[+-]?\d+\.\d+,\s*plate,\s*"
-            #     r"(?P<el>[+-]?\d+\.\d+)\s+altitude"
-            # )
 
             #regex accounts for zeros
             position_pattern = re.compile(
@@ -525,10 +510,12 @@ class RadarFunctionality(tk.Frame):
         time.sleep(.2)
         channel.send(f"cd {os.environ['FPGAPATH']}\n")
         print(f"sent: cd {os.environ['FPGAPATH']}")
-        #Need a total -Q number for pulses to be read i think
-        #channel.send(f"./fpgaStream -w 0.96 -s 0.5 -e 0.5 -b 0.0 -g 0.0 -S 1000 -k 8000 -Q {Q_VALUE} -q -c | socat - tcp:10.42.0.1:7777\n")
+
+        #CMD LINE 10/2
         channel.send(
-            f"./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -k 8000 -Q {Q_VALUE} -q -c | socat - tcp:10.42.0.1:7777\n")
+            f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} 
+            -S {self.dash_capital_S_var.get()} -k 8000 -Q {self.dash_capital_S_var.get() * 10} -q -c -y 6.25 -V {1 / self.dash_w_var.get()} -C 0.05 -u | socat - tcp:10.42.0.1:7777\n""")
+
         time.sleep(.5)
 
         num_pattern = re.compile(
