@@ -19,6 +19,7 @@ from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 import subprocess
 from pathlib import Path
 from scipy.interpolate import griddata
+import customtkinter
 
 from network_toggle import NetworkSwitch
 import state
@@ -130,33 +131,33 @@ class RadarFunctionality(tk.Frame):
         self.radar_drop()
         
         #infrastructure
-        self.run_heatmap_fpga_button= tk.Button(self.fpga_control_frame, text="RUN", command=lambda:self.start_threading(self.heat_map_fpga))
+        self.run_heatmap_fpga_button= customtkinter.CTkButton(self.fpga_control_frame, text="RUN", command=lambda:self.start_threading(self.heat_map_fpga))
         self.run_heatmap_fpga_button.grid(row=0, column=0)
-        self.run_heatmap_fpga_button.config(width=20, font=("Arial", 20))
+        self.run_heatmap_fpga_button.configure(width=20, font=("Arial", 20))
         #
         # self.run_capture_fpga_button= tk.Button(self.fpga_control_frame, text="Capture FPGA", command=lambda:self.capture_fpga())
         # self.run_capture_fpga_button.grid(row=1, column=2)
         # self.run_capture_fpga_button.config(width=20, font=("Arial", 20))
 
         #Dont need a stop button because the runs with self terminate
-        self.abort_fpga_button= tk.Button(self.fpga_control_frame, text="Abort", command=lambda:self.start_threading(self.kill_fpga))
+        self.abort_fpga_button= customtkinter.CTkButton(self.fpga_control_frame, text="Abort", command=lambda:self.start_threading(self.kill_fpga))
         self.abort_fpga_button.grid(column=0, row=2)
-        self.abort_fpga_button.config(width=20, font=("Arial", 20))
+        self.abort_fpga_button.configure(width=20, font=("Arial", 20))
 
-        self.create_heatmap_button= tk.Button(self.fpga_control_frame, text="Create Heatmap", command=lambda:self.create_heatmap())
+        self.create_heatmap_button= customtkinter.CTkButton(self.fpga_control_frame, text="Create Heatmap", command=lambda:self.create_heatmap())
         self.create_heatmap_button.grid(column=0, row=1)
-        self.create_heatmap_button.config(width=20, font=("Arial", 20))
+        self.create_heatmap_button.configure(width=20, font=("Arial", 20))
 
-        self.capture_packets_button = tk.Button(self.fpga_control_frame, text="CAPTURE ONLY", command=lambda:self.start_threading(self.capture_packets_run))
+        self.capture_packets_button = customtkinter.CTkButton(self.fpga_control_frame, text="CAPTURE ONLY", command=lambda:self.start_threading(self.capture_packets_run))
         self.capture_packets_button.grid(column=0, row =3)
-        self.capture_packets_button.config(width=20, font=("Arial", 20))
+        self.capture_packets_button.configure(width=20, font=("Arial", 20))
 
         self.close_heatmap_button = None
 
 
-        self.find_other_radars_button = tk.Button(self.radar_control_frame, text="Find Radars", command=lambda:self.start_network_scan())
+        self.find_other_radars_button = customtkinter.CTkButton(self.radar_control_frame, text="Find Radars", command=lambda:self.start_network_scan())
         self.find_other_radars_button.grid(row=1, column=0)
-        self.find_other_radars_button.config(width=20, font=("Arial", 20))
+        self.find_other_radars_button.configure(width=20, font=("Arial", 20))
 
         self.canvas = None
         self.progress_bar = None
@@ -279,6 +280,7 @@ class RadarFunctionality(tk.Frame):
         self.status_entry.config(font=("Arial", 20), justify="center")
 
     def heat_map_fpga(self):
+
         # try:
         #     print(f"-w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()}")
         # except:
@@ -635,6 +637,11 @@ class RadarFunctionality(tk.Frame):
 
 
     def start_threading(self, funct, *args):
+        #TODO THE FOLLOWING GETS THE RADAR SELECTED IN THE HEADER
+        radar_choice = state.radar_choice.get()
+        radar_dict = state.radars_found.get_dict()
+        print(f"INSIDE HEATMAP FPGA {radar_dict[radar_choice]}")
+
         #check for fpga_heat_map vs abort and capture
         self.current_radar = self.radar_dict[self.radar_selected.get()]
         print(self.current_radar)
@@ -721,8 +728,8 @@ class RadarFunctionality(tk.Frame):
         print(f"inside other radars {state.network_state}")
         self.status_var.set("Searching Network")
         self.status_entry.config(background="white")
-        self.find_other_radars_button.config(text="Searching for radars")
-        self.find_other_radars_button.config(state="disabled")
+        self.find_other_radars_button.configure(text="Searching for radars")
+        self.find_other_radars_button.configure(state="disabled")
         nm = nmap.PortScanner()
         # host_ip = os.environ.get("HOST_IP")
         # nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
@@ -731,8 +738,8 @@ class RadarFunctionality(tk.Frame):
             nm.scan(hosts=state.network_state, arguments="-sn", timeout=20)
         except:
             self.status_var.set("Network Error")
-            self.find_other_radars_button.config(state="normal")
-            self.find_other_radars_button.config(text="Find Radars")
+            self.find_other_radars_button.configure(state="normal")
+            self.find_other_radars_button.configure(text="Find Radars")
             return
         host_ip = state.network_state
         logging.info(f"running on {host_ip}")
@@ -749,8 +756,8 @@ class RadarFunctionality(tk.Frame):
             except:
                 print(f"No connection to {host}")
         logging.info("RUNNING find_other_radars")
-        self.find_other_radars_button.config(state="normal")
-        self.find_other_radars_button.config(text="Find Radars")
+        self.find_other_radars_button.configure(state="normal")
+        self.find_other_radars_button.configure(text="Find Radars")
         self.status_var.set("Finished Searching Network")
         self.status_entry.config(background="steel blue")
 
@@ -985,9 +992,9 @@ class RadarFunctionality(tk.Frame):
 
         self.canvas.get_tk_widget().grid(column=0, row=0, sticky="nsew")
 
-        self.close_heatmap_button= tk.Button(self.fpga_control_frame, text="Close Heatmap", command=lambda:self.close_heatmap())
+        self.close_heatmap_button= customtkinter.CTkButton(self.fpga_control_frame, text="Close Heatmap", command=lambda:self.close_heatmap())
         self.close_heatmap_button.grid(column=0, row=2)
-        self.close_heatmap_button.config(width=20, font=("Arial", 20))
+        self.close_heatmap_button.configure(width=20, font=("Arial", 20))
         return self.canvas
 
     def close_heatmap(self):
@@ -1121,13 +1128,13 @@ class RadarFunctionality(tk.Frame):
         self.dash_nine_entry.grid(column=1, row=8, sticky="nsew")
         self.dash_nine_var.set(24)
 
-        self.continuous_waveform_button = tk.Button(self.fpga_control_frame, width=10, text="Continuous Waveform", command= lambda: self.start_threading(self.continuous_waveform))
+        self.continuous_waveform_button = customtkinter.CTkButton(self.fpga_control_frame, width=10, text="Continuous Waveform", command= lambda: self.start_threading(self.continuous_waveform))
         self.continuous_waveform_button.grid(column=0, row=5)
-        self.continuous_waveform_button.config(width=20, font=("Arial", 20))
+        self.continuous_waveform_button.configure(width=20, font=("Arial", 20))
 
-        self.standard_60_waveform_button = tk.Button(self.fpga_control_frame, width = 10, text="60 Waveform", command= lambda: self.start_threading(self.standard_60_waveform))
+        self.standard_60_waveform_button = customtkinter.CTkButton(self.fpga_control_frame, width = 10, text="60 Waveform", command= lambda: self.start_threading(self.standard_60_waveform))
         self.standard_60_waveform_button.grid(column=0, row=6)
-        self.standard_60_waveform_button.config(width=20, font=("Arial", 20))
+        self.standard_60_waveform_button.configure(width=20, font=("Arial", 20))
 
     def continuous_waveform(self):
         try:
@@ -1135,8 +1142,8 @@ class RadarFunctionality(tk.Frame):
         except:
             input_warning = messagebox.showwarning("Warning", "Please enter valid Pulse Width")
             return 1
-        self.continuous_waveform_button.config(bg="green")
-        self.standard_60_waveform_button.config(bg="gray85")
+        self.continuous_waveform_button.configure(bg="green")
+        self.standard_60_waveform_button.configure(bg="gray85")
         client, channel = self.fl_network_mode()
         #client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-cw-variable.sh {w_var}\n")
         stdin, stdout, stderr = client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-cw-variable.sh {w_var}\n")
@@ -1149,8 +1156,8 @@ class RadarFunctionality(tk.Frame):
         client.close()
 
     def standard_60_waveform(self):
-        self.continuous_waveform_button.config(bg="gray85")
-        self.standard_60_waveform_button.config(bg="green")
+        self.continuous_waveform_button.configure(bg="gray85")
+        self.standard_60_waveform_button.configure(bg="green")
         client, channel = self.fl_network_mode()
         stdin, stdout, stderr = client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-60.sh\n")
         print("STDOUT:")
