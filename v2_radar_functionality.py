@@ -114,12 +114,6 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.toolbar_frame.grid_propagate(False)
         # self.network_state = "Wifi"
 
-        # Variables
-        self.radar_dict = {"Select A Radar": "---------", "sq-radar-4": "192.168.69.188"}
-        # self.radar_dict = {"Select A Radar": "---------"}
-        # self.radar_selected = None
-        self.radars_available = None
-        self.radar_drop()
 
         # infrastructure
         self.run_heatmap_fpga_button = customtkinter.CTkButton(self.fpga_control_frame, text="FPGA DATA",
@@ -149,11 +143,6 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.capture_packets_button.configure(width=200, font=("Arial", 14))
 
         self.close_heatmap_button = None
-
-        # self.find_other_radars_button = customtkinter.CTkButton(self.radar_control_frame, text="Find Radars",
-        #                                                         command=lambda: self.start_network_scan())
-        # self.find_other_radars_button.grid(row=1, column=0)
-        # self.find_other_radars_button.configure(width=20, font=("Arial", 20))
 
         self.canvas = None
         self.progress_bar = None
@@ -262,10 +251,10 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.setup_initial_input_outputs()
 
         self.status_label = customtkinter.CTkLabel(self.output_frame, text="Status:")
-        self.status_label.grid(column=0, row=9, sticky="nsew", pady=10)
+        self.status_label.grid(column=0, row=9, sticky="ew", pady=10)
         self.status_label.configure(font=("Arial", 14))
         self.status_entry = customtkinter.CTkEntry(self.output_frame, textvariable=self.status_var)
-        self.status_entry.grid(column=1, row=9, sticky="nsew", pady=10)
+        self.status_entry.grid(column=1, row=9, sticky="ew", pady=10)
         self.status_entry.configure(font=("Arial", 14), justify="center")
 
     def heat_map_fpga(self):
@@ -634,10 +623,13 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         print(f"INSIDE HEATMAP FPGA {radar_dict[radar_choice]}")
 
         # check for fpga_heat_map vs abort and capture
-        self.current_radar = self.radar_dict[self.radar_selected.get()]
-        print(self.current_radar)
+        self.current_radar_key = state.radar_choice.get()
+        for key, value in state.radars_found.get_dict().items():
+            if key == self.current_radar_key:
+                self.current_radar_value = value
+        print(f"INSIDE FLORIDA {self.current_radar_value}")
         print(funct.__name__)
-        if self.current_radar == "---------" or self.current_radar is None:
+        if self.current_radar_value == "--------" or self.current_radar_value is None:
             self.status_var.set("Please Select A Radar")
             self.status_entry.configure(fg_color="yellow", text_color="Black")
             return
@@ -680,13 +672,16 @@ class RadarFunctionality2(customtkinter.CTkFrame):
     #         self.status_entry.config(background="red")
 
     def fl_network_mode(self):
-        self.current_radar = self.radar_dict[self.radar_selected.get()]
-        print(self.current_radar)
+        self.current_radar_key = state.radar_choice.get()
+        for key, value in state.radars_found.get_dict().items():
+            if key == self.current_radar_key:
+                self.current_radar_value = value
+        print(f"INSIDE FLORIDA {self.current_radar_value}")
         self.status_var.set("Connecting to radar...")
         self.status_entry.configure(fg_color="yellow green", text_color="black")
         try:
             client = self.create_ssh_client()
-            client.connect(hostname=f"{self.current_radar}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
+            client.connect(hostname=f"{self.current_radar_value}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
                            password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=10)
             # print(f"{self.positioner_selected_for_use} inside status")
             # print(f"{selected_positioner_global} GLOBAL status")
@@ -701,73 +696,6 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             self.status_var.set("Network Error")
             self.status_entry.configure(fg_color="red", text_color="white")
 
-    def radar_drop(self):
-        self.radars_available = list(self.radar_dict.keys())
-        self.radar_selected = tk.StringVar()
-        self.radar_selected.set(self.radars_available[0])
-        combo_drop = ttk.Combobox(self.radar_control_frame, textvariable=self.radar_selected,
-                                  values=self.radars_available, state="readonly", justify='center')
-        combo_drop.grid(column=0, row=2)
-        combo_drop.configure(width=20)
-        combo_drop.configure(font=("Arial", 21))
-        return self.radar_selected.get()
-
-    def find_other_radars(self):
-        # self.status_textbox.config(state="normal")
-        print(f"inside other radars {state.network_state}")
-        self.status_var.set("Searching Network")
-        self.status_entry.config(fg_color="white", text_color="black")
-        self.find_other_radars_button.configure(text="Searching for radars")
-        self.find_other_radars_button.configure(state="disabled")
-        nm = nmap.PortScanner()
-        # host_ip = os.environ.get("HOST_IP")
-        # nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
-        # CHANGE NMAP SCAN BASED ON NETWORK STATE
-        try:
-            nm.scan(hosts=state.network_state, arguments="-sn", timeout=20)
-        except:
-            self.status_var.set("Network Error")
-            self.find_other_radars_button.configure(state="normal")
-            self.find_other_radars_button.configure(text="Find Radars")
-            return
-        host_ip = state.network_state
-        logging.info(f"running on {host_ip}")
-        print(f"running on {host_ip}")
-        for host in nm.all_hosts():
-            client = self.create_ssh_client()
-            try:
-                logging.info(f"Scanning {host}")
-                client.connect(hostname=f"{host}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
-                               password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False,
-                               allow_agent=False, timeout=3, auth_timeout=5)
-                stdin, stdout, stderr = client.exec_command("hostname")
-                radar_hostname = stdout.read().decode("utf-8")
-                client.close()
-                self.update_radar_pulldown(host, radar_hostname.strip())
-            except:
-                print(f"No connection to {host}")
-        logging.info("RUNNING find_other_radars")
-        self.find_other_radars_button.configure(state="normal")
-        self.find_other_radars_button.configure(text="Find Radars")
-        self.status_var.set("Finished Searching Network")
-        self.status_entry.config(fg_color="steel blue", text_color="white")
-
-    def start_network_scan(self):
-        self.status_entry.configure(fg_color="yellow", text_color = "black")
-        thread = threading.Thread(
-            target=self.find_other_radars,
-            daemon=True
-        )
-        thread.start()
-
-    def update_radar_pulldown(self, ip_address, hostname):
-        try:
-            if ip_address not in self.radar_dict.values():
-                self.radar_dict[hostname] = ip_address
-
-        except:
-            print("ERROR")
-        self.radar_drop()
 
     def update_textboxes(self):
         if self.latest_values is not None:
@@ -795,7 +723,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             self.hide_initial_i_o()
             self.heat_map_specific_show()
         self.hide_initial_i_o()
-        self.heat_map_specific_show()
+        self.heat_map_specific_hide()
         self.status_label.grid_remove()
         self.status_entry.grid_remove()
         azimuth_raw = []
@@ -983,7 +911,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
         self.toolbar_frame.grid_propagate(False)
 
-        self.canvas.get_tk_widget().grid(column=0, row=0, sticky="nsew")
+        #self.canvas.get_tk_widget().grid(column=0, columnspan=2, row=0, sticky="nsew")
 
         self.close_heatmap_button = customtkinter.CTkButton(self.fpga_control_frame, text="Close Heatmap",
                                                             command=lambda: self.close_heatmap())
@@ -1048,7 +976,6 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.dash_eight_label.grid()
         self.dash_nine_entry.grid()
         self.dash_nine_label.grid()
-        self.find_other_radars_button.grid()
         self.close_heatmap_button.grid_remove()
 
 
@@ -1149,23 +1076,21 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         except:
             input_warning = messagebox.showwarning("Warning", "Please enter valid Pulse Width")
             return 1
-        self.continuous_waveform_button.configure(fg_color="green")
-        self.standard_60_waveform_button.configure(fg_color="#1F6AA5")
+
         client, channel = self.fl_network_mode()
         # client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-cw-variable.sh {w_var}\n")
         stdin, stdout, stderr = client.exec_command(
             f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-cw-variable.sh {w_var}\n")
         print("STDOUT:")
         print(stdout.read().decode())
-
         print("STDERR:")
         print(stderr.read().decode())
-
         client.close()
+        self.continuous_waveform_button.configure(fg_color="green")
+        self.standard_60_waveform_button.configure(fg_color="#1F6AA5")
 
     def standard_60_waveform(self):
-        self.continuous_waveform_button.configure(fg_color="#1F6AA5")
-        self.standard_60_waveform_button.configure(fg_color="green")
+
         client, channel = self.fl_network_mode()
         stdin, stdout, stderr = client.exec_command(f"bash /home/sq/sq/stormquant-beta/scripts/siggen-program-60.sh\n")
         print("STDOUT:")
@@ -1174,6 +1099,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         print("STDERR:")
         print(stderr.read().decode())
         client.close()
+        self.continuous_waveform_button.configure(fg_color="#1F6AA5")
+        self.standard_60_waveform_button.configure(fg_color="green")
 
     def hide_initial_i_o(self):
         self.dash_w_label.grid_remove()
