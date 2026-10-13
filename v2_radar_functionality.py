@@ -258,7 +258,23 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.status_entry.configure(font=("Arial", 14))
 
     def heat_map_fpga(self):
+        self.timestamp = datetime.now().strftime("%m%d_%H%M%S")
 
+        self.csv_thread = threading.Thread(
+            target=self.csv_writer_worker,
+            args=(self.timestamp,),
+            daemon=True
+        )
+        self.raw_csv_thread = threading.Thread(
+            target=self.raw_csv_writer_worker,
+            args=(self.timestamp,),
+            daemon=True
+        )
+
+        self.csv_thread.start()
+        self.raw_csv_thread.start()
+        self.csv_queue.put((0, 0, 0, 0))
+        #self.raw_csv_queue.put((0, 0, 0, 0))
         # try:
         #     print(f"-w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()}")
         # except:
@@ -297,20 +313,9 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
         self.status_var.set("Starting FPGA")
         self.status_entry.configure(fg_color="green", text_color = "black")
-        self.timestamp = datetime.now().strftime("%m%d_%H%M%S")
-        self.csv_thread = threading.Thread(
-            target=self.csv_writer_worker,
-            args=(self.timestamp,),
-            daemon=True
-        )
-        self.raw_csv_thread = threading.Thread(
-            target=self.raw_csv_writer_worker,
-            args=(self.timestamp,),
-            daemon=True
-        )
 
-        self.csv_thread.start()
-        self.raw_csv_thread.start()
+
+
         print("After connection to fl network")
         global is_fpga_running
         is_fpga_running = True
@@ -328,8 +333,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             time.sleep(.2)
             # 10/2
             channel.send(
-                f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} 
-                    -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()} -y 6.25 -V {1 / self.dash_w_var.get()} -C 0.05 -u\n""")
+                f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()} -y 6.25 -V {1 / self.dash_w_var.get()} -C 0.05 -u\n""")
             time.sleep(.2)
             print(f"FPGA RUNNING STATE: {is_fpga_running}")
 
@@ -465,6 +469,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             # print(f"Maximum buffer size: {max_buffer_length:,} characters")
             self.hide_fpga_output()
             self.replace_initial_i_o()
+            self.create_heatmap_button.grid()
 
     def capture_packets_run(self):
         Q_VALUE = 10000
