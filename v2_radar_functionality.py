@@ -273,7 +273,6 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
         self.csv_thread.start()
         self.raw_csv_thread.start()
-        self.csv_queue.put((0, 0, 0, 0))
         #self.raw_csv_queue.put((0, 0, 0, 0))
         # try:
         #     print(f"-w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()}")
