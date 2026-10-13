@@ -22,9 +22,9 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-class HeaderFrame(tk.Frame):
+class HeaderFrame(customtkinter.CTkFrame):
     def __init__(self, parent):
-        super().__init__(parent, background="gray85")
+        super().__init__(parent)
         self.header_image = None
         self.grid_propagate(False)
 
@@ -114,7 +114,7 @@ class HeaderFrame(tk.Frame):
     def find_other_radars(self):
         #TODO remove okay, re
         self.create_popup()
-        state.radars_found.update_dict({"DUMMY1": 111111111})
+        state.radars_found.update_dict({"sq-radar-4": "192.168.69.188"})
 
         nm = nmap.PortScanner()
         # host_ip = os.environ.get("HOST_IP")
@@ -122,8 +122,11 @@ class HeaderFrame(tk.Frame):
         #CHANGE NMAP SCAN BASED ON NETWORK STATE
         try:
             nm.scan(hosts=state.network_state, arguments="-sn", timeout=20)
+
         except:
             print("NETWORK ERROR")
+            self.connection_button.configure(fg_color='yellow', text_color="black")
+            self.popup.destroy()
             return
         host_ip = state.network_state
 
@@ -141,7 +144,7 @@ class HeaderFrame(tk.Frame):
             except:
                 print(f"No connection to {host}")
         self.update_radar_pulldown()
-        self.connection_button.configure(fg_color="green")
+        self.connection_button.configure(fg_color="green", text_color="white")
         self.popup.destroy()
         #input_warning = messagebox.showwarning("Warning", "Finished Searching Network")
 
