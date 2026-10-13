@@ -114,7 +114,7 @@ class HeaderFrame(customtkinter.CTkFrame):
     def find_other_radars(self):
         #TODO remove okay, re
         self.create_popup()
-        state.radars_found.update_dict({"sq-radar-4": "192.168.69.188"})
+        #state.radars_found.update_dict({"sq-radar-4": "192.168.69.188"})
 
         nm = nmap.PortScanner()
         # host_ip = os.environ.get("HOST_IP")
