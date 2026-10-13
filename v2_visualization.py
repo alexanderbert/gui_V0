@@ -68,8 +68,9 @@ class VisualizeFrame(customtkinter.CTkFrame):
         self.button_frame.rowconfigure(list(range(0,20)), weight=1)
         # self.button_frame.rowconfigure(0, weight=1)
         # self.button_frame.rowconfigure(1, weight=1)
-        self.commands_label = customtkinter.CTkLabel(self.button_frame, text="Commands", width=150, fg_color="dark gray", text_color="black", corner_radius=6)
-        self.commands_label.grid(column=2, row=0)
+        self.commands_label = customtkinter.CTkLabel(self.button_frame, text="Commands", width=150, fg_color = "#2B2B2B", text_color = "#E5A93B")
+        self.commands_label.grid(column=2, row=0, sticky="ew")
+        self.commands_label.configure(font=("Arial", 14, "underline"))
 
         self.create_plot_button = customtkinter.CTkButton(self.button_frame, text="Plot", width=150, command= lambda: self.create_plot())
         self.create_plot_button.grid(column=2, row=1)
@@ -98,6 +99,7 @@ class VisualizeFrame(customtkinter.CTkFrame):
             initialdir="./generatedBinFiles",
             title="Choose a folder",
             filetypes=[
+                #TODO SET UP DOTS ONE DOT VS TWO DOT
                 #("Compressed files", "*.tgz, *tar.gz"),
                 ("Compressed files", "*.tgz"),
                 #("Compressed files", "*tar.gz"),
