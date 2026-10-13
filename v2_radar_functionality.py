@@ -116,7 +116,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
 
         # infrastructure
-        self.run_heatmap_fpga_button = customtkinter.CTkButton(self.fpga_control_frame, text="FPGA DATA",
+        self.run_heatmap_fpga_button = customtkinter.CTkButton(self.fpga_control_frame, text="Collect Heatmap Data",
                                                                command=lambda: self.start_threading(self.heat_map_fpga))
         self.run_heatmap_fpga_button.grid(row=0, column=0)
         self.run_heatmap_fpga_button.configure(width=200, font=("Arial", 14))
@@ -250,12 +250,12 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
         self.setup_initial_input_outputs()
 
-        self.status_label = customtkinter.CTkLabel(self.output_frame, text="Status:")
-        self.status_label.grid(column=0, row=9, sticky="ew", pady=10)
+        self.status_label = customtkinter.CTkLabel(self.output_frame, text="Status:", justify="center")
+        self.status_label.grid(column=0, row=9, sticky="ew", pady=10, padx=20)
         self.status_label.configure(font=("Arial", 14))
-        self.status_entry = customtkinter.CTkEntry(self.output_frame, textvariable=self.status_var)
-        self.status_entry.grid(column=1, row=9, sticky="ew", pady=10)
-        self.status_entry.configure(font=("Arial", 14), justify="center")
+        self.status_entry = customtkinter.CTkEntry(self.output_frame, width = 200, textvariable=self.status_var, justify="center")
+        self.status_entry.grid(column=1, row=9, pady=10, sticky="w")
+        self.status_entry.configure(font=("Arial", 14))
 
     def heat_map_fpga(self):
 
@@ -281,6 +281,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             azDeegPerS = 360.0 / float(state.speed_value)
             elDegPerStep = float(state.increment_value) * 2.0
             expected_Q_Value = int((azDelta / azDeegPerS) * (elDelta / elDegPerStep) * 2.0 * state.S_FLAG_VALUE * 1.2)
+            state.expected_Q_Value = expected_Q_Value
             print(state.S_FLAG_VALUE, elDelta, azDeegPerS, elDegPerStep, expected_Q_Value)
         except:
             pass
@@ -739,7 +740,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                 ("All Files", "*.*")
             ]
         )
-
+        print(f"CHOSEN CSV{csv_file}")
+        #TODO DOES NOT WORK IF THE FILE IS CHOSEN IN A DIFFERENT DIRECTORY
         if not csv_file:
             self.replace_initial_i_o()
             self.heat_map_specific_show()
@@ -895,7 +897,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         ax.format_coord = fixed_width_coord
         ax.fmt_xdata = lambda x: f"{x:8.2f}"
         ax.fmt_ydata = lambda y: f"{y:8.2f}"
-
+        self.output_frame.grid(columnspan=2)
         self.canvas = FigureCanvasTkAgg(fig, self.output_frame)
         self.canvas.draw()
         # self.canvas.get_tk_widget().grid(column=0, columnspan=2, row=0, rowspan=4, sticky="nsew")
@@ -921,6 +923,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
     def close_heatmap(self):
         if self.canvas is not None:
+            self.output_frame.grid(columnspan=1)
             plt.close(self.canvas.figure)
             self.canvas.get_tk_widget().destroy()
 
@@ -977,84 +980,85 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.dash_nine_entry.grid()
         self.dash_nine_label.grid()
         self.close_heatmap_button.grid_remove()
+        self.command_list_label.grid()
 
 
     def setup_initial_input_outputs(self):
         self.dash_w_label = customtkinter.CTkLabel(self.output_frame, text="w | Pulse width(ms):")
-        self.dash_w_label.grid(column=0, row=0, sticky="ew")
+        self.dash_w_label.grid(column=0, row=0, sticky="e", padx=20)
         self.dash_w_label.configure(font=("Arial", 14))
-        self.dash_w_entry = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center",
+        self.dash_w_entry = customtkinter.CTkEntry(self.output_frame, width=100, font=("Arial", 14), justify="center",
                                      textvariable=self.dash_w_var)
-        self.dash_w_entry.grid(column=1, row=0, sticky="ew")
+        self.dash_w_entry.grid(column=1, row=0, sticky="w")
         self.dash_w_var.set(0.96)
 
         self.dash_s_label = customtkinter.CTkLabel(self.output_frame, text="s | Pulse setup(ms):")
-        self.dash_s_label.grid(column=0, row=1, sticky="ew")
+        self.dash_s_label.grid(column=0, row=1, sticky="e", padx=20)
         self.dash_s_label.configure(font=("Arial", 14))
-        self.dash_s_entry = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center",
+        self.dash_s_entry = customtkinter.CTkEntry(self.output_frame, width=100, font=("Arial", 14), justify="center",
                                      textvariable=self.dash_s_var)
-        self.dash_s_entry.grid(column=1, row=1, sticky="ew")
+        self.dash_s_entry.grid(column=1, row=1, sticky="w")
         self.dash_s_var.set(2.0)
 
         self.dash_e_label = customtkinter.CTkLabel(self.output_frame, text="e | Pulse Holdover(ms):")
-        self.dash_e_label.grid(column=0, row=2, sticky="nsew")
+        self.dash_e_label.grid(column=0, row=2, sticky="e", padx=20)
         self.dash_e_label.configure(font=("Arial", 14))
-        self.dash_e_entry = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center",
+        self.dash_e_entry = customtkinter.CTkEntry(self.output_frame, width=100, font=("Arial", 14), justify="center",
                                      textvariable=self.dash_e_var)
-        self.dash_e_entry.grid(column=1, row=2, sticky="ew")
+        self.dash_e_entry.grid(column=1, row=2, sticky="w")
         self.dash_e_var.set(2.0)
 
         self.dash_b_label = customtkinter.CTkLabel(self.output_frame, text="b | Rx Start:")
-        self.dash_b_label.grid(column=0, row=3, sticky="ew")
+        self.dash_b_label.grid(column=0, row=3, sticky="e", padx=20)
         self.dash_b_label.configure(font=("Arial", 14))
-        self.dash_b_entry = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center",
+        self.dash_b_entry = customtkinter.CTkEntry(self.output_frame,width=100, font=("Arial", 14), justify="center",
                                      textvariable=self.dash_b_var)
-        self.dash_b_entry.grid(column=1, row=3, sticky="ew")
+        self.dash_b_entry.grid(column=1, row=3, sticky="w")
         self.dash_b_var.set(0.0)
 
         self.dash_g_label = customtkinter.CTkLabel(self.output_frame, text="g | Rx stop:")
-        self.dash_g_label.grid(column=0, row=4, sticky="ew")
+        self.dash_g_label.grid(column=0, row=4, sticky="e",padx=20)
         self.dash_g_label.configure(font=("Arial", 14))
-        self.dash_g_entry = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center",
+        self.dash_g_entry = customtkinter.CTkEntry(self.output_frame, width=100,font=("Arial", 14), justify="center",
                                      textvariable=self.dash_g_var)
-        self.dash_g_entry.grid(column=1, row=4, sticky="ew")
+        self.dash_g_entry.grid(column=1, row=4, sticky="w")
         self.dash_g_var.set(-1.0)
 
         self.dash_capital_S_label = customtkinter.CTkLabel(self.output_frame, text="S | Pulse per s:")
-        self.dash_capital_S_label.grid(column=0, row=5, sticky="ew")
+        self.dash_capital_S_label.grid(column=0, row=5, sticky="e",padx=20)
         self.dash_capital_S_label.configure(font=("Arial", 14))
-        self.dash_capital_S_entry = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center",
+        self.dash_capital_S_entry = customtkinter.CTkEntry(self.output_frame, width=100,font=("Arial", 14), justify="center",
                                              textvariable=self.dash_capital_S_var)
-        self.dash_capital_S_entry.grid(column=1, row=5, sticky="ew")
+        self.dash_capital_S_entry.grid(column=1, row=5, sticky="w")
         self.dash_capital_S_var.set(300)
 
         self.dash_capital_D_label = customtkinter.CTkLabel(self.output_frame, text="D | Read Before:")
-        self.dash_capital_D_label.grid(column=0, row=6, sticky="ew")
+        self.dash_capital_D_label.grid(column=0, row=6, sticky="e", padx=20)
         self.dash_capital_D_label.configure(font=("Arial", 14))
-        self.dash_capital_D_entry = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center",
+        self.dash_capital_D_entry = customtkinter.CTkEntry(self.output_frame, width=100,font=("Arial", 14), justify="center",
                                              textvariable=self.dash_capital_D_var)
-        self.dash_capital_D_entry.grid(column=1, row=6, sticky="ew")
+        self.dash_capital_D_entry.grid(column=1, row=6, sticky="w")
         self.dash_capital_D_var.set(10)
 
         self.dash_eight_label = customtkinter.CTkLabel(self.output_frame, text="8 | Sample Start Offset:")
-        self.dash_eight_label.grid(column=0, row=7, sticky="ew")
+        self.dash_eight_label.grid(column=0, row=7, sticky="e", padx=20)
         self.dash_eight_label.configure(font=("Arial", 14))
-        self.dash_eight_entry = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center",
+        self.dash_eight_entry = customtkinter.CTkEntry(self.output_frame,width=100, font=("Arial", 14), justify="center",
                                          textvariable=self.dash_eight_var)
-        self.dash_eight_entry.grid(column=1, row=7, sticky="ew")
+        self.dash_eight_entry.grid(column=1, row=7, sticky="w")
         self.dash_eight_var.set(0)
 
         self.dash_nine_label = customtkinter.CTkLabel(self.output_frame, text="9 | Sampling Length:")
-        self.dash_nine_label.grid(column=0, row=8, sticky="ew")
+        self.dash_nine_label.grid(column=0, row=8, sticky="e", padx=20)
         self.dash_nine_label.configure(font=("Arial", 14))
-        self.dash_nine_entry = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center",
+        self.dash_nine_entry = customtkinter.CTkEntry(self.output_frame,width=100, font=("Arial", 14), justify="center",
                                         textvariable=self.dash_nine_var)
-        self.dash_nine_entry.grid(column=1, row=8, sticky="ew")
+        self.dash_nine_entry.grid(column=1, row=8, sticky="w")
         self.dash_nine_var.set(24)
 
-        self.wave_form_label = customtkinter.CTkLabel(self.fpga_control_frame, text="Wave Form Commands", fg_color = "#EAEAEA", text_color = "Black")
-        self.wave_form_label.grid(column=0, row=5)
-        self.wave_form_label.configure(font=("Arial", 14), width=200, corner_radius=6)
+        self.wave_form_label = customtkinter.CTkLabel(self.fpga_control_frame, text="Wave Form Commands", fg_color = "#2B2B2B", text_color = "#E5A93B")
+        self.wave_form_label.grid(column=0, row=5, sticky='ew')
+        self.wave_form_label.configure(font=("Arial", 14, "underline"))
 
         self.continuous_waveform_button = customtkinter.CTkButton(self.fpga_control_frame, width=10,
                                                                   text="Set Continuous Wave form",
@@ -1160,32 +1164,38 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
     def display_fpga_output(self):
         self.az_label = customtkinter.CTkLabel(self.output_frame, text="Az:")
-        self.az_label.grid(column=0, row=0, sticky="nsew")
+        self.az_label.grid(column=0, row=0, sticky="E", padx=20)
         self.az_label.configure(font=("Arial", 14))
         self.az_entry = customtkinter.CTkEntry(self.output_frame, textvariable=self.az_var)
-        self.az_entry.grid(column=1, row=0, sticky="nsew")
+        self.az_entry.grid(column=1, row=0, sticky="W")
         self.az_entry.configure(font=("Arial", 14), justify="center")
 
         self.el_label = customtkinter.CTkLabel(self.output_frame, text="El:")
-        self.el_label.grid(column=0, row=1, sticky="nsew")
+        self.el_label.grid(column=0, row=1, sticky="E", padx=20)
         self.el_label.configure(font=("Arial", 14))
         self.el_entry = customtkinter.CTkEntry(self.output_frame, textvariable=self.el_var)
-        self.el_entry.grid(column=1, row=1, sticky="nsew")
+        self.el_entry.grid(column=1, row=1, sticky="W")
         self.el_entry.configure(font=("Arial", 14), justify="center")
 
         self.x_power_label = customtkinter.CTkLabel(self.output_frame, text="X Power:")
-        self.x_power_label.grid(column=0, row=2, sticky="nsew")
+        self.x_power_label.grid(column=0, row=2, sticky="E", padx=20)
         self.x_power_label.configure(font=("Arial", 14))
         self.x_power_entry = customtkinter.CTkEntry(self.output_frame, textvariable=self.x_power_var)
-        self.x_power_entry.grid(column=1, row=2, sticky="nsew")
+        self.x_power_entry.grid(column=1, row=2, sticky="W")
         self.x_power_entry.configure(font=("Arial", 14), justify="center")
 
         self.y_power_label = customtkinter.CTkLabel(self.output_frame, text="Y Power:")
-        self.y_power_label.grid(column=0, row=3, sticky="nsew")
+        self.y_power_label.grid(column=0, row=3, sticky="E", padx=20)
         self.y_power_label.configure(font=("Arial", 14))
         self.y_power_entry = customtkinter.CTkEntry(self.output_frame, textvariable=self.y_power_var)
-        self.y_power_entry.grid(column=1, row=3, sticky="nsew")
+        self.y_power_entry.grid(column=1, row=3, sticky="W")
         self.y_power_entry.configure(font=("Arial", 14), justify="center")
+
+        self.command_list_label = customtkinter.CTkLabel(self.output_frame, text=f"""Command String: -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} 
+        -S {self.dash_capital_S_var.get()} -Q {state.expected_Q_VALUE_VALUE} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} 
+        -X -D {self.dash_capital_D_var.get()} -y 6.25 -V {(1 / self.dash_w_var.get()):.4f} -C 0.05 -u""")
+        self.command_list_label.grid(column=0,columnspan=2, row=12)
+        self.command_list_label.configure(font=("Arial", 14), justify="center")
 
     def hide_fpga_output(self):
         self.az_label.grid_remove()
@@ -1196,12 +1206,13 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.x_power_entry.grid_remove()
         self.y_power_label.grid_remove()
         self.y_power_entry.grid_remove()
+        self.command_list_label.grid_remove()
 
     def check_inputs(self, mode):
         print(state.starting_azimuth_value)
         try:
             print(
-                f"-w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()}")
+                f"-w {self.dash_w_var.get()} \t-s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()}")
         except:
             input_warning = messagebox.showwarning("Warning", "Inputs entered incorrectly.")
             return 1
