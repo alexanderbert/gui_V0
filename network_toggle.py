@@ -1,5 +1,6 @@
 import tkinter as tk
 
+import customtkinter
 from dotenv import load_dotenv
 
 import state
@@ -28,7 +29,7 @@ class NetworkSwitch(tk.Frame):
         self.circle_color = "#FFFFFF"
 
         # 1. Label for State A
-        self.lbl_a = tk.Label(self, text=label_a, font=("Helvetica", 12, "bold"), fg="#333333")
+        self.lbl_a = tk.Label(self, text=label_a, font=("Helvetica", 12, "bold"), fg="#999999")
         self.lbl_a.pack(side="left", padx=5)
 
         # 2. The Interactive Slider Canvas
@@ -37,7 +38,7 @@ class NetworkSwitch(tk.Frame):
         self.canvas.pack(side="left", padx=5)
 
         # 3. Label for State B
-        self.lbl_b = tk.Label(self, text=label_b, font=("Helvetica", 12), fg="#999999")
+        self.lbl_b = tk.Label(self, text=label_b, font=("Helvetica", 12), fg="#faf7f7")
         self.lbl_b.pack(side="left", padx=5)
 
         # Bind click event to the canvas
@@ -84,7 +85,7 @@ class NetworkSwitch(tk.Frame):
 
         # Update text styles to highlight the active side
         if self.state:
-            self.lbl_a.config(font=("Helvetica", 12), fg="#999999")
+            self.lbl_a.config(font=("Helvetica", 12), fg="#faf7f7")
             self.lbl_b.config(font=("Helvetica", 12, "bold"), fg="#333333")
             state.network_state = f"{os.environ.get('ETHERNET_IP')}"
             # self.network_state.set("Wifi")
@@ -92,7 +93,7 @@ class NetworkSwitch(tk.Frame):
             # print(state.network_state)
         else:
             self.lbl_a.config(font=("Helvetica", 12, "bold"), fg="#333333")
-            self.lbl_b.config(font=("Helvetica", 12), fg="#999999")
+            self.lbl_b.config(font=("Helvetica", 12), fg="#faf7f7")
             state.network_state = f"{os.environ.get('HOST_IP')}"
             # self.network_state.set("Ethernet")
             # state.network_state = "Ethernet"
