@@ -499,11 +499,11 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         print(f"sent: cd {os.environ['FPGAPATH']}")
 
         # CMD LINE 10/2
+        #TODO NEED NEW COMMAND LAPTOP
         channel.send(
-            f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} 
-            -S {self.dash_capital_S_var.get()} -k 8000 -Q {self.dash_capital_S_var.get() * 10} -q -c -y 6.25 -V {1 / self.dash_w_var.get()} -C 0.05 -u | socat - tcp:10.42.0.1:7777\n""")
+            f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -k 8000 -Q {self.dash_capital_S_var.get() * 10} -q -c -y 6.25 -V {1 / self.dash_w_var.get()} -C 0.05 -u | socat - tcp:10.42.0.1:7777\n""")
 
-        time.sleep(.5)
+        time.sleep(.1)
 
         num_pattern = re.compile(
             r"num:\s*(?P<num>\d+),\s*"
