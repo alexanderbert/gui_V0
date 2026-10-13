@@ -451,27 +451,27 @@ class CommandFrame(customtkinter.CTkFrame):
 
         #CHECK THIS FOR INPUT CHECK CONFUSION
 
-
-        output = ""
-        while not channel.exit_status_ready() or channel.recv_ready():
-            if channel.recv_ready():
-                data = channel.recv(8192).decode("iso-8859-1")
-                time.sleep(.1)
-                channel.send("fg\n")
-                time.sleep(.1)
-                output += data
-                print(f"INSIDE START: {repr(output)}")
-                if "MUST HOME" in data or "homed?" in output:
-                    self.output_frame.output_entry.insert("end", "Use Homing Mode")
-                    self.input_frame.positioner_status_label.configure(text="Radar must be Homed", fg_color="orange")
-                    print("SUSPEND/BACKGROUNDING CAT AT HOMING MODE CHECK IN START SCAN")
-                    channel.send(f"\x1a")
-                    channel.send("bg\n")
-                    channel.close()
-                    client.close()
-                    return 1
-            else:
-                time.sleep(0.01)
+        #TODO ERROR CHECK NOT WORKING
+        # output = ""
+        # while not channel.exit_status_ready() or channel.recv_ready():
+        #     if channel.recv_ready():
+        #         data = channel.recv(8192).decode("iso-8859-1")
+        #         time.sleep(.1)
+        #         channel.send("fg\n")
+        #         time.sleep(.1)
+        #         output += data
+        #         print(f"INSIDE START: {repr(output)}")
+        #         if "MUST HOME" in data or "homed?" in output:
+        #             self.output_frame.output_entry.insert("end", "Use Homing Mode")
+        #             self.input_frame.positioner_status_label.configure(text="Radar must be Homed", fg_color="orange")
+        #             print("SUSPEND/BACKGROUNDING CAT AT HOMING MODE CHECK IN START SCAN")
+        #             channel.send(f"\x1a")
+        #             channel.send("bg\n")
+        #             channel.close()
+        #             client.close()
+        #             return 1
+        #     else:
+        #         time.sleep(0.01)
         self.button_mode("disabled")
         self.input_frame.positioner_status_label.configure(text=f"Running {state.positioner_mode_value} on {state.radar_choice.get()}", fg_color="green", text_color="white")
 
