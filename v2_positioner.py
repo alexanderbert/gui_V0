@@ -432,7 +432,8 @@ class CommandFrame(customtkinter.CTkFrame):
         channel.send(f"cat {ttyf} &\n")
         # channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         # channel.send(f"cat {ttyf} &\n")
-        time.sleep(.2)
+        time.sleep(.1)
+
 
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
@@ -448,7 +449,9 @@ class CommandFrame(customtkinter.CTkFrame):
                     echo scan start > {ttyf}\n
                     """)
         # print("FOREGROUNDING CAT")
-
+        time.sleep(.1)
+        print("FOREGROUNDING CAT IN SET HOME")
+        channel.send("fg\n")
         #CHECK THIS FOR INPUT CHECK CONFUSION
 
         #TODO ERROR CHECK NOT WORKING
