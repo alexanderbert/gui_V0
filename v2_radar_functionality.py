@@ -102,7 +102,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.radar_control_frame.grid_columnconfigure(0, weight=1)
         self.radar_control_frame.grid_rowconfigure(list(range(0, 4)), weight=1)
 
-        self.output_frame = customtkinter.CTkFrame(self, fg_color="#2B2B2B")
+        self.output_frame = customtkinter.CTkFrame(self)
         self.output_frame.grid(column=0, row=0, rowspan=2, sticky="nsew")
         self.output_frame.grid_columnconfigure(list(range(0, 3)), weight=2)
         # self.output_frame.grid_columnconfigure(4, weight=1)
