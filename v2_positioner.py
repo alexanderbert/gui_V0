@@ -1,3 +1,4 @@
+import re
 from concurrent.futures import thread
 from tkinter import messagebox
 
@@ -436,12 +437,8 @@ class CommandFrame(customtkinter.CTkFrame):
         # NEW TRY
         ttyf = "/dev/ttyUSB1"
         # channel.send(f"cat {ttyf} &\n")
-        # channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
-        # channel.send(f"cat {ttyf} &\n")
-        # time.sleep(.1)
-        # ttyf = "/dev/ttyUSB1"
-        # channel.send(f"cat {ttyf} &\n")
-        # time.sleep(.1)
+        # time.sleep(0.1)
+
 
 
 
@@ -517,31 +514,35 @@ class CommandFrame(customtkinter.CTkFrame):
         self.continuous_output_list = []
         client, channel = self.fl_network_mode()
 
-        output = ""
+        buffer = ""
         ttyf = "/dev/ttyUSB1"
         channel.send(f"cat {ttyf} &\n")
         time.sleep(.1)
         channel.send("fg\n")
         time.sleep(.1)
         marker_found = False
-        self.output_queue.put("STARTING OUTPUT FROM RADAR")
+        self.output_queue.put("STARTING OUTPUT FROM RADAR\n")
         while not KILL_RUN or channel.exit_status_ready() or channel.recv_ready():
             if channel.recv_ready():
+                print(
+                    f"KILL_RUN={KILL_RUN}, "
+                    f"exit_ready={channel.exit_status_ready()}, "
+                    f"recv_ready={channel.recv_ready()}",
+                    flush=True
+                )
                 data = channel.recv(1024).decode("iso-8859-1")
-                # updated_data = data.split("/dev/ttyUSB1")
-                # updated_data = updated_data[2].replace("\r", " ")
-                updated_data = data.replace("\r", " ")
-                for line in updated_data:
-                    if "[0m" in line:
-                        try:
-                            line = line.split("[0m")[2]
-                            self.output_queue.put(line)
-                        except:
-                            self.output_queue.put(line)
-                #self.output_queue.put(updated_data)
-                output += data
-                print(f"INSIDE START: {repr(output)}")
-                if "MUST HOME" in output or "homed?" in output or "TRACKING ERROR WARNING" in output:
+                print(f"DATA AFTER FRESH RECEIVE: {repr(data)}")
+                buffer += data
+                output = buffer.split("\r\r\n")
+                buffer = output.pop()
+
+                for line in output:
+                    print(f"LINE IN OUTPUT: {line}")
+
+                    self.clean_output_data(line)
+
+                print(f"INSIDE START: {repr(buffer)}")
+                if "MUST HOME" in buffer or "homed?" in buffer or "TRACKING ERROR WARNING" in buffer:
                     self.output_frame.output_entry.insert("end", "Use Homing Mode")
                     self.input_frame.positioner_status_label.configure(text="Radar must be Homed", fg_color="orange")
                     print("SUSPEND/BACKGROUNDING CAT AT HOMING MODE CHECK IN START SCAN")
@@ -550,19 +551,12 @@ class CommandFrame(customtkinter.CTkFrame):
                     channel.close()
                     client.close()
                     return 1
-
-                # if "OK status" in output:
-                #     lines = output.split("OK status")
-                #     output = lines.pop()
-                #     for line in lines:
-                #         self.output_queue.put(line)
-
-
-
+            elif channel.exit_status_ready():
+                print(f"EXIT STATUS READY = {channel.exit_status_ready()} ")
             else:
                 time.sleep(0.01)
-
-        print("ENDING CONTINOUS OUTPUT")
+        self.output_frame.output_entry.insert("end", "Channel Closed")
+        print("ENDING CONTINUOUS OUTPUT")
         time.sleep(0.01)
         channel.send(f"\x1a")
         time.sleep(0.01)
@@ -571,7 +565,18 @@ class CommandFrame(customtkinter.CTkFrame):
         channel.close()
         client.close()
 
+    def clean_output_data(self, data):
+        line = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', data)
+        print(f"LINE IN CLEAN OUTPUT DATA OUTPUT: {line}")
+        self.output_queue.put(f"{line.strip()}\n")
+
+        #TODO CAN ATTEMPT THIS AFTER SEEING HOW RHI RHISQUARE ARE PRINTED...
+        # if re.match(r'^\d+\s+\[SCAN (?:PPI|COM)\]', message):
+        #     cleaned_messages.append(message)
+
+
     def update_output_fields(self):
+        current_tag = "default"
         batch = []
         max_items = 500
 
@@ -637,7 +642,7 @@ class CommandFrame(customtkinter.CTkFrame):
         if run_status_variable == 1:
             state.positioner_output_text.set(f"Stop Command fail, retry")
         else:
-            self.input_frame.positioner_status_label.configure(text="Stopped", fg_color="gray", text_color="white")
+            self.input_frame.positioner_status_label.configure(text="Stopped", fg_color="red", text_color="white")
             state.positioner_output_text.set("Scan stopped\n")
 
         self.button_mode("normal")
