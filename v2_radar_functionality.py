@@ -46,6 +46,7 @@ is_fpga_running = False
 class RadarFunctionality2(customtkinter.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
+        self.command_list_label = None
         self.dash_w_label = None
         self.dash_w_entry = None
         self.dash_s_label = None
@@ -479,6 +480,13 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                                             maximum=Q_VALUE)
         self.progress_bar.grid(column=0, columnspan=2, row=5, sticky="nsew")
         self.progress_bar['value'] = 0
+        #TODO SEE IF THIS EXECUTES CORRECTLY
+        self.command_list_label = customtkinter.CTkLabel(self.output_frame,
+                                                         text=f"""Command String: -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} 
+        -S {self.dash_capital_S_var.get()} -Q {state.expected_Q_VALUE_VALUE} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} 
+        -X -D {self.dash_capital_D_var.get()} -y 6.25 -V {(1 / self.dash_w_var.get()):.4f} -C 0.05 -u""")
+        self.command_list_label.grid(column=0, columnspan=2, row=12)
+        self.command_list_label.configure(font=("Arial", 14), justify="center")
 
         self.status_var.set("Capture Run Started")
         self.status_entry.configure(fg_color="green", text_color="white")
@@ -501,7 +509,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         # CMD LINE 10/2
         #TODO NEED NEW COMMAND LAPTOP
         channel.send(
-            f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -k 8000 -Q {self.dash_capital_S_var.get() * 10} -q -c -y 6.25 -V {1 / self.dash_w_var.get()} -C 0.05 -u | socat - tcp:10.42.0.1:7777\n""")
+            f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -k 8000 -Q 10000 -q -c -y 6.25 -V {1 / self.dash_w_var.get()} -C 0.05 -u | socat - tcp:10.42.0.1:7777\n""")
 
         time.sleep(.1)
 
@@ -535,6 +543,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.progress_bar_stage = 0
         self.progress_bar.destroy()
         self.replace_initial_i_o()
+        self.command_list_label.grid_remove()
 
     def update_progressbar(self, value):
         '''
@@ -564,6 +573,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             self.create_heatmap_button.grid()
         if self.progress_bar is not None:
             self.progress_bar.destroy()
+        if self.command_list_label is not None:
+            self.command_list_label.grid_remove()
         self.replace_initial_i_o()
         global is_fpga_running
         is_fpga_running = False
