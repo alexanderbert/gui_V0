@@ -1,3 +1,4 @@
+from concurrent.futures import thread
 from tkinter import messagebox
 
 import customtkinter
@@ -7,9 +8,9 @@ import state
 import threading
 import tkinter as tk
 import time
-
+import queue
 from state import ending_azimuth_value
-
+KILL_RUN = False
 
 class Positioner2Frame(customtkinter.CTkFrame):
     def __init__(self, parent):
@@ -59,8 +60,6 @@ class InputFrame(customtkinter.CTkFrame):
         super().__init__(parent)
         self.columnconfigure(list(range(0,8)), weight=1)
         self.grid_propagate(False)
-
-
 
         self.start_azimuth_var = tk.StringVar()
         self.start_azimuth_var.trace_add("write", self.on_change_start_az)
@@ -198,6 +197,11 @@ class InputFrame(customtkinter.CTkFrame):
 class CommandFrame(customtkinter.CTkFrame):
     def __init__(self, parent, input_frame, output_frame):
         super().__init__(parent)
+        # self.continuous_output_list = None
+
+        self.output_queue = queue.Queue()
+        self.after(20, self.update_output_fields)
+
         self.input_frame = input_frame
         self.output_frame = output_frame
         self.columnconfigure(list(range(0,8)), weight=1)
@@ -239,6 +243,8 @@ class CommandFrame(customtkinter.CTkFrame):
 
         self.reset_button = customtkinter.CTkButton(self, text="Reset", command=lambda: self.start_thread(self.reset_positioner))
         self.reset_button.pack(side=tk.TOP, pady=10)
+
+        self.update_output_fields()
 
     def create_ssh_client(self):
         client = paramiko.client.SSHClient()
@@ -429,10 +435,15 @@ class CommandFrame(customtkinter.CTkFrame):
             return 1
         # NEW TRY
         ttyf = "/dev/ttyUSB1"
-        channel.send(f"cat {ttyf} &\n")
+        # channel.send(f"cat {ttyf} &\n")
         # channel.send(f"stty -F {ttyf} 115200 raw -hupcl -onlcr -echo\n")
         # channel.send(f"cat {ttyf} &\n")
-        time.sleep(.1)
+        # time.sleep(.1)
+        # ttyf = "/dev/ttyUSB1"
+        # channel.send(f"cat {ttyf} &\n")
+        # time.sleep(.1)
+
+
 
 
         channel.send(f"""
@@ -447,12 +458,22 @@ class CommandFrame(customtkinter.CTkFrame):
                     echo scan set repeat {state.repeat_value} > {ttyf}
                     echo scan set slipdetect {state.slip_detect_value} > {ttyf}
                     echo scan start > {ttyf}\n
-                    """)
+        #             """)
+
+        # channel.send(f"fg\n")
+        # output = ""
+        # while channel.recv_ready():
+        #     data = channel.recv(8192).decode("iso-8859-1")
+        #     output += data
+
+
+        # channel.send("fg\n")
         # print("FOREGROUNDING CAT")
         time.sleep(.1)
-        print("FOREGROUNDING CAT IN SET HOME")
-        channel.send("fg\n")
+        # print("FOREGROUNDING CAT IN SET HOME")
+        # channel.send("fg\n")
         #CHECK THIS FOR INPUT CHECK CONFUSION
+        self.start_thread(self.continuous_output)
 
         #TODO ERROR CHECK NOT WORKING
         # output = ""
@@ -482,15 +503,94 @@ class CommandFrame(customtkinter.CTkFrame):
         # if run_status != 1:
         #     self.input_frame.positioner_status_label.configure(text="Error: Start Scan Failed", fg_color="yellow", text_color="black")
         #     self.button_mode("normal")
-        print("SUSPEND/BACKGROUNDING CAT AT END OF START SCAN")
-        channel.send(f"\x1a")
-        time.sleep(.1)
-        channel.send("bg\n")
-        time.sleep(.1)
+        # print("SUSPEND/BACKGROUNDING CAT AT END OF START SCAN")
+        # channel.send(f"\x1a")
+        # time.sleep(.1)
+        # channel.send("bg\n")
+        # time.sleep(.1)
         channel.close()
         client.close()
-        run_status = self.get_positioner_status()
-        return run_status
+        #run_status = self.get_positioner_status()
+        return
+
+    def continuous_output(self):
+        self.continuous_output_list = []
+        client, channel = self.fl_network_mode()
+
+        output = ""
+        ttyf = "/dev/ttyUSB1"
+        channel.send(f"cat {ttyf} &\n")
+        time.sleep(.1)
+        channel.send("fg\n")
+        time.sleep(.1)
+        marker_found = False
+        self.output_queue.put("STARTING OUTPUT FROM RADAR")
+        while not KILL_RUN or channel.exit_status_ready() or channel.recv_ready():
+            if channel.recv_ready():
+                data = channel.recv(1024).decode("iso-8859-1")
+                # updated_data = data.split("/dev/ttyUSB1")
+                # updated_data = updated_data[2].replace("\r", " ")
+                updated_data = data.replace("\r", " ")
+                for line in updated_data:
+                    if "[0m" in line:
+                        try:
+                            line = line.split("[0m")[2]
+                            self.output_queue.put(line)
+                        except:
+                            self.output_queue.put(line)
+                #self.output_queue.put(updated_data)
+                output += data
+                print(f"INSIDE START: {repr(output)}")
+                if "MUST HOME" in output or "homed?" in output or "TRACKING ERROR WARNING" in output:
+                    self.output_frame.output_entry.insert("end", "Use Homing Mode")
+                    self.input_frame.positioner_status_label.configure(text="Radar must be Homed", fg_color="orange")
+                    print("SUSPEND/BACKGROUNDING CAT AT HOMING MODE CHECK IN START SCAN")
+                    channel.send(f"\x1a")
+                    channel.send("bg\n")
+                    channel.close()
+                    client.close()
+                    return 1
+
+                # if "OK status" in output:
+                #     lines = output.split("OK status")
+                #     output = lines.pop()
+                #     for line in lines:
+                #         self.output_queue.put(line)
+
+
+
+            else:
+                time.sleep(0.01)
+
+        print("ENDING CONTINOUS OUTPUT")
+        time.sleep(0.01)
+        channel.send(f"\x1a")
+        time.sleep(0.01)
+        channel.send("bg\n")
+        time.sleep(0.01)
+        channel.close()
+        client.close()
+
+    def update_output_fields(self):
+        batch = []
+        max_items = 500
+
+        for _ in range(max_items):
+            try:
+                batch.append(self.output_queue.get_nowait())
+            except queue.Empty:
+                break
+        if batch:
+            output = "".join(batch)
+
+            self.output_frame.output_entry.insert("end", output)
+            self.output_frame.output_entry.see("end")
+
+        # if self.continuous_output_list is not None:
+        #     output = self.continuous_output_list
+        #     self.output_frame.output_entry.insert("end", output)
+        #     self.output_frame.output_entry.see("end")
+        self.after(20, self.update_output_fields)
 
 
 
@@ -501,8 +601,13 @@ class CommandFrame(customtkinter.CTkFrame):
         instead of putting up another status, put up a stopping alert
         :return:
         '''
+        global KILL_RUN
+        KILL_RUN = True
+        self.continuous_output_list = None
+
         print("STOPPING SCAN")
-        self.output_frame.output_entry.set("Executing Stop Command\nPlease Standby for positioner\nto finish rotation\n")
+        self.output_frame.output_entry.delete("0.0", "end")
+        self.output_frame.output_entry.insert("end", "Executing Stop Command\nPlease Standby for positioner\nto finish rotation\n")
         try:
             client, channel = self.fl_network_mode()
         except:
@@ -517,7 +622,7 @@ class CommandFrame(customtkinter.CTkFrame):
 
         for i in range(1, 301):
             run_status_variable = self.get_positioner_status()
-            if run_status_variable != 1:
+            if run_status_variable == 0:
                 print("WITHIN IF CONDITION OF STOP SCAN")
                 break
             else:
@@ -1030,7 +1135,7 @@ class CommandFrame(customtkinter.CTkFrame):
                     scan_mode_variable = line.split("Mode:")[1]
                 if "Run:" in line:
                     run_status_variable = line.split("Run:")[1]
-                    run_status = int(run_status_variable.strip())
+                    run_status_variable = int(run_status_variable.strip())
                 if "Start Az:" in line:
                     start_az_variable = line.split("Start Az:")[1]
                 if "End Az:" in line:
@@ -1131,5 +1236,3 @@ class CommandFrame(customtkinter.CTkFrame):
             self.output_frame.output_entry.configure(state="disabled")
             print("RUN STATUS VARIABLE: ", run_status_variable)
             return run_status_variable
-
-
