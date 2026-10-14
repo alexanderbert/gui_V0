@@ -436,12 +436,9 @@ class CommandFrame(customtkinter.CTkFrame):
             return 1
         # NEW TRY
         ttyf = "/dev/ttyUSB1"
-        # channel.send(f"cat {ttyf} &\n")
-        # time.sleep(0.1)
-
-
-
-
+        #TODO SET UP CAT FOR CONFIRMATION CHECK
+        channel.send(f"cat {ttyf} &\n")
+        time.sleep(0.1)
 
         channel.send(f"""
                     stty -F {ttyf} 115200 raw -hupcl -onlcr -echo
@@ -456,12 +453,24 @@ class CommandFrame(customtkinter.CTkFrame):
                     echo scan set slipdetect {state.slip_detect_value} > {ttyf}
                     echo scan start > {ttyf}\n
         #             """)
-
-        # channel.send(f"fg\n")
-        # output = ""
-        # while channel.recv_ready():
-        #     data = channel.recv(8192).decode("iso-8859-1")
-        #     output += data
+        start_successful = False
+        #TODO CHECK FOR CONFIRMATION
+        #OK Starting {state.positioner_mode_value} scan
+        #Device or resource busy\r\nfg\r\n-bash: fg: job has terminated\r\n[1]+  Exit 1
+        #OK start
+        channel.send("fg\n")
+        output = ""
+        while channel.recv_ready():
+            data = channel.recv(1024).decode("iso-8859-1")
+            output += data
+            print(output)
+            if "OK Starting" in output or "OK start" in output:
+                print("OK FOUND")
+                start_successful = True
+                break
+            elif "busy" in output or "terminated" in output or "ERROR" in output:
+                print("START FAILED")
+                break
 
 
         # channel.send("fg\n")
@@ -470,7 +479,17 @@ class CommandFrame(customtkinter.CTkFrame):
         # print("FOREGROUNDING CAT IN SET HOME")
         # channel.send("fg\n")
         #CHECK THIS FOR INPUT CHECK CONFUSION
-        self.start_thread(self.continuous_output)
+        if start_successful:
+            self.start_thread(self.continuous_output)
+            self.button_mode("disabled")
+            self.input_frame.positioner_status_label.configure(
+                text=f"Running {state.positioner_mode_value} on {state.radar_choice.get()}", fg_color="green",
+                text_color="white")
+        else:
+            self.input_frame.positioner_status_label.configure(
+                text=f"Error", fg_color="yellow",
+                text_color="black")
+
 
         #TODO ERROR CHECK NOT WORKING
         # output = ""
@@ -493,18 +512,17 @@ class CommandFrame(customtkinter.CTkFrame):
         #             return 1
         #     else:
         #         time.sleep(0.01)
-        self.button_mode("disabled")
-        self.input_frame.positioner_status_label.configure(text=f"Running {state.positioner_mode_value} on {state.radar_choice.get()}", fg_color="green", text_color="white")
+
 
         # run_status = self.get_positioner_status()
         # if run_status != 1:
         #     self.input_frame.positioner_status_label.configure(text="Error: Start Scan Failed", fg_color="yellow", text_color="black")
         #     self.button_mode("normal")
         # print("SUSPEND/BACKGROUNDING CAT AT END OF START SCAN")
-        # channel.send(f"\x1a")
-        # time.sleep(.1)
-        # channel.send("bg\n")
-        # time.sleep(.1)
+        channel.send(f"\x1a")
+        time.sleep(.1)
+        channel.send("bg\n")
+        time.sleep(.1)
         channel.close()
         client.close()
         #run_status = self.get_positioner_status()
@@ -520,8 +538,9 @@ class CommandFrame(customtkinter.CTkFrame):
         time.sleep(.1)
         channel.send("fg\n")
         time.sleep(.1)
-        marker_found = False
-        self.output_queue.put("STARTING OUTPUT FROM RADAR\n")
+
+        print("----------------STARTING CONTINUOUS OUTPUT ---------------------")
+        self.output_frame.output_entry.insert("end", "Starting Output from Radar")
         while not KILL_RUN or channel.exit_status_ready() or channel.recv_ready():
             if channel.recv_ready():
                 print(
@@ -577,6 +596,9 @@ class CommandFrame(customtkinter.CTkFrame):
 
     def update_output_fields(self):
         current_tag = "default"
+        self.output_frame.output_entry.tag_config("cyan", foreground="cyan")
+        self.output_frame.output_entry.tag_config("magenta", foreground="magenta")
+        self.output_frame.output_entry.tag_config("default", foreground="white")
         batch = []
         max_items = 500
 
@@ -587,14 +609,31 @@ class CommandFrame(customtkinter.CTkFrame):
                 break
         if batch:
             output = "".join(batch)
-
+            print(f"OUTPUT AFTER BATCHING: {output} BATCH END")
             self.output_frame.output_entry.insert("end", output)
             self.output_frame.output_entry.see("end")
 
-        # if self.continuous_output_list is not None:
-        #     output = self.continuous_output_list
-        #     self.output_frame.output_entry.insert("end", output)
-        #     self.output_frame.output_entry.see("end")
+            #TODO ATTEMPT AT COLOR CODING, WORKS BUT HAS LIST INDEX OUT OF RANGE SOMETIMES
+            # try:
+            #     if output.count("\n") >= 2:
+            #         lines = output.split("\n")
+            #         for line in lines:
+            #             chunks = line.split(" ", 3)
+            #             self.output_frame.output_entry.insert("end", chunks[0] + " ", "cyan")
+            #             self.output_frame.output_entry.insert("end", chunks[1] + " ", "magenta")
+            #             self.output_frame.output_entry.insert("end", chunks[2] + " ", "magenta")
+            #             self.output_frame.output_entry.insert("end", chunks[3] + "\n", "white")
+            #     else:
+            #         chunks = output.split(" ", 3)
+            #         self.output_frame.output_entry.insert("end", chunks[0] + " ", "cyan")
+            #         self.output_frame.output_entry.insert("end", chunks[1] + " ", "magenta")
+            #         self.output_frame.output_entry.insert("end", chunks[2] + " ", "magenta")
+            #         self.output_frame.output_entry.insert("end", chunks[3] + "\n", "white")
+            # except Exception as e:
+            #     print(e)
+            # print(f"OUTPUT AFTER BATCHING: {output} OUTPUT BATCH END")
+            # self.output_frame.output_entry.see("end")
+
         self.after(20, self.update_output_fields)
 
 
