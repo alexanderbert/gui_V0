@@ -459,17 +459,19 @@ class CommandFrame(customtkinter.CTkFrame):
         #Device or resource busy\r\nfg\r\n-bash: fg: job has terminated\r\n[1]+  Exit 1
         #OK start
         channel.send("fg\n")
+        time.sleep(.5)
         output = ""
         while channel.recv_ready():
             data = channel.recv(1024).decode("iso-8859-1")
             output += data
             print(output)
-            if "OK Starting" in output or "OK start" in output:
+
+            if "busy" in output or "terminated" in output or "ERROR" in output:
+                print("START FAILED")
+                break
+            elif "OK Starting" in output or "OK start" in output:
                 print("OK FOUND")
                 start_successful = True
-                break
-            elif "busy" in output or "terminated" in output or "ERROR" in output:
-                print("START FAILED")
                 break
 
 
@@ -612,6 +614,27 @@ class CommandFrame(customtkinter.CTkFrame):
             print(f"OUTPUT AFTER BATCHING: {output} BATCH END")
             self.output_frame.output_entry.insert("end", output)
             self.output_frame.output_entry.see("end")
+            #TODO ANOTHER ATTEMPT AT COLOR CODING
+            # try:
+            #     if output.count("\n") == 0:
+            #         self.output_frame.output_entry.insert("end", output)
+            #     elif output.count("\n") == 1:
+            #         chunks = output.split(" ", 3)
+            #         self.output_frame.output_entry.insert("end", chunks[0] + " ", "cyan")
+            #         self.output_frame.output_entry.insert("end", chunks[1] + " ", "magenta")
+            #         self.output_frame.output_entry.insert("end", chunks[2] + " ", "magenta")
+            #         self.output_frame.output_entry.insert("end", chunks[3] + "\n", "white")
+            #     elif output.count("\n") >= 2:
+            #         lines = output.split("\n")
+            #         for line in lines:
+            #             chunks = line.split(" ", 3)
+            #             self.output_frame.output_entry.insert("end", chunks[0] + " ", "cyan")
+            #             self.output_frame.output_entry.insert("end", chunks[1] + " ", "magenta")
+            #             self.output_frame.output_entry.insert("end", chunks[2] + " ", "magenta")
+            #             self.output_frame.output_entry.insert("end", chunks[3] + "\n", "white")
+            # except Exception as e:
+            #     print(f"ERROR: {e}")
+            # self.output_frame.output_entry.see("end")
 
             #TODO ATTEMPT AT COLOR CODING, WORKS BUT HAS LIST INDEX OUT OF RANGE SOMETIMES
             # try:
