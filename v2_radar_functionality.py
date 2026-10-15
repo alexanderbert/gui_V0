@@ -509,8 +509,10 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         # CMD LINE 10/2
         #TODO NEED NEW COMMAND LAPTOP
         channel.send(
-            f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -k 8000 -Q 10000 -q -c -y 6.25 -V {1 / self.dash_w_var.get()} -C 0.05 -u | socat - tcp:10.42.0.1:7777\n""")
-
+            #f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -k 8000 -Q 10000 -q -c -y 6.25 -V {1 / self.dash_w_var.get()} -C 0.05 -u | socat - tcp:10.42.0.1:7777\n""")
+        # EXAMPLE STREAM'./fpgaStream -S 300 -D 10 -u -w 0.96 -s 2.0 -e 2.0 -b 0.0 -g -1.0 -y 5.8 -V 6.3 -C 0.1 -k 8000 -q -Q 3000 -n'
+            f'./fpgaStream -S {self.dash_capital_S_var.get()} -D {self.dash_capital_D_var.get()} -u -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -y 5.8 -V {1 / self.dash_w_var.get()} -C 0.1 -k 10000 -q -Q {10 * self.dash_capital_S_var.get()} -n | socat - tcp:10.42.0.1:7777\n '
+        )
         time.sleep(.1)
 
         num_pattern = re.compile(
@@ -1104,6 +1106,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         print(stdout.read().decode())
         print("STDERR:")
         print(stderr.read().decode())
+        channel.close()
         client.close()
         self.continuous_waveform_button.configure(fg_color="green")
         self.standard_60_waveform_button.configure(fg_color="#1F6AA5")
@@ -1117,6 +1120,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
         print("STDERR:")
         print(stderr.read().decode())
+        channel.close()
         client.close()
         self.continuous_waveform_button.configure(fg_color="#1F6AA5")
         self.standard_60_waveform_button.configure(fg_color="green")
