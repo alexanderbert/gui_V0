@@ -255,7 +255,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.setup_initial_input_outputs()
 
         self.status_label = customtkinter.CTkLabel(self.output_frame, text="Status:", justify="center")
-        self.status_label.grid(column=0, row=15, sticky="ew", pady=10, padx=20)
+        self.status_label.grid(column=0, row=15, sticky="e", pady=10, padx=20)
         self.status_label.configure(font=("Arial", 14))
         self.status_entry = customtkinter.CTkEntry(self.output_frame, width = 200, textvariable=self.status_var, justify="center")
         self.status_entry.grid(column=1, row=15, pady=10, sticky="w")
@@ -1086,7 +1086,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.dash_capital_V_label = customtkinter.CTkLabel(self.output_frame, text="V | FIR Override:")
         self.dash_capital_V_label.grid(column=0, row=10, sticky="e", padx=20)
         self.dash_capital_V_label.configure(font=("Arial", 14))
-        self.dash_capital_V_entry = customtkinter.CTkLabel(self.output_frame, width=100, font=("Arial", 14), justify="center",textvariable=self.dash_capital_V_var)
+        self.dash_capital_V_entry = customtkinter.CTkEntry(self.output_frame, width=100, font=("Arial", 14), justify="center",textvariable=self.dash_capital_V_var)
         self.dash_capital_V_entry.grid(column=1, row=10, sticky="w")
         self.dash_capital_V_var.set(0)
 
