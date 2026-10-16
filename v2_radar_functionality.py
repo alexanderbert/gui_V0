@@ -84,6 +84,9 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.dash_eight_var = tk.IntVar()
         self.dash_nine_var = tk.IntVar()
         self.dash_capital_D_var = tk.IntVar()
+        self.dash_y_var = tk.DoubleVar()
+        self.dash_capital_V_var = tk.DoubleVar()
+        self.dash_capital_C_var = tk.DoubleVar()
 
         self.columnconfigure(0, weight=10)
         self.columnconfigure(1, weight=10)
@@ -1073,6 +1076,27 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.dash_nine_entry.grid(column=1, row=8, sticky="w")
         self.dash_nine_var.set(24)
 
+        self.dash_y_label = customtkinter.CTkLabel(self.output_frame, text="y | FIR center frequency:")
+        self.dash_y_label.grid(column=0, row=9, sticky="e", padx=20)
+        self.dash_y_label.configure(font=("Arial", 14))
+        self.dash_y_entry = customtkinter.CTkEntry(self.output_frame, width=100, font=("Arial", 14), justify="center", textvariable=self.dash_y_var)
+        self.dash_y_entry.grid(column=1, row=9, sticky="w")
+        self.dash_y_var.set(0)
+
+        self.dash_capital_V_label = customtkinter.CTkLabel(self.output_frame, text="V | FIR Override:")
+        self.dash_capital_V_label.grid(column=0, row=10, sticky="e", padx=20)
+        self.dash_capital_V_label.configure(font=("Arial", 14))
+        self.dash_capital_V_entry = customtkinter.CTkLabel(self.output_frame, width=100, font=("Arial", 14), justify="center",textvariable=self.dash_capital_V_var)
+        self.dash_capital_V_entry.grid(column=1, row=10, sticky="w")
+        self.dash_capital_V_var.set(0)
+
+        self.dash_capital_C_label = customtkinter.CTkLabel(self.output_frame, text="C | FIR Parks width:")
+        self.dash_capital_C_label.grid(column=0, row=11, sticky="e", padx=20)
+        self.dash_capital_C_label.configure(font=("Arial", 14))
+        self.dash_capital_C_entry = customtkinter.CTkEntry(self.output_frame, width=100, font=("Arial", 14), justify="center",textvariable=self.dash_capital_C_var)
+        self.dash_capital_C_entry.grid(column=1, row=11, sticky="w")
+        self.dash_capital_C_var.set(0)
+
         self.wave_form_label = customtkinter.CTkLabel(self.fpga_control_frame, text="Wave Form Commands", fg_color = "#2B2B2B", text_color = "#E5A93B")
         self.wave_form_label.grid(column=0, row=5, sticky='ew')
         self.wave_form_label.configure(font=("Arial", 14, "underline"))
@@ -1144,6 +1168,12 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.dash_eight_entry.grid_remove()
         self.dash_nine_label.grid_remove()
         self.dash_nine_entry.grid_remove()
+        self.dash_y_label.grid_remove()
+        self.dash_y_entry.grid_remove()
+        self.dash_capital_C_label.grid_remove()
+        self.dash_capital_C_entry.grid_remove()
+        self.dash_capital_V_label.grid_remove()
+        self.dash_capital_V_entry.grid_remove()
 
 
 
@@ -1179,6 +1209,12 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.dash_eight_entry.grid()
         self.dash_nine_label.grid()
         self.dash_nine_entry.grid()
+        self.dash_y_label.grid()
+        self.dash_y_entry.grid()
+        self.dash_capital_C_label.grid()
+        self.dash_capital_C_entry.grid()
+        self.dash_capital_V_label.grid()
+        self.dash_capital_V_entry.grid()
 
 
     def display_fpga_output(self):
