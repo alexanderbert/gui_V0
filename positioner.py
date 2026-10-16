@@ -966,24 +966,6 @@ class ScanFrame(tk.Frame):
 
     def movement_output(self, key_press, movement):
         print(f"keystroke: '{movement} {key_press}'")
-        #"5.0/1.0 Deg", "0.5/0.25 Deg", "0.1/0.05 Deg", "0.01/0.01 Deg"
-        # key_pad_dict = {"5.0/1.0 Deg up": 'W',
-        #                 "5.0/1.0 Deg down": 'S',
-        #                 "5.0/1.0 Deg left": 'A',
-        #                 "5.0/1.0 Deg right": 'D',
-        #                 "0.5/0.25 Deg up": 'w',
-        #                 "0.5/0.25 Deg down": 's',
-        #                 "0.5/0.25 Deg left": 'a',
-        #                 "0.5/0.25 Deg right": 'd',
-        #                 "0.1/0.05 Deg up": 'i',
-        #                 "0.1/0.05 Deg down": 'k',
-        #                 "0.1/0.05 Deg left": 'j',
-        #                 "0.1/0.05 Deg right": 'l',
-        #                 "0.01/0.01 Deg up": 'I',
-        #                 "0.01/0.01 Deg down": 'K',
-        #                 "0.01/0.01 Deg left": 'J',
-        #                 "0.01/0.01 Deg right": 'L',
-        #                 }
         movement_dict = {"5.0/1.0 Deg up": 'W',
                         "5.0/1.0 Deg down": 'S',
                         "5.0/1.0 Deg left": 'A',
