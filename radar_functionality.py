@@ -131,26 +131,26 @@ class RadarFunctionality(tk.Frame):
         self.radar_drop()
         
         #infrastructure
-        self.run_heatmap_fpga_button= customtkinter.CTkButton(self.fpga_control_frame, text="RUN", command=lambda:self.start_threading(self.heat_map_fpga))
+        self.run_heatmap_fpga_button= customtkinter.CTkButton(self.fpga_control_frame, text="FPGA DATA", command=lambda:self.start_threading(self.heat_map_fpga))
         self.run_heatmap_fpga_button.grid(row=0, column=0)
-        self.run_heatmap_fpga_button.configure(width=20, font=("Arial", 20))
+        self.run_heatmap_fpga_button.configure(width=150, font=("Arial", 20))
         #
         # self.run_capture_fpga_button= tk.Button(self.fpga_control_frame, text="Capture FPGA", command=lambda:self.capture_fpga())
         # self.run_capture_fpga_button.grid(row=1, column=2)
         # self.run_capture_fpga_button.config(width=20, font=("Arial", 20))
 
         #Dont need a stop button because the runs with self terminate
-        self.abort_fpga_button= customtkinter.CTkButton(self.fpga_control_frame, text="Abort", command=lambda:self.start_threading(self.kill_fpga))
+        self.abort_fpga_button= customtkinter.CTkButton(self.fpga_control_frame, text="Abort FPGA", command=lambda:self.start_threading(self.kill_fpga))
         self.abort_fpga_button.grid(column=0, row=2)
-        self.abort_fpga_button.configure(width=20, font=("Arial", 20))
+        self.abort_fpga_button.configure(width=150, font=("Arial", 20))
 
-        self.create_heatmap_button= customtkinter.CTkButton(self.fpga_control_frame, text="Create Heatmap", command=lambda:self.create_heatmap())
+        self.create_heatmap_button= customtkinter.CTkButton(self.fpga_control_frame, text="Draw Heatmap", command=lambda:self.create_heatmap())
         self.create_heatmap_button.grid(column=0, row=1)
-        self.create_heatmap_button.configure(width=20, font=("Arial", 20))
+        self.create_heatmap_button.configure(width=150, font=("Arial", 20))
 
-        self.capture_packets_button = customtkinter.CTkButton(self.fpga_control_frame, text="CAPTURE ONLY", command=lambda:self.start_threading(self.capture_packets_run))
+        self.capture_packets_button = customtkinter.CTkButton(self.fpga_control_frame, text="Capture Raw Packets", command=lambda:self.start_threading(self.capture_packets_run))
         self.capture_packets_button.grid(column=0, row =3)
-        self.capture_packets_button.configure(width=20, font=("Arial", 20))
+        self.capture_packets_button.configure(width=150, font=("Arial", 20))
 
         self.close_heatmap_button = None
 
