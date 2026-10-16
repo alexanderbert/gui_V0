@@ -255,10 +255,10 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.setup_initial_input_outputs()
 
         self.status_label = customtkinter.CTkLabel(self.output_frame, text="Status:", justify="center")
-        self.status_label.grid(column=0, row=9, sticky="ew", pady=10, padx=20)
+        self.status_label.grid(column=0, row=15, sticky="ew", pady=10, padx=20)
         self.status_label.configure(font=("Arial", 14))
         self.status_entry = customtkinter.CTkEntry(self.output_frame, width = 200, textvariable=self.status_var, justify="center")
-        self.status_entry.grid(column=1, row=9, pady=10, sticky="w")
+        self.status_entry.grid(column=1, row=15, pady=10, sticky="w")
         self.status_entry.configure(font=("Arial", 14))
 
     def heat_map_fpga(self):
