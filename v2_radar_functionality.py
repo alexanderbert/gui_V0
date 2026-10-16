@@ -336,7 +336,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             time.sleep(.2)
             # 10/2
             channel.send(
-                f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()} -y 6.25 -V {1 / self.dash_w_var.get()} -C 0.05 -u\n""")
+                f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()} -y {self.dash_y_var.get()} -V {self.dash_capital_V_var.get()} -C {self.dash_capital_C_var.get()} -u\n""")
             time.sleep(.2)
             print(f"FPGA RUNNING STATE: {is_fpga_running}")
 
@@ -487,7 +487,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.command_list_label = customtkinter.CTkLabel(self.output_frame,
                                                          text=f"""Command String: -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} 
         -S {self.dash_capital_S_var.get()} -Q {state.expected_Q_VALUE_VALUE} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} 
-        -X -D {self.dash_capital_D_var.get()} -y 6.25 -V {(1 / self.dash_w_var.get()):.4f} -C 0.05 -u""")
+        -X -D {self.dash_capital_D_var.get()} -y {self.dash_y_var.get()} -V {self.dash_capital_V_var.get():.4f} -C {self.dash_capital_C_var.get()} -u""")
         self.command_list_label.grid(column=0, columnspan=2, row=12)
         self.command_list_label.configure(font=("Arial", 14), justify="center")
 
@@ -514,7 +514,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         channel.send(
             #f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -k 8000 -Q 10000 -q -c -y 6.25 -V {1 / self.dash_w_var.get()} -C 0.05 -u | socat - tcp:10.42.0.1:7777\n""")
         # EXAMPLE STREAM'./fpgaStream -S 300 -D 10 -u -w 0.96 -s 2.0 -e 2.0 -b 0.0 -g -1.0 -y 5.8 -V 6.3 -C 0.1 -k 8000 -q -Q 3000 -n'
-            f'./fpgaStream -S {self.dash_capital_S_var.get()} -D {self.dash_capital_D_var.get()} -u -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -y 5.8 -V {1 / self.dash_w_var.get()} -C 0.1 -k 10000 -q -Q {10 * self.dash_capital_S_var.get()} -n | socat - tcp:10.42.0.1:7777\n '
+            f'./fpgaStream -S {self.dash_capital_S_var.get()} -D {self.dash_capital_D_var.get()} -u -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -y {self.dash_y_var.get()} -V {1 / self.dash_w_var.get()} -C {self.dash_capital_C_var.get()} -k 10000 -q -Q {10 * self.dash_capital_S_var.get()} -n | socat - tcp:10.42.0.1:7777\n '
         )
         time.sleep(.1)
 
