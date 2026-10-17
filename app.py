@@ -4,6 +4,7 @@ from header import *
 #from positioner import PositionerFrame
 #from radar_functionality import RadarFunctionality
 #from visualization import *
+from usb_check import *
 from v2_positioner import *
 from v2_radar_functionality import *
 from v2_visualization import *
@@ -51,6 +52,8 @@ class App(customtkinter.CTk):
 
         self.my_notebook.add(self.connection_frame, text = "Home")
         ### seperate tab for home
+        self.initial_connection_check = Initial_Check(self.my_notebook)
+        self.my_notebook.add(self.initial_connection_check, text = "Initial Checklist")
         self.my_notebook.add(self.main_frame, text = "Generate Radar Data")
         self.my_notebook.add(self.positioner_frame, text = "Positioner Control")
         self.my_notebook.add(self.visualization_frame, text = "Visualize Radar Output")
