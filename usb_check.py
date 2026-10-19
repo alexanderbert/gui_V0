@@ -120,7 +120,6 @@ class Initial_Check(customtkinter.CTkFrame):
             pieces = re.split(ansi_regex, text)
             self.usb_check_output_textbox.insert("end", pieces[0], "default")
             for index, piece in enumerate(pieces):
-                current_index = pieces.index(piece)
                 print(f"PIECE AND INDEX IN QUESTION: index: {index}, piece: {piece}")
                 if "\x1b[K" in piece:
                     self.usb_check_output_textbox.insert("end", " ", "default")
@@ -128,16 +127,16 @@ class Initial_Check(customtkinter.CTkFrame):
                 elif "" == piece:
                     continue
                 elif "\x1b[01;36m" in piece:
-                    #current_index = pieces.index(piece)
                     self.usb_check_output_textbox.insert("end", pieces[index + 1], "cyan")
                 elif "\x1b[0m" in piece:
-                    #current_index = pieces.index(piece)
-                    self.usb_check_output_textbox.insert("end", pieces[index + 1], "default")
+                    if "\x1b[K" in pieces[index + 1]:
+                        self.usb_check_output_textbox.insert("end", "", "default")
+                        break
+                    else:
+                        self.usb_check_output_textbox.insert("end", pieces[index + 1], "default")
                 elif "\x1b[40;33;01m" in piece:
-                    #current_index = pieces.index(piece)
                     self.usb_check_output_textbox.insert("end", pieces[index + 1], "yellow")
                 elif "\x1b[40;31;01m" in piece:
-                    #current_index = pieces.index(piece)
                     self.usb_check_output_textbox.insert("end", pieces[index + 1], "red")
                 else:
                     continue
