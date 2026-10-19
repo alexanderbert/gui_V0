@@ -15,20 +15,22 @@ class Initial_Check(customtkinter.CTkFrame):
         self.usb_check_output_var = tk.StringVar()
         self.radar_chosen = None
 
+        self.button_frame = customtkinter.CTkFrame(self)
+        self.button_frame.grid(column=5, row=0, rowspan=5, sticky="NS")
+        self.button_frame.rowconfigure(list(range(0,11)), weight=1)
 
-        self.usb_check_output_textbox = customtkinter.CTkTextbox(self)
-        self.usb_check_output_textbox.grid(column=0, columnspan=4, row=0, sticky="nsew")
+
+        self.usb_check_output_textbox = customtkinter.CTkTextbox(self, fg_color="gray17")
+        self.usb_check_output_textbox.grid(column=0, columnspan=4, row=0, rowspan=4, sticky="nsew")
         self.usb_check_output_textbox.configure(font=("Arial", 14),state="normal")
         self.usb_check_output_textbox.tag_config("cyan", foreground="cyan")
         self.usb_check_output_textbox.tag_config("red", foreground="red")
         self.usb_check_output_textbox.tag_config("yellow", foreground="yellow")
         self.usb_check_output_textbox.tag_config("default", foreground="white")
 
-        self.usb_check_button = customtkinter.CTkButton(self, width=100, text="USB Check", command = lambda: self.run_usb_check())
-        self.usb_check_button.grid(column=5, row=0, sticky="ew")
-        # self.yellow_example = "lrwxrwxrwx 1 sq sq 61 Sep 23 09:36 \x1b[0m\x1b[01;36mgpsdo\x1b[0m -> \x1b[40;33;01m/dev/serial/by-path/platform-3530000.xhci-usb-0:3.1:1.2-port0\x1b[0m\x1b[K\r\n"
-        # self.red_example = "lrwxrwxrwx 1 sq sq 61 Sep 23 09:36 \x1b[40;31;01mmonitor\x1b[0m -> \x1b[40;31;01m/dev/serial/by-path/platform-3530000.xhci-usb-0:3.4.4.2.2:1.0\x1b[0m\x1b[K\r\n"
-        # self.ansi_color_checker(self.red_example)
+        self.usb_check_button = customtkinter.CTkButton(self.button_frame, width=150, text="USB Check", command = lambda: self.run_usb_check())
+        self.usb_check_button.grid(column=0, row=0, sticky="ew")
+
 
     def run_usb_check(self):
         self.current_radar_key = state.radar_choice.get()
@@ -77,9 +79,8 @@ class Initial_Check(customtkinter.CTkFrame):
             time.sleep(.1)
         if "/home/sq/sq/usbmap" in output:
             output = output.split("/home/sq/sq/usbmap\r")[1]
+            self.usb_check_output_textbox.insert("0.0", f"USB REPORT FOR {state.radar_choice.get().title()}\n")
             for line in output.split("\r"):
-                #self.usb_check_output_textbox.insert("end", line)
-                print("PUT COLOR CHECKER HEREE")
                 #TODO THIS CALLS THE COLOR CHECKER
                 self.ansi_color_checker(line)
         self.usb_check_output_textbox.configure(state="disabled")
@@ -111,16 +112,12 @@ class Initial_Check(customtkinter.CTkFrame):
         except:
             print("ERROR CHECKING USB MAP")
 
-
-    # yellow_example = ['\nlrwxrwxrwx 1 sq sq 61 Sep 23 09:36 ', '\x1b[01;36m', 'posctl', '\x1b[0m', ' -> ', '\x1b[40;33;01m', '/dev/serial/by-path/platform-3530000.xhci-usb-0:3.1:1.1-port0', '\x1b[0m', '\x1b[K']
-    # red_example = ['\nlrwxrwxrwx 1 sq sq 61 Sep 23 09:36 ', '\x1b[40;31;01m', 'monitor-stlink', '\x1b[0m', ' -> ', '\x1b[40;31;01m', '/dev/serial/by-path/platform-3530000.xhci-usb-0:3.4.4.2.3:1.2', '\x1b[0m', '\x1b[K']
     def ansi_color_checker(self, text):
         ansi_regex = r'(\x1b\[[0-9;]*m)'
         if re.search(ansi_regex, text):
             pieces = re.split(ansi_regex, text)
             self.usb_check_output_textbox.insert("end", pieces[0], "default")
             for index, piece in enumerate(pieces):
-                print(f"PIECE AND INDEX IN QUESTION: index: {index}, piece: {piece}")
                 if "\x1b[K" in piece:
                     self.usb_check_output_textbox.insert("end", " ", "default")
                     break
