@@ -168,4 +168,7 @@ class HeaderFrame(customtkinter.CTkFrame):
         image_label.pack(side="left", padx=50)
         image_label.image = self.header_image
 
+        self.version_text = customtkinter.CTkLabel(self, text= f"Version: {state.current_version_number}")
+        self.version_text.pack(side="left", padx=10)
+
 
