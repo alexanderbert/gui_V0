@@ -5,7 +5,7 @@ import tkinter as tk
 
 load_dotenv()
 
-
+current_version_number = 1.1
 positioner_output_text = None
 
 network_state = f"{os.environ.get('HOST_IP')}"

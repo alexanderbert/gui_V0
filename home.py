@@ -21,7 +21,7 @@ class HomeFrame(customtkinter.CTkFrame):
         self.output_textbox = customtkinter.CTkTextbox(self, state = "normal")
         self.output_textbox.pack(side="top", fill="both", pady = 40, padx = 40)
 
-        self.welcome_statement = '''Radar Calibration and Testing Tool (RCATT). Please search for radars on your network 
+        self.welcome_statement = f'''Radar Calibration and Testing Tool (RCATT) Version {state.current_version_number}. Please search for radars on your network 
         with the button located in the top right of the header.
         Lorem ipsum dolor sit amet consectetur adipiscing elit. Quo duis eiusmod
             exercitation pariatur eos minim quos fugiat est quos ex. Esse magna
