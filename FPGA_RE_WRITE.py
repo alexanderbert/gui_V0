@@ -1,0 +1,495 @@
+import logging
+import tkinter as tk
+import customtkinter
+from tkinter import ttk, messagebox
+from settings import *
+import threading
+import queue
+import paramiko
+#TODO NEED THIS LINE TO RUN
+# from scp import SCPClient
+import time
+from dotenv import load_dotenv
+import os
+import sys
+import subprocess
+import nmap
+from datetime import datetime
+from pathlib import Path
+from datetime import datetime
+import glob
+import shutil
+import state
+
+# Determine the correct path to the .env file
+if getattr(sys, 'frozen', False):
+    # Running in a PyInstaller bundle
+    application_path = os.path.dirname(sys.executable)
+else:
+    # Running in a normal Python environment
+    application_path = os.path.dirname(os.path.abspath(__file__))
+
+dotenv_path = os.path.join(application_path, '.env')
+
+# Load the .env file from the determined path
+load_dotenv(dotenv_path=dotenv_path)
+is_running = False
+# client = paramiko.client.SSHClient()
+output_queue = queue.Queue()
+capture_output_flag = False
+
+class MainFrame(customtkinter.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.columnconfigure(0, weight=10)
+        self.columnconfigure(1, weight=10)
+        self.columnconfigure(2, weight=1)
+        self.rowconfigure(list(range(0,20)), weight=1)
+        self.grid_propagate(False)
+        self.command_dict = {}
+        self.entry_dict = {}
+        self.status_var = tk.StringVar()
+        self.current_radar_value = None
+
+
+
+        self.input_frame = customtkinter.CTkFrame(self)
+        self.input_frame.grid(column=0, columnspan=2, row=0, rowspan=20, sticky="nsew")
+        self.input_frame.grid_propagate(False)
+
+        self.output_frame = customtkinter.CTkFrame(self)
+        self.output_frame.grid_propagate(False)
+
+        self.create_entries()
+
+        self.status_entry = customtkinter.CTkEntry(self, textvariable=self.status_var, justify="center")
+        self.status_entry.grid(column=2, row=5)
+        self.status_var.set("Not connected")
+
+        self.commands_label = customtkinter.CTkLabel(master=self, text="Commands", text_color="#E5A93B", width=150)
+        self.commands_label.grid(column=2, row=0)
+        self.commands_label.configure(font=("Arial", 14, "underline"))
+
+        self.button_end = customtkinter.CTkButton(self, text="End Run", command=lambda: self.stop_order("DUMMY"))
+        self.button_end.grid(column=2, row=4)
+        self.button_end.configure(width=150, font=("Arial", 14))
+
+        self.button_reset = customtkinter.CTkButton(self, text="Reset", command=lambda: self.run_reset_radar())
+        self.button_reset.grid(column=2, row=3)
+        self.button_reset.configure(width=150, font=("Arial", 14))
+
+        self.submit_button = customtkinter.CTkButton(self, text = "Run FPGA", command=lambda: self.start_threading(self.run_command_connect, False))
+        self.submit_button.grid(column=2, row=1)
+        self.submit_button.configure(width=150, font=("Arial", 14))
+
+        self.capture_button = customtkinter.CTkButton(self, text = "Capture Run", command = lambda: self.start_threading(self.run_command_connect, True))
+        self.capture_button.grid(column=2, row=2)
+        self.capture_button.configure(text="Capture", width=150, font=("Arial", 14))
+
+    def start_threading(self, func, *args):
+        print("Starting Thread")
+        self.status_var.set("starting thread")
+
+        thread = threading.Thread(
+            target=func,
+            args=args,
+            daemon=True
+        )
+        thread.start()
+
+
+    def create_entries(self):
+        for index, entry in enumerate(FPGA_COMMAND_ALPHA):
+            labels = CommandLabels(parent=self.input_frame, command_selected=entry, unit=COMMAND_UPDATE[entry]['unit'],
+                                   text=COMMAND_UPDATE[entry]['title'], col=1, row=index)
+            labels.insert(tk.END, COMMAND_UPDATE[entry]['title'])
+            labels.configure(state="disabled")
+            labels.configure(font=("Arial", 14))
+            labels.configure(wrap="word")
+            self.entry_dict[f'{entry }'] = tk.StringVar()
+
+            entry = customtkinter.CTkEntry(self.input_frame, width=75, font=("Arial", 14),
+                                           textvariable=self.entry_dict[f'{entry}'])
+            if COMMAND_UPDATE[FPGA_COMMAND_ALPHA[index]]['default_value'] == 'True':
+                entry.insert(15, f"{COMMAND_UPDATE[FPGA_COMMAND_ALPHA[index]]['default_value']}")
+                entry.grid(column=0, row=index)
+                self.command_dict[FPGA_COMMAND_ALPHA[index]] = COMMAND_UPDATE[FPGA_COMMAND_ALPHA[index]][
+                    'default_value']
+                entry.configure(state=tk.DISABLED)
+            elif COMMAND_UPDATE[FPGA_COMMAND_ALPHA[index]]['default_value']:
+                entry.insert(15, f"{COMMAND_UPDATE[FPGA_COMMAND_ALPHA[index]]['default_value']}")
+                entry.grid(column=0, row=index)
+                self.command_dict[FPGA_COMMAND_ALPHA[index]] = COMMAND_UPDATE[FPGA_COMMAND_ALPHA[index]][
+                    'default_value']
+
+    def update_all_textboxes(self, output_list):
+        x_dc_offset_value = output_list[0].split("= ")
+        self.x_dc_offset_textbox.delete("0.0", "end")
+        self.x_dc_offset_textbox.insert("0.0",x_dc_offset_value[1] )
+
+        y_dc_offset_value = output_list[1].split("= ")
+        self.y_dc_offset_textbox.delete("0.0", "end")
+        self.y_dc_offset_textbox.insert("0.0", y_dc_offset_value[1] )
+
+        x_min_max_value = output_list[2].split("X  ")
+        self.x_min_max_textbox.delete("0.0", "end")
+        self.x_min_max_textbox.insert("0.0", x_min_max_value[1] )
+
+        y_min_max_value = output_list[3].split("Y  ")
+        self.y_min_max_textbox.delete("0.0", "end")
+        self.y_min_max_textbox.insert("0.0", y_min_max_value[1] )
+
+        x_power_value = output_list[4].split(": ")
+        self.x_power_textbox.delete("0.0", "end")
+        self.x_power_textbox.insert("0.0", x_power_value[1] )
+
+        y_power_value = output_list[5].split(": ")
+        self.y_power_textbox.delete("0.0", "end")
+        self.y_power_textbox.insert("0.0", y_power_value[1] )
+
+        rate_value = output_list[6].split(": ")
+        final_rate = rate_value[1].split("=")
+        self.rate_textbox.delete("0.0", "end")
+        self.rate_textbox.insert("0.0", final_rate[0] )
+
+    def create_output(self):
+        self.output_frame.grid(column=0, row=0, columnspan=2, rowspan=20, sticky = "NSEW")
+        self.output_frame.grid_columnconfigure(list(range(0,3)), weight=2)
+        self.output_frame.rowconfigure(list(range(0,19)), weight=1)
+        self.grid_propagate(False)
+        for index, entry in enumerate(OUTPUT_FIELDS):
+            output_labels = customtkinter.CTkLabel(self.output_frame, text=OUTPUT_FIELDS[index])
+            output_labels.grid(column=0, row=index, sticky="e", padx=20)
+            output_labels.configure(font=("Arial", 14), width = 100)
+        self.x_dc_offset_textbox = customtkinter.CTkEntry(self.output_frame, justify="center")
+        self.x_dc_offset_textbox.configure(width = 100, height = 20)
+        self.x_dc_offset_textbox.grid(column=1, row=0, pady=10, sticky="w")
+        self.y_dc_offset_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center")
+        self.y_dc_offset_textbox.configure(width = 100, height = 20)
+        self.y_dc_offset_textbox.grid(column=1, row=1, pady=10, sticky="w")
+        self.x_min_max_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center")
+        self.x_min_max_textbox.configure(width = 100, height = 20)
+        self.x_min_max_textbox.grid(column=1, row=2, pady=10, sticky="w")
+        self.y_min_max_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center")
+        self.y_min_max_textbox.configure(width = 100, height = 20)
+        self.y_min_max_textbox.grid(column=1, row=3, pady=10, sticky="w")
+        self.x_power_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center")
+        self.x_power_textbox.configure(width = 100, height = 20)
+        self.x_power_textbox.grid(column=1, row=4, pady=10, sticky="w")
+        self.y_power_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center")
+        self.y_power_textbox.configure(width = 100, height = 20)
+        self.y_power_textbox.grid(column=1, row=5, pady=10, sticky="w")
+        self.rate_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center")
+        self.rate_textbox.configure(width = 100, height = 20)
+        self.rate_textbox.grid(column=1, row=6, pady=10, sticky="w")
+        self.settings_label = customtkinter.CTkLabel(self.output_frame, text="Settings")
+        self.settings_label.configure(font=("Arial", 14))
+        self.settings_label.grid(column=0, row=7, pady=10, padx=20, sticky="e")
+        self.settings_textbox = customtkinter.CTkTextbox(self.output_frame, wrap="word", font=("Arial", 14))
+        self.settings_textbox.configure(width = 500, height = 50)
+        self.settings_textbox.grid(column=1, row=7, pady=10, sticky="ew")
+
+    def display_settings(self, settings):
+        commands = settings.split(" ")
+        print(commands)
+        output_string = ""
+        for command in commands:
+            if command == "-u":
+                output_string += f"{COMMAND_UPDATE[command]['shorthand']}: True"
+            elif command in COMMAND_UPDATE.keys():
+                output_string += f"{COMMAND_UPDATE[command]['shorthand']}: "
+            else:
+                output_string += f"{command}, "
+            # todo does not work on python 3.8
+            # output_string.removesuffix(", ")
+        self.settings_textbox.delete("0.0", "end")
+        self.settings_textbox.insert("0.0", output_string)
+
+    def create_ssh_client(self):
+        client = paramiko.client.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
+
+        return client
+
+    def fl_network_mode(self):
+        self.current_radar_key = state.radar_choice.get()
+        for key, value in state.radars_found.get_dict().items():
+            if key == self.current_radar_key:
+                self.current_radar_value = value
+        print(f"INSIDE FLORIDA {self.current_radar_value}")
+        self.status_var.set("Connecting to radar...")
+        self.status_entry.configure(fg_color="yellow green", text_color="black")
+        try:
+            client = self.create_ssh_client()
+            client.connect(hostname=f"{self.current_radar_value}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
+                           password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=10)
+            # print(f"{self.positioner_selected_for_use} inside status")
+            # print(f"{selected_positioner_global} GLOBAL status")
+            transport = client.get_transport()
+            channel = transport.open_session()
+            channel.get_pty()
+            channel = client.invoke_shell()
+            time.sleep(.1)
+            logging.info("CONNECTED TO FLORIDA NETWORK")
+            return client, channel
+        except:
+            self.status_var.set("Network Error")
+            self.status_entry.configure(fg_color="red", text_color="white")
+
+    def stop_order(self):
+        self.status_var.set("Stopping run...")
+        self.hide_outputs()
+        self.show_inputs()
+        global is_running
+        is_running = False
+
+    def run_reset_radar(self):
+        print(state.radar_choice.get())
+        self.current_radar_key = state.radar_choice.get()
+        for key, value in state.radars_found.get_dict().items():
+            if key == self.current_radar_key:
+                self.current_radar_value = value
+        print(f"INSIDE FLORIDA {self.current_radar_value}")
+
+        client, channel = self.fl_network_mode()
+
+        self.status_var.set("Running Reset...")
+        channel.send("ps auxfww | grep fpgaStream\n")
+        time.sleep(1)
+        while channel.recv_ready():
+            chunk = channel.recv(1024).decode("iso-8859-1")
+
+        grep_results = chunk.split("\n")
+        open_pids = []
+        for i, line in enumerate(grep_results):
+            if i == 0:
+                pass
+            else:
+                lister = line.split()
+                if len(lister) > 5:
+                    open_pids.append(lister[1])
+        for pid in open_pids:
+            channel.send(f"sudo kill -9 {pid}\n")
+            time.sleep(1)
+            while channel.recv_ready():
+                chunk = channel.recv(1024).decode("iso-8859-1")
+                if "password for sq:" in chunk:
+                    channel.send(f"{os.environ.get('CONNECTION_PASSWORD')}\n")
+
+        channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
+        time.sleep(1)
+        channel.send(f"./fpgaStream -r; sudo rmmod xdma; sudo modprobe xdma \n")
+        time.sleep(3)
+        while channel.recv_ready():
+            chunk = channel.recv(1024).decode("iso-8859-1")
+            if "password for sq:" in chunk:
+                channel.send(f"{os.environ.get('CONNECTION_PASSWORD')}\n")
+        client.close()
+        print("Reset FINISHED")
+        self.status_var.set("Reset FINISHED")
+
+
+
+
+    def run_command_connect(self, capture_check):
+        global is_running
+        is_running = True
+        is_capture_run = False
+
+        command = ""
+        for key, value in self.entry_dict.items():
+            if value.get() == "True":
+                command += f" {key} "
+                continue
+            command += f" {key} {value.get()}"
+            print(f"The entry for {key} is {value.get()}")
+
+        print(f"COMMAND:{command.strip()}")
+
+
+        try:
+            client, channel = self.fl_network_mode()
+        except ValueError:
+            print("Network Error")
+            is_running = False
+            return 1
+
+        #HIDE INPUTS AND SHOW OUTPUTS
+
+        if capture_check:
+            #is_capture_run = True
+            self.status_var.set("Capture Run Starting")
+
+        self.hide_inputs()
+        self.create_output()
+
+        try:
+
+            time.sleep(0.1)
+            channel.send(f"cd {os.environ['FPGAPATH']}\n")
+            time.sleep(.1)
+            channel.send(f"./fpgaStream {command}\n")
+            time.sleep(.1)
+
+            max_duration = 2000
+            start_time = time.time()
+            output = ""
+            # while channel.recv_ready() and is_running:
+            while channel.active and is_running:
+                chunk = channel.recv(1024).decode("iso-8859-1")
+                output += chunk
+                current_time = time.time()
+                if "Captured 10000 packets." in output:
+                    is_capture_run = True
+                    break
+
+                if current_time - start_time < 2:
+                    time.sleep(3)
+                if "<5>" in output:
+                    after = output.split("<5>", 1)
+                    if "[1;1H$<5>" in after[1]:
+                        new_output = after[1].replace("[1;1H$<5>", "\n")
+                        new_output = new_output.split("\n")
+                        for line in new_output:
+                            print(line)
+                            splits = line.split(",")
+                            desired_fields = []
+                            for index, split in enumerate(splits):
+                                if len(splits) == 11:
+                                    if index < 6 or index == 9:
+                                        desired_fields.append(split)
+                            print(desired_fields)
+                            output_queue.put(desired_fields)
+                            self.run_queue()
+                output = ""
+                time.sleep(.5)
+                if current_time - start_time > max_duration:
+                    break
+
+            channel.send("^S\n")
+            channel.send("^C\n")
+            client.close()
+            self.status_var.set("Run Finished")
+        except:
+            channel.send("^S\n")
+            channel.send("^C\n")
+            client.close()
+            self.status_var.set("Run Finished")
+        if is_capture_run:
+            self.status_var.set("Gathering capture files")
+            self.get_bin_files(self.current_radar_value)
+
+
+
+
+    def get_bin_files(self, radar_selected):
+
+        ## GET ACTUAL LOCATIONS HERE
+        print(f"GETTING BINS from {radar_selected}")
+        client, channel = self.fl_network_mode()
+
+
+        try:
+            #TODO GET THE RADAR I DONT THINK I HAVE TO
+
+            #channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
+            #channel.send(f"cd {os.environ['FPGAPATH']}\n")
+            stdin, stdout, stderr = client.exec_command(f"cd {os.environ['FPGAPATH']} && pwd")
+            print(stdout.read().decode())
+            time.sleep(0.5)
+
+
+            stdin, stdout, stderr = client.exec_command("pwd")
+            print(f"{stdout.read().decode()}")
+            now = datetime.now()
+            formatted_time = now.strftime("%m-%d-%H-%M")
+            bin_files = glob.glob(f"{os.environ['FPGAPATH']}/*.bin")
+            print(f"{bin_files} BIN FILES")
+            new_directory = f"raw-bin-{formatted_time}"
+            stdin, stdout, stderr = client.exec_command(f"mkdir -p '{os.environ['FPGAPATH']}/{new_directory}/'")
+            print(f"{new_directory} CREATED")
+            stdin, stdout, stderr = client.exec_command(f"cp {os.environ['FPGAPATH']}/daq0080*.bin '{os.environ['FPGAPATH']}/{new_directory}/'")
+            transfer_status = stdout.channel.recv_exit_status()
+            print(f"{transfer_status} of bins")
+            stdin, stdout, stderr = client.exec_command(
+                f"cd {os.environ['FPGAPATH']} && tar -czvf '{new_directory}.tgz' '{new_directory}'"
+                #f"tar -czvf '{os.environ['FPGAPATH']}/{new_directory}.tgz' '{os.environ['FPGAPATH']}/{new_directory}/'"
+                )
+            exit_status = stdout.channel.recv_exit_status()
+            print(f"{exit_status}")
+
+
+            stdin, stdout, stderr = client.exec_command(f"rm {os.environ['FPGAPATH']}/*.bin")
+            exit_status = stdout.channel.recv_exit_status()
+            print(f"{exit_status}")
+
+
+            #TODO NEED THESE TWO LINES TO RUN
+            # with SCPClient(client.get_transport()) as scp:
+            #     scp.get(f"{os.environ['FPGAPATH']}/raw-bin-{formatted_time}.tgz", "./generatedBinFiles/")
+                #todo unnecessary if exe exists on file
+                #scp.get("/home/sq/sq/stormquant-beta/cmake-build-debug/common/raytestingutils/convertRawToCleartext", "../ClearText/")
+                #os.chmod("../ClearText/convertRawToCleartext", 0o755)
+        except Exception as e:
+            print(f"An error has occurred: {e}")
+
+        finally:
+            #todo add threading if this works
+            client.close()
+
+    def run_queue(self):
+        #print(f"OPQ: {output_queue.get()}")
+        # while output_queue.qsize() > 10 and is_running:
+        #     self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
+        print(output_queue.qsize())
+        try:
+            if not output_queue.empty():
+                self.after(100, self.update_all_textboxes(output_queue.get()))
+        except:
+            print("Error occured")
+
+    def hide_inputs(self):
+        self.input_frame.grid_remove()
+
+    def show_outputs(self):
+        self.create_output()
+
+    def show_inputs(self):
+        self.input_frame.grid()
+
+    def hide_outputs(self):
+        self.output_frame.grid_remove()
+
+
+
+class CommandLabels(customtkinter.CTkTextbox):
+    def __init__(self, parent, unit, col, text, row, command_selected, wrap = tk.CHAR):
+        super().__init__(master = parent, width = 150, height = 30)
+        self.unit = unit
+        self.text = text
+        self.col = col
+        self.row = row
+        self.command_selected = command_selected
+        self.wrap = wrap
+        self.font = ("Times New Roman", 14)
+        self.grid(column = col, row = row, sticky = "W")
+        self.bind("<Enter>", self.on_enter)
+        self.bind("<Leave>", self.on_leave)
+
+    def on_enter(self, event):
+        self.configure(state = "normal")
+        self.grid(column=self.col, row=self.row)
+        self.delete("1.0", tk.END)
+        self.insert(tk.END, COMMAND_UPDATE[self.command_selected]['text'])
+        self.configure(width=450)
+        self.configure(state = "disabled")
+
+    def on_leave(self, event):
+        self.configure(state="normal")
+        self.grid(column = self.col, row = self.row)
+        self.delete("1.0", tk.END)
+        self.insert(tk.END, COMMAND_UPDATE[self.command_selected]['title'])
+        self.configure(width=150)
+        self.configure(state="disabled")
+
