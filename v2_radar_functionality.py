@@ -299,11 +299,13 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             elDelta = float(state.ending_el_value) - float(state.starting_el_value)
             azDeegPerS = 360.0 / float(state.speed_value)
             elDegPerStep = float(state.increment_value) * 2.0
-            expected_Q_Value = int((azDelta / azDeegPerS) * (elDelta / elDegPerStep) * 2.0 * state.S_FLAG_VALUE * 1.2)
-            state.expected_Q_Value = expected_Q_Value
-            print(state.S_FLAG_VALUE, elDelta, azDeegPerS, elDegPerStep, expected_Q_Value)
+            expected_Q_Value = int((azDelta / azDeegPerS) * (elDelta / elDegPerStep) * 2.0 * self.dash_capital_S_var.get() * 1.2)
+            state.expected_Q_VALUE_VALUE = expected_Q_Value
+
+            print(self.dash_capital_S_var.get(), elDelta, azDeegPerS, elDegPerStep, expected_Q_Value)
         except:
             pass
+        print(f"EXPECTED Q VALUE: {state.expected_Q_VALUE_VALUE}")
         client, channel = self.fl_network_mode()
         # client, channel = self.alex_network_mode()
         # stdin, stdout, stderr = client.exec_command("ls")
@@ -323,11 +325,12 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         global is_fpga_running
         is_fpga_running = True
         time.sleep(.2)
-
+        self.progress_bar_label = customtkinter.CTkLabel(self.output_frame, text="Progress: ", justify="center")
+        self.progress_bar_label.grid(column=0, row=5, sticky="e", padx=20)
         self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate",
                                             style="yellow.Horizontal.TProgressbar", length=400,
-                                            maximum=expected_Q_Value)
-        self.progress_bar.grid(column=0, columnspan=2, row=5, sticky="nsew")
+                                            maximum=state.expected_Q_VALUE_VALUE)
+        self.progress_bar.grid(column=1, row=5, sticky="w")
         self.progress_bar['value'] = 0
 
         try:
@@ -336,7 +339,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             time.sleep(.2)
             # 10/2
             channel.send(
-                f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -Q {expected_Q_Value} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()} -y {self.dash_y_var.get()} -V {self.dash_capital_V_var.get()} -C {self.dash_capital_C_var.get()} -u\n""")
+                f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -Q {state.expected_Q_VALUE_VALUE} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()} -y {self.dash_y_var.get()} -V {self.dash_capital_V_var.get()} -C {self.dash_capital_C_var.get()} -u\n""")
             time.sleep(.2)
             print(f"FPGA RUNNING STATE: {is_fpga_running}")
 
@@ -469,6 +472,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             self.status_entry.configure(fg_color="white", text_color="black")
             self.progress_bar_stage = 0
             self.progress_bar.destroy()
+            self.progress_bar_label.destroy()
             # print(f"Maximum buffer size: {max_buffer_length:,} characters")
             self.hide_fpga_output()
             self.replace_initial_i_o()
@@ -477,17 +481,19 @@ class RadarFunctionality2(customtkinter.CTkFrame):
     def capture_packets_run(self):
         Q_VALUE = 10000
         self.hide_initial_i_o()
+        self.progress_bar_label = customtkinter.CTkLabel(self.output_frame, text="Progress: ", justify="center")
+        self.progress_bar_label.grid(column=0, row=5, sticky="e", padx=20)
 
         self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate",
                                             style="yellow.Horizontal.TProgressbar", length=400,
                                             maximum=Q_VALUE)
-        self.progress_bar.grid(column=0, columnspan=2, row=5, sticky="nsew")
+        self.progress_bar.grid(column=1, row=5, sticky="w",padx=50)
         self.progress_bar['value'] = 0
         #TODO SEE IF THIS EXECUTES CORRECTLY
         self.command_list_label = customtkinter.CTkLabel(self.output_frame,
                                                          text=f"""Command String: -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} 
         -S {self.dash_capital_S_var.get()} -Q {state.expected_Q_VALUE_VALUE} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} 
-        -X -D {self.dash_capital_D_var.get()} -y {self.dash_y_var.get()} -V {self.dash_capital_V_var.get():.4f} -C {self.dash_capital_C_var.get()} -u""")
+        -X -D {self.dash_capital_D_var.get()} -y {self.dash_y_var.get()} -V {self.dash_capital_V_var.get()} -C {self.dash_capital_C_var.get()} -u""")
         self.command_list_label.grid(column=0, columnspan=2, row=12)
         self.command_list_label.configure(font=("Arial", 14), justify="center")
 
@@ -514,7 +520,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         channel.send(
             #f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -k 8000 -Q 10000 -q -c -y 6.25 -V {1 / self.dash_w_var.get()} -C 0.05 -u | socat - tcp:10.42.0.1:7777\n""")
         # EXAMPLE STREAM'./fpgaStream -S 300 -D 10 -u -w 0.96 -s 2.0 -e 2.0 -b 0.0 -g -1.0 -y 5.8 -V 6.3 -C 0.1 -k 8000 -q -Q 3000 -n'
-            f'./fpgaStream -S {self.dash_capital_S_var.get()} -D {self.dash_capital_D_var.get()} -u -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -y {self.dash_y_var.get()} -V {1 / self.dash_w_var.get()} -C {self.dash_capital_C_var.get()} -k 10000 -q -Q {10 * self.dash_capital_S_var.get()} -n | socat - tcp:10.42.0.1:7777\n '
+            f'./fpgaStream -S {self.dash_capital_S_var.get()} -D {self.dash_capital_D_var.get()} -u -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -y {self.dash_y_var.get()} -V {self.dash_capital_V_var.get()} -C {self.dash_capital_C_var.get()} -k 10000 -q -Q {10 * self.dash_capital_S_var.get()} -n | socat - tcp:10.42.0.1:7777\n '
         )
         time.sleep(.1)
 
@@ -546,6 +552,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.status_var.set("Capture Run Finished")
         self.status_entry.configure(fg_color="white", text_color="black")
         self.progress_bar_stage = 0
+        self.progress_bar_label.destroy()
         self.progress_bar.destroy()
         self.replace_initial_i_o()
         self.command_list_label.grid_remove()
@@ -1081,21 +1088,21 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.dash_y_label.configure(font=("Arial", 14))
         self.dash_y_entry = customtkinter.CTkEntry(self.output_frame, width=100, font=("Arial", 14), justify="center", textvariable=self.dash_y_var)
         self.dash_y_entry.grid(column=1, row=9, sticky="w")
-        self.dash_y_var.set(0)
+        self.dash_y_var.set(5.8)
 
         self.dash_capital_V_label = customtkinter.CTkLabel(self.output_frame, text="V | FIR Override:")
         self.dash_capital_V_label.grid(column=0, row=10, sticky="e", padx=20)
         self.dash_capital_V_label.configure(font=("Arial", 14))
         self.dash_capital_V_entry = customtkinter.CTkEntry(self.output_frame, width=100, font=("Arial", 14), justify="center",textvariable=self.dash_capital_V_var)
         self.dash_capital_V_entry.grid(column=1, row=10, sticky="w")
-        self.dash_capital_V_var.set(0)
+        self.dash_capital_V_var.set(6.3)
 
         self.dash_capital_C_label = customtkinter.CTkLabel(self.output_frame, text="C | FIR Parks width:")
         self.dash_capital_C_label.grid(column=0, row=11, sticky="e", padx=20)
         self.dash_capital_C_label.configure(font=("Arial", 14))
         self.dash_capital_C_entry = customtkinter.CTkEntry(self.output_frame, width=100, font=("Arial", 14), justify="center",textvariable=self.dash_capital_C_var)
         self.dash_capital_C_entry.grid(column=1, row=11, sticky="w")
-        self.dash_capital_C_var.set(0)
+        self.dash_capital_C_var.set(0.1)
 
         self.wave_form_label = customtkinter.CTkLabel(self.fpga_control_frame, text="Wave Form Commands", fg_color = "#2B2B2B", text_color = "#E5A93B")
         self.wave_form_label.grid(column=0, row=5, sticky='ew')
@@ -1246,9 +1253,9 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.y_power_entry.grid(column=1, row=3, sticky="W")
         self.y_power_entry.configure(font=("Arial", 14), justify="center")
 
-        self.command_list_label = customtkinter.CTkLabel(self.output_frame, text=f"""Command String: -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} 
-        -S {self.dash_capital_S_var.get()} -Q {state.expected_Q_VALUE_VALUE} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} 
-        -X -D {self.dash_capital_D_var.get()} -y 6.25 -V {(1 / self.dash_w_var.get()):.4f} -C 0.05 -u""")
+        self.command_list_label = customtkinter.CTkLabel(self.output_frame, text=f"""Command String: \t-w {self.dash_w_var.get()} \t-s {self.dash_s_var.get()} \t-e {self.dash_e_var.get()} \t-b {self.dash_b_var.get()} \t-g {self.dash_g_var.get()} 
+        \t-S {self.dash_capital_S_var.get()} \t-Q {state.expected_Q_VALUE_VALUE} \t-8 {int(self.dash_eight_var.get())} \t-9 {int(self.dash_nine_var.get())} 
+        \t\t-X \t-D {self.dash_capital_D_var.get()} \t-y {self.dash_y_var.get()} \t-V {self.dash_capital_V_var.get()} \t-C {self.dash_capital_C_var.get()} -u""")
         self.command_list_label.grid(column=0,columnspan=2, row=12)
         self.command_list_label.configure(font=("Arial", 14), justify="center")
 
@@ -1267,7 +1274,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         print(state.starting_azimuth_value)
         try:
             print(
-                f"-w {self.dash_w_var.get()} \t-s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()}")
+                f"-w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()}")
         except:
             input_warning = messagebox.showwarning("Warning", "Inputs entered incorrectly.")
             return 1
