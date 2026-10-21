@@ -36,7 +36,7 @@ load_dotenv(dotenv_path=dotenv_path)
 is_running = False
 # client = paramiko.client.SSHClient()
 output_queue = queue.Queue()
-capture_output_flag = False
+
 
 class MainFrame(customtkinter.CTkFrame):
     def __init__(self, parent):
@@ -88,7 +88,7 @@ class MainFrame(customtkinter.CTkFrame):
 
     def start_threading(self, func, *args):
         print("Starting Thread")
-        self.status_var.set("starting thread")
+        self.status_var.set("Starting thread")
 
         thread = threading.Thread(
             target=func,
@@ -182,28 +182,22 @@ class MainFrame(customtkinter.CTkFrame):
         self.rate_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center")
         self.rate_textbox.configure(width = 100, height = 20)
         self.rate_textbox.grid(column=1, row=6, pady=10, sticky="w")
-        self.settings_label = customtkinter.CTkLabel(self.output_frame, text="Settings")
+        self.settings_label = customtkinter.CTkLabel(self.output_frame, text="Settings:")
         self.settings_label.configure(font=("Arial", 14))
         self.settings_label.grid(column=0, row=7, pady=10, padx=20, sticky="e")
         self.settings_textbox = customtkinter.CTkTextbox(self.output_frame, wrap="word", font=("Arial", 14))
-        self.settings_textbox.configure(width = 500, height = 50)
+        self.settings_textbox.configure(width = 200, height = 30)
         self.settings_textbox.grid(column=1, row=7, pady=10, sticky="ew")
 
-    def display_settings(self, settings):
-        commands = settings.split(" ")
-        print(commands)
-        output_string = ""
-        for command in commands:
-            if command == "-u":
-                output_string += f"{COMMAND_UPDATE[command]['shorthand']}: True"
-            elif command in COMMAND_UPDATE.keys():
-                output_string += f"{COMMAND_UPDATE[command]['shorthand']}: "
-            else:
-                output_string += f"{command}, "
-            # todo does not work on python 3.8
-            # output_string.removesuffix(", ")
+    def display_settings(self):
+        commands = ""
+        for key, value in self.entry_dict.items():
+            commands += f" {key} {value} "
+
+        commands.strip()
         self.settings_textbox.delete("0.0", "end")
-        self.settings_textbox.insert("0.0", output_string)
+        self.settings_textbox.insert("0.0", commands)
+
 
     def create_ssh_client(self):
         client = paramiko.client.SSHClient()
@@ -305,7 +299,12 @@ class MainFrame(customtkinter.CTkFrame):
             command += f" {key} {value.get()}"
             print(f"The entry for {key} is {value.get()}")
 
+        self.hide_inputs()
+        self.create_output()
         print(f"COMMAND:{command.strip()}")
+        self.settings_textbox.tag_config("center", justify="center")
+        self.settings_textbox.delete("0.0", "end")
+        self.settings_textbox.insert("0.0", command.strip(), "center")
 
 
         try:
@@ -321,8 +320,7 @@ class MainFrame(customtkinter.CTkFrame):
             #is_capture_run = True
             self.status_var.set("Capture Run Starting")
 
-        self.hide_inputs()
-        self.create_output()
+
 
         try:
 
@@ -378,15 +376,15 @@ class MainFrame(customtkinter.CTkFrame):
             self.status_var.set("Run Finished")
         if is_capture_run:
             self.status_var.set("Gathering capture files")
-            self.get_bin_files(self.current_radar_value)
+            self.get_bin_files(self)
 
 
 
 
-    def get_bin_files(self, radar_selected):
+    def get_bin_files(self):
 
         ## GET ACTUAL LOCATIONS HERE
-        print(f"GETTING BINS from {radar_selected}")
+        print(f"Gathering capture files")
         client, channel = self.fl_network_mode()
 
 
@@ -436,6 +434,7 @@ class MainFrame(customtkinter.CTkFrame):
 
         finally:
             #todo add threading if this works
+            self.status_var.set("Capture Finished")
             client.close()
 
     def run_queue(self):
