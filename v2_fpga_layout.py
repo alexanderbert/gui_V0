@@ -1,0 +1,753 @@
+import logging
+import tkinter as tk
+import customtkinter
+from tkinter import ttk, messagebox
+from settings import *
+import threading
+import queue
+import paramiko
+#TODO NEED THIS LINE TO RUN
+# from scp import SCPClient
+import time
+from dotenv import load_dotenv
+import os
+import sys
+import subprocess
+import nmap
+from datetime import datetime
+from pathlib import Path
+from datetime import datetime
+import glob
+import shutil
+import state
+
+# Determine the correct path to the .env file
+if getattr(sys, 'frozen', False):
+    # Running in a PyInstaller bundle
+    application_path = os.path.dirname(sys.executable)
+else:
+    # Running in a normal Python environment
+    application_path = os.path.dirname(os.path.abspath(__file__))
+
+dotenv_path = os.path.join(application_path, '.env')
+
+# Load the .env file from the determined path
+load_dotenv(dotenv_path=dotenv_path)
+is_running = False
+# client = paramiko.client.SSHClient()
+output_queue = queue.Queue()
+capture_output_flag = False
+
+# Todo unnecessary if exe exists
+# dir_path = Path("../ClearText")
+# dir_path.mkdir(parents=True, exist_ok=True)
+
+class MainFrame(customtkinter.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.command_dict = {}
+        self.entry_dict = {}
+        self.columnconfigure(0, weight=6)
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.grid_propagate(False)
+
+        self.io_frame = IOFrame(self, self.command_dict, self.entry_dict)
+        self.io_frame.grid(column=0, row = 0, sticky = "NSEW")
+
+        self.control_frame = ControlFrame(self, self.command_dict, self.entry_dict, self.io_frame)
+        self.control_frame.grid(column=1, row = 0, sticky = "NSEW")
+
+
+class IOFrame(customtkinter.CTkFrame):
+    def __init__(self, parent, command_dict, entry_dict):
+        super().__init__(parent)
+        self.command_dict = command_dict
+        self.entry_dict = entry_dict
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.grid_propagate(False)
+
+        self.input_frame = InputFrame(self, self.command_dict, self.entry_dict)
+        self.input_frame.grid(column=0, row = 0, sticky = "NSEW")
+        self.input_frame.create_entries()
+
+        self.output_frame = OutputFrame(self)
+
+
+
+    def show_input_frame_hide_output_frame(self):
+        self.input_frame.grid(column=0, row = 0, sticky = "NSEW")
+        self.output_frame.grid_forget()
+    def hide_input_frame_show_output_frame(self):
+        self.input_frame.grid_forget()
+        self.output_frame.grid(column=0, row = 0, sticky = "NSEW")
+        self.output_frame.create_output()
+
+
+class InputFrame(customtkinter.CTkFrame):
+    def __init__(self, parent, entry_dict, command_dict):
+        super().__init__(parent)
+        #todo ADD COLUMNS TO HAVE TEXT OUTPUT
+        self.rowconfigure(list(range(21)), weight=1)
+        self.entry_dict = entry_dict
+        self.command_dict = command_dict
+        self.tf_list = ["True", "False"]
+        self.tf_selected = None
+
+    def create_entries(self):
+        for index, entry in enumerate(FPGA_COMMAND_ALPHA):
+            labels = CommandLabels(parent = self,command_selected= entry, unit=COMMAND_UPDATE[entry]['unit'], text = COMMAND_UPDATE[entry]['title'], col=1, row = index)
+            labels.insert(tk.END, COMMAND_UPDATE[entry]['title'])
+            labels.configure(state = "disabled")
+            labels.configure(font = ("Arial", 14))
+            labels.configure(wrap="word")
+            self.entry_dict[f'entry_{[index]}'] = tk.StringVar()
+
+            entry = customtkinter.CTkEntry(self, width=75, font = ("Arial", 14), textvariable=self.entry_dict[f'entry_{[index]}'])
+            if COMMAND_UPDATE[FPGA_COMMAND_ALPHA[index]]['default_value'] == 'True':
+                entry.insert(15, f"{COMMAND_UPDATE[FPGA_COMMAND_ALPHA[index]]['default_value']}")
+                entry.grid(column=0, row=index, sticky="ew")
+                self.command_dict[FPGA_COMMAND_ALPHA[index]] = COMMAND_UPDATE[FPGA_COMMAND_ALPHA[index]][
+                    'default_value']
+                entry.configure(state=tk.DISABLED)
+            elif COMMAND_UPDATE[FPGA_COMMAND_ALPHA[index]]['default_value']:
+                entry.insert(15, f"{COMMAND_UPDATE[FPGA_COMMAND_ALPHA[index]]['default_value']}")
+                entry.grid(column = 0, row = index, sticky = "ew")
+                self.command_dict[FPGA_COMMAND_ALPHA[index]] = COMMAND_UPDATE[FPGA_COMMAND_ALPHA[index]]['default_value']
+
+
+class OutputFrame(customtkinter.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        # self.command_dict = parent.command_dict
+        # self.entry_dict = parent.entry_dict
+        self.rowconfigure(list(range(8)), weight=1)
+
+
+    def update_all_textboxes(self, output_list):
+        x_dc_offset_value = output_list[0].split("= ")
+        self.x_dc_offset_textbox.replace("1.0", tk.END, x_dc_offset_value[1], "center")
+        self.x_dc_offset_textbox.tag_configure("center", justify="center")
+        y_dc_offset_value = output_list[1].split("= ")
+        self.y_dc_offset_textbox.replace("1.0", tk.END, y_dc_offset_value[1], "center")
+        self.y_dc_offset_textbox.tag_configure("center", justify="center")
+        x_min_max_value = output_list[2].split("X  ")
+        self.x_min_max_textbox.replace("1.0", tk.END, x_min_max_value[1], "center")
+        self.x_min_max_textbox.tag_configure("center", justify="center")
+        y_min_max_value = output_list[3].split("Y  ")
+        self.y_min_max_textbox.replace("1.0", tk.END, y_min_max_value[1], "center")
+        self.y_min_max_textbox.tag_configure("center", justify="center")
+        x_power_value = output_list[4].split(": ")
+        self.x_power_textbox.replace("1.0", tk.END, x_power_value[1], "center")
+        self.x_power_textbox.tag_configure("center", justify="center")
+        y_power_value = output_list[5].split(": ")
+        self.y_power_textbox.replace("1.0", tk.END, y_power_value[1], "center")
+        self.y_power_textbox.tag_configure("center", justify="center")
+        rate_value = output_list[6].split(": ")
+        final_rate = rate_value[1].split("=")
+        self.rate_textbox.replace("1.0", tk.END, final_rate[0], "center")
+        self.rate_textbox.tag_configure("center", justify="center")
+
+    def create_output(self):
+        for index, entry in enumerate(OUTPUT_FIELDS):
+            output_labels = tk.Label(self, text=OUTPUT_FIELDS[index])
+            output_labels.grid(column=0, row=index, sticky="NSEW")
+            output_labels.configure(font = ("Arial", 20))
+        self.x_dc_offset_textbox = tk.Text(self, font=("Arial", 20))
+        self.x_dc_offset_textbox.grid(column=1, row=0, sticky="NSEW")
+        self.y_dc_offset_textbox = tk.Text(self, font=("Arial", 20))
+        self.y_dc_offset_textbox.grid(column=1, row=1, sticky="NSEW")
+        self.x_min_max_textbox = tk.Text(self, font=("Arial", 20))
+        self.x_min_max_textbox.grid(column=1, row=2, sticky="NSEW")
+        self.y_min_max_textbox = tk.Text(self, font=("Arial", 20))
+        self.y_min_max_textbox.grid(column=1, row=3, sticky="NSEW")
+        self.x_power_textbox = tk.Text(self, font=("Arial", 20))
+        self.x_power_textbox.grid(column=1, row=4, sticky="NSEW")
+        self.y_power_textbox = tk.Text(self, font=("Arial", 20))
+        self.y_power_textbox.grid(column=1, row=5, sticky="NSEW")
+        self.rate_textbox = tk.Text(self, font=("Arial", 20))
+        self.rate_textbox.grid(column=1, row=6, sticky="NSEW")
+        self.settings_label = tk.Label(self, text="Settings")
+        self.settings_label.configure(font = ("Arial", 20))
+        self.settings_label.grid(column=0, row=7, sticky="NSEW")
+        self.settings_textbox = tk.Text(self, wrap="word", font=("Arial", 20))
+        self.settings_textbox.grid(column=1, row=7, sticky="NSEW")
+
+    def display_settings(self, settings):
+        commands = settings.split(" ")
+        print(commands)
+        output_string = ""
+        for command in commands:
+            if command == "-u":
+                output_string += f"{COMMAND_UPDATE[command]['shorthand']}: True"
+            elif command in COMMAND_UPDATE.keys():
+                output_string += f"{COMMAND_UPDATE[command]['shorthand']}: "
+            else:
+                output_string += f"{command}, "
+            #todo does not work on python 3.8
+            #output_string.removesuffix(", ")
+        self.settings_textbox.insert(tk.END, output_string)
+
+
+class ControlFrame(customtkinter.CTkFrame):
+    def __init__(self, parent, command_dict, entry_dict, io_frame):
+        super().__init__(parent)
+        self.io_frame = io_frame
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+        #self.radars_available_frame = RadarsAvailableFrame(self)
+        #self.radars_available_frame.grid(column=0, row = 0, sticky = "NSEW")
+
+        self.button_frame = ButtonFrame(self, command_dict, entry_dict, self.io_frame)
+        self.button_frame.grid(column=0, row = 0, sticky = "NSEW")
+
+
+# class RadarsAvailableFrame(customtkinter.CTkFrame):
+#     radar_dict = {"Select A Radar": "--------"}
+#     def __init__(self, parent):
+#         super().__init__(parent, fg_color = "steel blue")
+#         self.radar_selected = None
+#         self.radars_available = None
+#         self.columnconfigure(list(range(3)), weight=1)
+#         self.rowconfigure(list(range(3)), weight=1)
+#         self.grid_propagate(False)
+#         self.messagebox = None
+#
+
+    # def radar_drop(self):
+    #     self.radars_available = list(self.radar_dict.keys())
+    #     self.radar_selected = tk.StringVar()
+    #     self.radar_selected.set(self.radars_available[0])
+    #     combo_drop = ttk.Combobox(self, textvariable=self.radar_selected, values = self.radars_available, state="readonly")
+    #     combo_drop.grid(column=1, row=0, sticky="EW")
+    #     combo_drop.configure(width=10)
+    #     combo_drop.configure(font = ("Arial", 20))
+    #     return self.radar_selected
+    #
+    #
+    # def find_other_radars(self):
+    #     nm = nmap.PortScanner()
+    #     #f"{os.environ.get('CONNECTION_USERNAME')}"
+    #     #nm.scan(hosts = f"{os.environ.get('HOST_IP')}", arguments = "-sn")
+    #     nm.scan(hosts=state.network_state, arguments="-sn")
+    #     host_ip = state.network_state
+    #     logging.info(f"fpga_layout connect: running on {host_ip}")
+    #     for host in nm.all_hosts():
+    #         self.messagebox.configure(state="normal")
+    #         self.messagebox.delete("1.0", tk.END)
+    #         self.messagebox.insert(tk.END, f"Scanning: {host}")
+    #         self.messagebox.configure(state="disabled")
+    #         try:
+    #             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    #             client.load_system_host_keys()
+    #             client.connect(hostname=f"{host}", username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=3)
+    #             stdin, stdout, stderr = client.exec_command("hostname")
+    #             radar_hostname = stdout.read().decode("utf-8")
+    #             print(radar_hostname)
+    #             client.close()
+    #             self.update_radar_pulldown(host, radar_hostname.strip())
+    #
+    #         except:
+    #             print(f"No connection to {host}")
+    #     self.datetime =datetime.now().strftime("%H:%M:%S")
+    #     self.messagebox.configure(state="normal")
+    #     self.messagebox.delete("1.0", tk.END)
+    #     self.messagebox.insert("1.0", f"Scan finished at {self.datetime}")
+    #     self.messagebox.configure(state="disabled")
+    #
+    # def start_network_scan(self):
+    #     thread = threading.Thread(
+    #         target = self.find_other_radars,
+    #         daemon = True
+    #     )
+    #     thread.start()
+    #     self.messagebox=tk.Text(self, width=20, height=1, background="steel blue", borderwidth=0, relief="flat", highlightthickness=0)
+    #     self.messagebox.configure(font=("Arial", 20))
+    #     self.messagebox.grid(column=1, row=3, sticky="s")
+    #     self.messagebox.insert(tk.END, "Starting network scan...")
+    #     self.messagebox.configure(state="disabled")
+    #
+    #
+    # def update_radar_pulldown(self, ip_address, hostname):
+    #     try:
+    #         if ip_address not in self.radar_dict.values():
+    #             self.radar_dict[hostname] = ip_address
+    #     except:
+    #         print("ERROR")
+    #     self.radar_drop()
+
+    #
+    # def run_reset_radar(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}"):
+    #     self.messagebox.configure(state="normal")
+    #     self.messagebox.delete("1.0", tk.END)
+    #     self.messagebox.insert(tk.END, f"Resetting {hostname}...")
+    #     client.load_system_host_keys()
+    #     client.connect(hostname=hostname, username=username, password=password, look_for_keys=False, allow_agent=False)
+    #     transport = client.get_transport()
+    #     channel = transport.open_session()
+    #     channel.get_pty()
+    #     channel.invoke_shell()
+    #
+    #     channel.send("ps auxfww | grep fpgaStream\n")
+    #     time.sleep(1)
+    #     while channel.recv_ready():
+    #         chunk = channel.recv(1024).decode("iso-8859-1")
+    #
+    #     grep_results = chunk.split("\n")
+    #     open_pids = []
+    #     for i, line in enumerate(grep_results):
+    #         if i == 0:
+    #             pass
+    #         else:
+    #             lister = line.split()
+    #             if len(lister) > 5:
+    #                 open_pids.append(lister[1])
+    #     for pid in open_pids:
+    #         channel.send(f"sudo kill -9 {pid}\n")
+    #         time.sleep(1)
+    #         while channel.recv_ready():
+    #             chunk = channel.recv(1024).decode("iso-8859-1")
+    #             if "password for sq:" in chunk:
+    #                 channel.send(f"{password}\n")
+    #
+    #     channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
+    #     time.sleep(1)
+    #     channel.send(f"./fpgaStream {command}\n")
+    #     time.sleep(3)
+    #     while channel.recv_ready():
+    #         chunk = channel.recv(1024).decode("iso-8859-1")
+    #         if "password for sq:" in chunk:
+    #             channel.send(f"{password}\n")
+    #     client.close()
+    #     self.messagebox.delete("1.0", tk.END)
+    #     self.messagebox.insert(tk.END, f"{hostname} Reset")
+    #     self.messagebox.configure(state="disabled")
+    #     print("Reset FINISHED")
+
+class ButtonFrame(customtkinter.CTkFrame):
+    def __init__(self, parent, command_dict, entry_dict, io_frame):
+        super().__init__(parent, fg_color="gray20")
+        #self.radar_available_frame = radar_available_frame
+        self.current_radar_key = None
+        self.io_frame = io_frame
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(list(range(10)), weight=1)
+        self.command_dict = command_dict
+        self.entry_dict = entry_dict
+        self.button_end = None
+        self.button_reset = None
+        self.network_check_button = None
+        self.create_buttons()
+        self.status_var = tk.StringVar()
+        #self.io_frame.hide_input_frame_hide_output_frame()
+
+
+        self.status_entry = customtkinter.CTkEntry(self, textvariable=self.status_var, justify="center")
+        self.status_entry.grid(column=0, row=5)
+        self.status_var.set("Not connected")
+
+    def create_ssh_client(self):
+        client = paramiko.client.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
+
+        return client
+
+    def fl_network_mode(self):
+        print("PRINTING AOUBT IO FRAME", self.io_frame)
+        self.current_radar_key = state.radar_choice.get()
+        for key, value in state.radars_found.get_dict().items():
+            if key == self.current_radar_key:
+                self.current_radar_value = value
+        print(f"INSIDE FLORIDA {self.current_radar_value}")
+        self.status_var.set("Connecting to radar...")
+        self.status_entry.configure(fg_color="yellow green", text_color="black")
+        try:
+            client = self.create_ssh_client()
+            client.connect(hostname=f"{self.current_radar_value}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
+                           password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=10)
+            # print(f"{self.positioner_selected_for_use} inside status")
+            # print(f"{selected_positioner_global} GLOBAL status")
+            transport = client.get_transport()
+            channel = transport.open_session()
+            channel.get_pty()
+            channel = client.invoke_shell()
+            time.sleep(.1)
+            logging.info("CONNECTED TO FLORIDA NETWORK")
+            return client, channel
+        except:
+            self.status_var.set("Network Error")
+            self.status_entry.configure(fg_color="red", text_color="white")
+
+    def stop_order(self, radar_selected):
+        global is_running
+        is_running = False
+        self.io_frame.show_input_frame_hide_output_frame()
+        global capture_output_flag
+        if capture_output_flag:
+            self.get_bin_files(radar_selected)
+            capture_output_flag = False
+
+    def run_reset_radar(self):
+        print(state.radar_choice.get())
+        self.current_radar_key = state.radar_choice.get()
+        for key, value in state.radars_found.get_dict().items():
+            if key == self.current_radar_key:
+                self.current_radar_value = value
+        print(f"INSIDE FLORIDA {self.current_radar_value}")
+
+        client, channel = self.fl_network_mode()
+
+
+        channel.send("ps auxfww | grep fpgaStream\n")
+        time.sleep(1)
+        while channel.recv_ready():
+            chunk = channel.recv(1024).decode("iso-8859-1")
+
+        grep_results = chunk.split("\n")
+        open_pids = []
+        for i, line in enumerate(grep_results):
+            if i == 0:
+                pass
+            else:
+                lister = line.split()
+                if len(lister) > 5:
+                    open_pids.append(lister[1])
+        for pid in open_pids:
+            channel.send(f"sudo kill -9 {pid}\n")
+            time.sleep(1)
+            while channel.recv_ready():
+                chunk = channel.recv(1024).decode("iso-8859-1")
+                if "password for sq:" in chunk:
+                    channel.send(f"{os.environ.get('CONNECTION_PASSWORD')}\n")
+
+        channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
+        time.sleep(1)
+        channel.send(f"./fpgaStream -r; sudo rmmod xdma; sudo modprobe xdma \n")
+        time.sleep(3)
+        while channel.recv_ready():
+            chunk = channel.recv(1024).decode("iso-8859-1")
+            if "password for sq:" in chunk:
+                channel.send(f"{os.environ.get('CONNECTION_PASSWORD')}\n")
+        client.close()
+        print("Reset FINISHED")
+        self.status_var.set("Reset FINISHED")
+
+
+
+    def run_command_connect(self, command, hostname, username=f"{os.environ.get('CONNECTION_USERNAME')}", password=f"{os.environ.get('CONNECTION_PASSWORD')}"):
+        global is_running
+        is_running = True
+        is_capture_run = False
+        #self.io_frame.hide_input_frame_show_output_frame()
+        #self.io_frame.output_frame.display_settings(command)
+        try:
+            client, channel = self.fl_network_mode()
+        except ValueError:
+            print("Network Error")
+            is_running = False
+            return 1
+        try:
+
+            time.sleep(0.1)
+            channel.send(f"cd {os.environ['FPGAPATH']}\n")
+            time.sleep(.1)
+            channel.send(f"./fpgaStream {command}\n")
+            time.sleep(.1)
+
+            max_duration = 2000
+            start_time = time.time()
+            output = ""
+            # while channel.recv_ready() and is_running:
+            while channel.active and is_running:
+                chunk = channel.recv(1024).decode("iso-8859-1")
+                output += chunk
+                current_time = time.time()
+                if "Captured 10000 packets." in output:
+                    is_capture_run = True
+                    break
+
+                if current_time - start_time < 2:
+                    time.sleep(3)
+                if "<5>" in output:
+                    after = output.split("<5>", 1)
+                    if "[1;1H$<5>" in after[1]:
+                        new_output = after[1].replace("[1;1H$<5>", "\n")
+                        new_output = new_output.split("\n")
+                        for line in new_output:
+                            print(line)
+                            splits = line.split(",")
+                            desired_fields = []
+                            for index, split in enumerate(splits):
+                                if len(splits) == 11:
+                                    if index < 6 or index == 9:
+                                        desired_fields.append(split)
+                            print(desired_fields)
+                            output_queue.put(desired_fields)
+                            self.run_queue()
+                output = ""
+                time.sleep(.5)
+                if current_time - start_time > max_duration:
+                    break
+
+            channel.send("^S\n")
+            channel.send("^C\n")
+            client.close()
+        except:
+            channel.send("^S\n")
+            channel.send("^C\n")
+            client.close()
+        if is_capture_run:
+            self.io_frame.input_frame.output_frame.settings_textbox.configure(state="normal")
+            self.io_frame.input_frame.output_frame.settings_textbox.insert(tk.END, "SCAN FINISHED")
+            self.io_frame.input_frame.output_frame.settings_textbox.configure(fg_color="red")
+            self.io_frame.input_frame.output_frame.settings_textbox.configure(state="disabled")
+
+
+
+    def get_bin_files(self, radar_selected):
+
+        ## GET ACTUAL LOCATIONS HERE
+        print(f"GETTING BINS from {radar_selected}")
+        client, channel = self.fl_network_mode()
+
+
+        try:
+            #TODO GET THE RADAR I DONT THINK I HAVE TO
+
+            #channel.send(f"cd {os.environ.get('FPGAPATH')}\n")
+            #channel.send(f"cd {os.environ['FPGAPATH']}\n")
+            stdin, stdout, stderr = client.exec_command(f"cd {os.environ['FPGAPATH']} && pwd")
+            print(stdout.read().decode())
+            time.sleep(0.5)
+
+
+            stdin, stdout, stderr = client.exec_command("pwd")
+            print(f"{stdout.read().decode()}")
+            now = datetime.now()
+            formatted_time = now.strftime("%m-%d-%H-%M")
+            bin_files = glob.glob(f"{os.environ['FPGAPATH']}/*.bin")
+            print(f"{bin_files} BIN FILES")
+            new_directory = f"raw-bin-{formatted_time}"
+            stdin, stdout, stderr = client.exec_command(f"mkdir -p '{os.environ['FPGAPATH']}/{new_directory}/'")
+            print(f"{new_directory} CREATED")
+            stdin, stdout, stderr = client.exec_command(f"cp {os.environ['FPGAPATH']}/daq0080*.bin '{os.environ['FPGAPATH']}/{new_directory}/'")
+            transfer_status = stdout.channel.recv_exit_status()
+            print(f"{transfer_status} of bins")
+            stdin, stdout, stderr = client.exec_command(
+                f"cd {os.environ['FPGAPATH']} && tar -czvf '{new_directory}.tgz' '{new_directory}'"
+                #f"tar -czvf '{os.environ['FPGAPATH']}/{new_directory}.tgz' '{os.environ['FPGAPATH']}/{new_directory}/'"
+                )
+            exit_status = stdout.channel.recv_exit_status()
+            print(f"{exit_status}")
+
+
+            stdin, stdout, stderr = client.exec_command(f"rm {os.environ['FPGAPATH']}/*.bin")
+            exit_status = stdout.channel.recv_exit_status()
+            print(f"{exit_status}")
+
+
+            #TODO NEED THESE TWO LINES TO RUN
+            # with SCPClient(client.get_transport()) as scp:
+            #     scp.get(f"{os.environ['FPGAPATH']}/raw-bin-{formatted_time}.tgz", "./generatedBinFiles/")
+                #todo unnecessary if exe exists on file
+                #scp.get("/home/sq/sq/stormquant-beta/cmake-build-debug/common/raytestingutils/convertRawToCleartext", "../ClearText/")
+                #os.chmod("../ClearText/convertRawToCleartext", 0o755)
+        except Exception as e:
+            print(f"An error has occurred: {e}")
+
+        finally:
+            #todo add threading if this works
+            client.close()
+
+
+    def create_buttons(self):
+        self.commands_label = customtkinter.CTkLabel(master=self, text="Commands", text_color="#E5A93B", width=150)
+        self.commands_label.grid(column=0, row=0)
+        self.commands_label.configure(font=("Arial", 14, "underline"))
+
+        self.button_end = customtkinter.CTkButton(self, text="End Run", command= lambda: self.stop_order("DUMMY"))
+        self.button_end.grid(column=0,  row=4)
+        self.button_end.configure(width=150, font=("Arial", 14))
+
+        self.button_reset = customtkinter.CTkButton(self, text="Reset", command = lambda:self.run_reset_radar())
+        self.button_reset.grid(column=0, row=3)
+        self.button_reset.configure(width=150, font=("Arial", 14))
+
+        self.submit_button = SubmitButton(self, self.command_dict, self.entry_dict, self.io_frame, False)
+        self.submit_button.grid(column=0, row=1)
+        self.submit_button.configure(width=150, font=("Arial", 14))
+
+        self.capture_button = SubmitButton(self, self.command_dict, self.entry_dict, self.io_frame, True)
+        self.capture_button.grid(column=0, row=2)
+        self.capture_button.configure(text= "Capture", width=150, font=("Arial", 14))
+
+        #self.network_check_button = tk.Button(self, text="Network Check" , command= lambda: RadarsAvailableFrame.find_other_radars(self.radar_available_frame))
+        # self.network_check_button = customtkinter.CTkButton(self, text="Find Radars",
+        #                                       command=lambda: RadarsAvailableFrame.start_network_scan(
+        #                                           self.radar_available_frame))
+        # self.network_check_button.grid(column=0, row=4)
+        # self.network_check_button.configure(width=10, font=("Arial", 20))
+
+
+class CommandLabels(customtkinter.CTkTextbox):
+    def __init__(self, parent, unit, col, text, row, command_selected, wrap = tk.CHAR):
+        super().__init__(master = parent, width = 200, height = 30, fg_color="#2B2B2B")
+        self.unit = unit
+        self.text = text
+        self.col = col
+        self.row = row
+        self.command_selected = command_selected
+        self.wrap = wrap
+        self.font = ("Times New Roman", 14)
+        self.grid(column = col, row = row, sticky = "W")
+        self.bind("<Enter>", self.on_enter)
+        self.bind("<Leave>", self.on_leave)
+
+    def on_enter(self, event):
+        self.configure(state = "normal")
+        self.grid(column=self.col, row=self.row)
+        self.delete("1.0", tk.END)
+        self.insert(tk.END, COMMAND_UPDATE[self.command_selected]['text'])
+        self.configure(width=450)
+        self.configure(state = "disabled")
+
+    def on_leave(self, event):
+        self.configure(state="normal")
+        self.grid(column = self.col, row = self.row)
+        self.delete("1.0", tk.END)
+        self.insert(tk.END, COMMAND_UPDATE[self.command_selected]['title'])
+        self.configure(width=150)
+        self.configure(state="disabled")
+
+class Button(customtkinter.CTkButton):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+class SubmitButton(customtkinter.CTkButton):
+    def __init__(self, parent, received_commands, received_units, radar_available_frame, io_frame, capture_output = False):
+        super().__init__(parent, text="Run FPGA", command=lambda: self.run_command(self.received_commands, self.received_units))
+        self.radar_available_frame = radar_available_frame
+        self.io_frame = io_frame
+        self.received_commands = received_commands
+        self.received_units = received_units
+        self.capture_output = capture_output
+
+    def run_queue(self):
+        #print(f"OPQ: {output_queue.get()}")
+        # while output_queue.qsize() > 10 and is_running:
+        #     self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
+        print(output_queue.qsize())
+        try:
+            if not output_queue.empty():
+                self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
+        except:
+            print("Error occured")
+
+    def create_ssh_client(self):
+        client = paramiko.client.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
+
+        return client
+
+    # def fl_network_mode(self):
+    #     self.current_radar_key = state.radar_choice.get()
+    #     for key, value in state.radars_found.get_dict().items():
+    #         if key == self.current_radar_key:
+    #             self.current_radar_value = value
+    #     print(f"INSIDE FLORIDA {self.current_radar_value}")
+    #     self.io_frame.button_frame.status_var.set("Connecting to radar...")
+    #
+    #     try:
+    #         client = self.create_ssh_client()
+    #         client.connect(hostname=f"{self.current_radar_value}", username=f"{os.environ.get('CONNECTION_USERNAME')}",
+    #                        password=f"{os.environ.get('CONNECTION_PASSWORD')}", look_for_keys=False, allow_agent=False, timeout=10)
+    #         # print(f"{self.positioner_selected_for_use} inside status")
+    #         # print(f"{selected_positioner_global} GLOBAL status")
+    #         transport = client.get_transport()
+    #         channel = transport.open_session()
+    #         channel.get_pty()
+    #         channel = client.invoke_shell()
+    #         time.sleep(.1)
+    #         logging.info("CONNECTED TO FLORIDA NETWORK")
+    #         return client, channel
+    #     except:
+    #         #self.io_frame.output_frame.status_var.set("Network Error")
+    #         self.io_frame.button_frame.status_var.set("Network Error")
+    #         self.io_frame.button_frame.status_entry.configure(fg_color="red", text_color="white")
+
+
+    def run_command(self, received_commands, received_units):
+        cmd_str = ""
+        unit_list = []
+
+        for unit in self.received_units:
+            unit_list.append(unit)
+
+        for i, value in enumerate(self.received_commands.values()):
+            if value.get() == "True":
+                cmd_str += f"{unit_list[i]} "
+            else:
+                cmd_str += f"{unit_list[i]} {value.get()} "
+
+        input_check_return = self.input_check(cmd_str)
+        if input_check_return == False:
+            self.io_frame.input_frame.create_entries()
+            return
+
+        # FLAG FOR CAPTURING OUTPUT
+        if self.capture_output:
+            global capture_output_flag
+            capture_output_flag = True
+            self.capture_output = True
+            #todo clarify -c or -n
+            cmd_str += "-n -Q 10000"
+
+        print(cmd_str)
+
+        self.current_radar_key = state.radar_choice.get()
+        for key, value in state.radars_found.get_dict().items():
+            if key == self.current_radar_key:
+                self.current_radar_value = value
+        print(self.current_radar_value)
+        thread = threading.Thread(target=ButtonFrame.run_command_connect, args=(self, cmd_str.strip(), self.current_radar_value))
+        thread.start()
+
+    def input_check(self, cmd_str):
+        cmd_list = cmd_str.split(" ")
+        for i, cmd_flag in enumerate(cmd_list):
+            #if cmd_flag in COMMAND_UPDATE and cmd_flag != '-u' and cmd_flag != "-y" and cmd_flag != "-C" and cmd_flag != "-V":
+            if cmd_flag in COMMAND_UPDATE and cmd_flag != '-u':
+                if cmd_flag == "-y" or cmd_flag == "-C" or cmd_flag == "-V":
+                    cmd_num  = cmd_list[i+1]
+                    try:
+                        float(cmd_num)
+                    except ValueError:
+                        return False
+                elif cmd_flag == "-D":
+                    cmd_num = cmd_list[i+1]
+                    try:
+                        num_cmd_num = float(cmd_num)
+                    except ValueError:
+                        return False
+                    if 0 <= num_cmd_num <= float(cmd_list[1]):
+                        continue
+                    else:
+                        input_warning = messagebox.showwarning("Warning", f"{COMMAND_UPDATE[cmd_flag]['title']} ratio must be between 0 and 1.0")
+                        if input_warning == 'ok':
+                            return False
+                else:
+                    cmd_num = cmd_list[i+1]
+                    try:
+                        num_cmd_num = float(cmd_num)
+                    except ValueError:
+                        return False
+                    if COMMAND_UPDATE[cmd_flag]['lowerbound'] <= num_cmd_num <= COMMAND_UPDATE[cmd_flag]['upperbound']:
+                        continue
+                    else:
+                        input_warning = messagebox.showwarning("Warning", f"{COMMAND_UPDATE[cmd_flag]['title']} must be betweeen {COMMAND_UPDATE[cmd_flag]['lowerbound']} and {COMMAND_UPDATE[cmd_flag]['upperbound']}")
+                        if input_warning == 'ok':
+                            return False
