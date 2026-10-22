@@ -50,6 +50,7 @@ class MainFrame(customtkinter.CTkFrame):
         self.entry_dict = {}
         self.status_var = tk.StringVar()
         self.current_radar_value = None
+        self.CURRENT_FPGA_PID = None
 
 
 
@@ -80,7 +81,7 @@ class MainFrame(customtkinter.CTkFrame):
         self.commands_label.grid(column=2, row=0)
         self.commands_label.configure(font=("Arial", 14, "underline"))
 
-        self.button_end = customtkinter.CTkButton(self, text="End Run", command=lambda: self.stop_order())
+        self.button_end = customtkinter.CTkButton(self, text="End Run", command=lambda: self.start_threading(self.stop_order))
         self.button_end.grid(column=2, row=4)
         self.button_end.configure(width=150, font=("Arial", 14))
 
@@ -268,11 +269,25 @@ class MainFrame(customtkinter.CTkFrame):
             self.status_entry.configure(fg_color="red", text_color="white")
 
     def stop_order(self):
-        self.status_var.set("Stopping run...")
-        self.hide_outputs()
-        self.show_inputs()
-        global is_running
-        is_running = False
+        self.status_var.set("Stopping order...")
+
+
+        client, channel = self.fl_network_mode()
+
+        if self.CURRENT_FPGA_PID:
+            stdin, stdout, stderr = client.exec_command(f"kill -9 {self.CURRENT_FPGA_PID}")
+            print(f"STDOUT: {stdout.read().decode('utf-8')}")
+            print(f"STDERR: {stderr.read().decode('utf-8')}")
+
+            global is_running
+            is_running = False
+            self.status_var.set("Run Stopped")
+        else:
+            self.status_var.set("Stop order failed")
+
+        channel.close()
+        client.close()
+
 
     def run_reset_radar(self):
         print(state.radar_choice.get())
@@ -334,10 +349,6 @@ class MainFrame(customtkinter.CTkFrame):
                 continue
             command += f" {key} {value.get()}"
 
-
-
-
-
         try:
             client, channel = self.fl_network_mode()
         except ValueError:
@@ -359,11 +370,7 @@ class MainFrame(customtkinter.CTkFrame):
             self.status_var.set("Capture Run Starting")
         else:
             self.status_var.set("Starting Stream")
-
-
-
         try:
-
             time.sleep(0.1)
             channel.send(f"cd {os.environ['FPGAPATH']}\n")
             time.sleep(.1)
@@ -376,63 +383,63 @@ class MainFrame(customtkinter.CTkFrame):
 
             # while channel.recv_ready() and is_running:
             print("IS RUNNING", is_running)
-            print("IS CAPUTURE", is_capture_run)
-            while True:
-                while channel.active:
-                    buffer = channel.recv(1024).decode("iso-8859-1")
-                    print(repr(buffer))
-                    output += buffer
-                    #TODO CURRENT TRY
-                    if "Captured 10000 packets." in output:
-                        is_capture_run = True
-                        print("FINISHED GATHERING PACKETS")
-                        break
+            print("IS CAPTURE", is_capture_run)
+            stdin, stdout,stderr = client.exec_command("pgrep -n fpgaStream")
+            self.CURRENT_FPGA_PID = stdout.read().decode('utf-8').strip()
+            print(self.CURRENT_FPGA_PID)
+            while channel.active and is_running:
+                buffer = channel.recv(1024).decode("iso-8859-1")
+                print(repr(buffer))
+                output += buffer
+                #TODO CURRENT TRY
+                if "Captured 10000 packets." in output:
+                    is_capture_run = True
+                    print("FINISHED GATHERING PACKETS")
+                    break
 
-                    if "failed reading" in output:
-                        print("FAILED READING")
-                        break
-                    if "\x1b[1;1H$<5>" in buffer:
-                        try:
-                            print("IN TRY")
-                            clean_buffer = buffer.replace("\x1b[1;1H$<5>", "")
-                            fields = [field.strip() for field in clean_buffer.split(",")]
-                            x_dc_offset_value = fields[0].split("=", 1)[1].strip()
-                            y_dc_offset_value = fields[1].split("=", 1)[1].strip()
-                            x_min_max_value = fields[2].split("X  ", 1)[1].strip()
-                            y_min_max_value = fields[3].split("Y  ", 1)[1].strip()
-                            x_power_value = fields[4].split(": ", 1)[1].strip()
-                            y_power_value = fields[5].split(": ", 1)[1].strip()
+                if "failed reading" in output or "FAILED READING" in output:
+                    print("FAILED READING FOUND IN OUTPUT")
+                    break
+                if "\x1b[1;1H$<5>" in buffer:
+                    try:
+                        clean_buffer = buffer.replace("\x1b[1;1H$<5>", "")
+                        fields = [field.strip() for field in clean_buffer.split(",")]
+                        x_dc_offset_value = fields[0].split("=", 1)[1].strip()
+                        y_dc_offset_value = fields[1].split("=", 1)[1].strip()
+                        x_min_max_value = fields[2].split("X  ", 1)[1].strip()
+                        y_min_max_value = fields[3].split("Y  ", 1)[1].strip()
+                        x_power_value = fields[4].split(": ", 1)[1].strip()
+                        y_power_value = fields[5].split(": ", 1)[1].strip()
 
-                            rate_value = fields[9].split(":", 1)[1].strip()
-                            final_rate = rate_value.split("=", 1)[0].strip()
+                        rate_value = fields[9].split(":", 1)[1].strip()
+                        final_rate = rate_value.split("=", 1)[0].strip()
 
-                            self.output_fpga_values = (
-                                x_dc_offset_value,
-                                y_dc_offset_value,
-                                x_min_max_value,
-                                y_min_max_value,
-                                x_power_value,
-                                y_power_value,
-                                final_rate,
-                            )
+                        self.output_fpga_values = (
+                            x_dc_offset_value,
+                            y_dc_offset_value,
+                            x_min_max_value,
+                            y_min_max_value,
+                            x_power_value,
+                            y_power_value,
+                            final_rate,
+                        )
 
-                            print("FPGA VALUES:", self.output_fpga_values)
+                        print("FPGA VALUES:", self.output_fpga_values)
 
-                            # output_list = buffer.split("<5>", 1)
-                            # x_dc_offset_value = output_list[0].split("= ")
-                            # y_dc_offset_value = output_list[1].split("= ")
-                            # x_min_max_value = output_list[2].split("X  ")
-                            # y_min_max_value = output_list[3].split("Y  ")
-                            # x_power_value = output_list[4].split(": ")
-                            # y_power_value = output_list[5].split(": ")
-                            # rate_value = output_list[6].split(": ")
-                            # final_rate = rate_value[1].split("=")
-                            #
-                            # self.output_fpga_values = (x_dc_offset_value[1], y_dc_offset_value[1], x_min_max_value[1], y_min_max_value[1], x_power_value[1], y_power_value[1],final_rate[0])
-                        except (ValueError, IndexError) as e:
-                            print(e)
-                            continue
-                    print("CHANNEL ACTIVE", channel.active)
+                        # output_list = buffer.split("<5>", 1)
+                        # x_dc_offset_value = output_list[0].split("= ")
+                        # y_dc_offset_value = output_list[1].split("= ")
+                        # x_min_max_value = output_list[2].split("X  ")
+                        # y_min_max_value = output_list[3].split("Y  ")
+                        # x_power_value = output_list[4].split(": ")
+                        # y_power_value = output_list[5].split(": ")
+                        # rate_value = output_list[6].split(": ")
+                        # final_rate = rate_value[1].split("=")
+                        #
+                        # self.output_fpga_values = (x_dc_offset_value[1], y_dc_offset_value[1], x_min_max_value[1], y_min_max_value[1], x_power_value[1], y_power_value[1],final_rate[0])
+                    except (ValueError, IndexError) as e:
+                        print(e)
+                        continue
 
                         #TODO PREVIOUS TRY
                         # if "[1;1H$<5>" in after[1]:
@@ -464,22 +471,23 @@ class MainFrame(customtkinter.CTkFrame):
 
 
         except:
-            channel.send("^S\n")
-            channel.send("^C\n")
-            client.close()
-            self.status_var.set("Run Finished")
+            self.status_var.set("Run Error")
+            self.status_entry.configure(fg="red", text_color="white")
             self.hide_outputs()
             self.show_inputs()
+            client.close()
+            channel.close()
+            is_running = False
         if is_capture_run:
             self.status_var.set("Gathering capture files")
-            self.get_bin_files(self)
+            self.get_bin_files()
 
-        # channel.send("^S\n")
-        # channel.send("^C\n")
-        # client.close()
-        # self.status_var.set("Run Finished")
-        # self.hide_outputs()
-        # self.show_inputs()
+        channel.close()
+        client.close()
+        self.status_var.set("Run Finished")
+        self.hide_outputs()
+        self.show_inputs()
+        return 0
 
 
 
