@@ -287,6 +287,7 @@ class MainFrame(customtkinter.CTkFrame):
 
         channel.close()
         client.close()
+        self.CURRENT_FPGA_PID = None
 
 
     def run_reset_radar(self):
