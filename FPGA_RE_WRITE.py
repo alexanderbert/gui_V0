@@ -271,6 +271,8 @@ class MainFrame(customtkinter.CTkFrame):
 
     def stop_order(self):
         self.status_var.set("Stopping order...")
+        global is_running
+        is_running = False
 
 
         client, channel = self.fl_network_mode()
@@ -280,8 +282,7 @@ class MainFrame(customtkinter.CTkFrame):
             print(f"STDOUT: {stdout.read().decode('utf-8')}")
             print(f"STDERR: {stderr.read().decode('utf-8')}")
 
-            global is_running
-            is_running = False
+
             self.status_var.set("Run Stopped")
         else:
             self.status_var.set("Stop order failed")
@@ -386,7 +387,7 @@ class MainFrame(customtkinter.CTkFrame):
             # while channel.recv_ready() and is_running:
             print("IS RUNNING", is_running)
             print("IS CAPTURE", is_capture_run)
-            channel.settimeout(5)
+            channel.settimeout(10)
             stdin, stdout,stderr = client.exec_command("pgrep -n fpgaStream")
             self.CURRENT_FPGA_PID = stdout.read().decode('utf-8').strip()
             print(self.CURRENT_FPGA_PID)
