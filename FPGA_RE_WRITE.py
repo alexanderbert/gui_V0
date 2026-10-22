@@ -66,11 +66,21 @@ class MainFrame(customtkinter.CTkFrame):
         self.status_entry.grid(column=2, row=5)
         self.status_var.set("Not connected")
 
+        self.output_fpga_values = None
+        self.update_all_textboxes()
+        self.x_dc_offset_textbox_var = tk.StringVar()
+        self.y_dc_offset_textbox_var = tk.StringVar()
+        self.x_min_max_textbox_var = tk.StringVar()
+        self.y_min_max_textbox_var = tk.StringVar()
+        self.x_power_textbox_var = tk.StringVar()
+        self.y_power_textbox_var = tk.StringVar()
+        self.rate_textbox_var = tk.StringVar()
+
         self.commands_label = customtkinter.CTkLabel(master=self, text="Commands", text_color="#E5A93B", width=150)
         self.commands_label.grid(column=2, row=0)
         self.commands_label.configure(font=("Arial", 14, "underline"))
 
-        self.button_end = customtkinter.CTkButton(self, text="End Run", command=lambda: self.stop_order("DUMMY"))
+        self.button_end = customtkinter.CTkButton(self, text="End Run", command=lambda: self.stop_order())
         self.button_end.grid(column=2, row=4)
         self.button_end.configure(width=150, font=("Arial", 14))
 
@@ -122,35 +132,61 @@ class MainFrame(customtkinter.CTkFrame):
                 self.command_dict[FPGA_COMMAND_ALPHA[index]] = COMMAND_UPDATE[FPGA_COMMAND_ALPHA[index]][
                     'default_value']
 
-    def update_all_textboxes(self, output_list):
-        x_dc_offset_value = output_list[0].split("= ")
-        self.x_dc_offset_textbox.delete("0.0", "end")
-        self.x_dc_offset_textbox.insert("0.0",x_dc_offset_value[1] )
+    def update_all_textboxes(self):
+        if self.output_fpga_values is not None:
+            x_dc_offset, y_dc_offset, x_min_max, y_min_max, x_power, y_power, rate = self.output_fpga_values
+            self.x_dc_offset_textbox_var.set(x_dc_offset)
+            self.y_dc_offset_textbox_var.set(y_dc_offset)
+            self.x_min_max_textbox_var.set(x_min_max)
+            self.y_min_max_textbox_var.set(y_min_max)
+            self.x_power_textbox_var.set(x_power)
+            self.y_power_textbox_var.set(y_power)
+            self.rate_textbox_var.set(rate)
+        self.after(20, self.update_all_textboxes)
 
-        y_dc_offset_value = output_list[1].split("= ")
-        self.y_dc_offset_textbox.delete("0.0", "end")
-        self.y_dc_offset_textbox.insert("0.0", y_dc_offset_value[1] )
-
-        x_min_max_value = output_list[2].split("X  ")
-        self.x_min_max_textbox.delete("0.0", "end")
-        self.x_min_max_textbox.insert("0.0", x_min_max_value[1] )
-
-        y_min_max_value = output_list[3].split("Y  ")
-        self.y_min_max_textbox.delete("0.0", "end")
-        self.y_min_max_textbox.insert("0.0", y_min_max_value[1] )
-
-        x_power_value = output_list[4].split(": ")
-        self.x_power_textbox.delete("0.0", "end")
-        self.x_power_textbox.insert("0.0", x_power_value[1] )
-
-        y_power_value = output_list[5].split(": ")
-        self.y_power_textbox.delete("0.0", "end")
-        self.y_power_textbox.insert("0.0", y_power_value[1] )
-
-        rate_value = output_list[6].split(": ")
-        final_rate = rate_value[1].split("=")
-        self.rate_textbox.delete("0.0", "end")
-        self.rate_textbox.insert("0.0", final_rate[0] )
+        # if output_queue.qsize() > 0:
+        #     output_list = output_queue.get()
+        #     x_dc_offset_value = output_list[0].split("= ")
+        #     # self.x_dc_offset_textbox.delete("0.0", "end")
+        #     # self.x_dc_offset_textbox.insert("0.0",x_dc_offset_value[1] )
+        #     self.x_dc_offset_textbox_var.set(x_dc_offset_value[1])
+        #     print(f"x_dc_offset_value: {x_dc_offset_value[1]}")
+        #
+        #     y_dc_offset_value = output_list[1].split("= ")
+        #     # self.y_dc_offset_textbox.delete("0.0", "end")
+        #     # self.y_dc_offset_textbox.insert("0.0", y_dc_offset_value[1] )
+        #     self.y_dc_offset_textbox_var.set(y_dc_offset_value[1])
+        #     print(f"y_dc_offset_value: {y_dc_offset_value[1]}")
+        #
+        #     x_min_max_value = output_list[2].split("X  ")
+        #     # self.x_min_max_textbox.delete("0.0", "end")
+        #     # self.x_min_max_textbox.insert("0.0", x_min_max_value[1] )
+        #     self.x_min_max_textbox_var.set(x_min_max_value[1])
+        #     print(f"x_min_max_value: {x_min_max_value[1]}")
+        #
+        #     y_min_max_value = output_list[3].split("Y  ")
+        #     # self.y_min_max_textbox.delete("0.0", "end")
+        #     # self.y_min_max_textbox.insert("0.0", y_min_max_value[1] )
+        #     self.y_min_max_textbox_var.set(y_min_max_value[1] )
+        #     print(f"y_min_max_value: {y_min_max_value[1]}")
+        #
+        #     x_power_value = output_list[4].split(": ")
+        #     self.x_power_textbox_var.set(x_power_value[1])
+        #     # self.x_power_textbox.delete("0.0", "end")
+        #     # self.x_power_textbox.insert("0.0", x_power_value[1] )
+        #
+        #     y_power_value = output_list[5].split(": ")
+        #     self.y_power_textbox_var.set(y_power_value[1])
+        #     # self.y_power_textbox.delete("0.0", "end")
+        #     # self.y_power_textbox.insert("0.0", y_power_value[1] )
+        #     print(f"y_power_value: {y_power_value[1]}")
+        #
+        #     rate_value = output_list[6].split(": ")
+        #     final_rate = rate_value[1].split("=")
+        #     self.rate_textbox_var.set(final_rate[0])
+        #     # self.rate_textbox.delete("0.0", "end")
+        #     # self.rate_textbox.insert("0.0", final_rate[0] )
+        #     print(f"final_rate: {final_rate[0]}")
 
     def create_output(self):
         self.output_frame.grid(column=0, row=0, columnspan=2, rowspan=20, sticky = "NSEW")
@@ -161,25 +197,25 @@ class MainFrame(customtkinter.CTkFrame):
             output_labels = customtkinter.CTkLabel(self.output_frame, text=OUTPUT_FIELDS[index])
             output_labels.grid(column=0, row=index, sticky="e", padx=20)
             output_labels.configure(font=("Arial", 14), width = 100)
-        self.x_dc_offset_textbox = customtkinter.CTkEntry(self.output_frame, justify="center")
+        self.x_dc_offset_textbox = customtkinter.CTkEntry(self.output_frame, justify="center", textvariable=self.x_dc_offset_textbox_var)
         self.x_dc_offset_textbox.configure(width = 100, height = 20)
         self.x_dc_offset_textbox.grid(column=1, row=0, pady=10, sticky="w")
-        self.y_dc_offset_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center")
+        self.y_dc_offset_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center", textvariable=self.y_dc_offset_textbox_var)
         self.y_dc_offset_textbox.configure(width = 100, height = 20)
         self.y_dc_offset_textbox.grid(column=1, row=1, pady=10, sticky="w")
-        self.x_min_max_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center")
+        self.x_min_max_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center", textvariable=self.x_min_max_textbox_var)
         self.x_min_max_textbox.configure(width = 100, height = 20)
         self.x_min_max_textbox.grid(column=1, row=2, pady=10, sticky="w")
-        self.y_min_max_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center")
+        self.y_min_max_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center", textvariable=self.y_min_max_textbox_var)
         self.y_min_max_textbox.configure(width = 100, height = 20)
         self.y_min_max_textbox.grid(column=1, row=3, pady=10, sticky="w")
-        self.x_power_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center")
+        self.x_power_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center", textvariable=self.x_power_textbox_var)
         self.x_power_textbox.configure(width = 100, height = 20)
         self.x_power_textbox.grid(column=1, row=4, pady=10, sticky="w")
-        self.y_power_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center")
+        self.y_power_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center", textvariable=self.y_power_textbox_var)
         self.y_power_textbox.configure(width = 100, height = 20)
         self.y_power_textbox.grid(column=1, row=5, pady=10, sticky="w")
-        self.rate_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center")
+        self.rate_textbox = customtkinter.CTkEntry(self.output_frame, font=("Arial", 14), justify="center", textvariable =self.rate_textbox_var)
         self.rate_textbox.configure(width = 100, height = 20)
         self.rate_textbox.grid(column=1, row=6, pady=10, sticky="w")
         self.settings_label = customtkinter.CTkLabel(self.output_frame, text="Settings:")
@@ -297,14 +333,9 @@ class MainFrame(customtkinter.CTkFrame):
                 command += f" {key} "
                 continue
             command += f" {key} {value.get()}"
-            print(f"The entry for {key} is {value.get()}")
 
-        self.hide_inputs()
-        self.create_output()
-        print(f"COMMAND:{command.strip()}")
-        self.settings_textbox.tag_config("center", justify="center")
-        self.settings_textbox.delete("0.0", "end")
-        self.settings_textbox.insert("0.0", command.strip(), "center")
+
+
 
 
         try:
@@ -315,10 +346,19 @@ class MainFrame(customtkinter.CTkFrame):
             return 1
 
         #HIDE INPUTS AND SHOW OUTPUTS
+        self.hide_inputs()
+        self.create_output()
+
+        print(f"COMMAND:{command.strip()}")
+        self.settings_textbox.tag_config("center", justify="center")
+        self.settings_textbox.delete("0.0", "end")
+        self.settings_textbox.insert("0.0", command.strip(), "center")
 
         if capture_check:
             #is_capture_run = True
             self.status_var.set("Capture Run Starting")
+        else:
+            self.status_var.set("Starting Stream")
 
 
 
@@ -333,51 +373,113 @@ class MainFrame(customtkinter.CTkFrame):
             max_duration = 2000
             start_time = time.time()
             output = ""
+
             # while channel.recv_ready() and is_running:
-            while channel.active and is_running:
-                chunk = channel.recv(1024).decode("iso-8859-1")
-                output += chunk
-                current_time = time.time()
-                if "Captured 10000 packets." in output:
-                    is_capture_run = True
-                    break
+            print("IS RUNNING", is_running)
+            print("IS CAPUTURE", is_capture_run)
+            while True:
+                while channel.active:
+                    buffer = channel.recv(1024).decode("iso-8859-1")
+                    print(repr(buffer))
+                    output += buffer
+                    #TODO CURRENT TRY
+                    if "Captured 10000 packets." in output:
+                        is_capture_run = True
+                        print("FINISHED GATHERING PACKETS")
+                        break
 
-                if current_time - start_time < 2:
-                    time.sleep(3)
-                if "<5>" in output:
-                    after = output.split("<5>", 1)
-                    if "[1;1H$<5>" in after[1]:
-                        new_output = after[1].replace("[1;1H$<5>", "\n")
-                        new_output = new_output.split("\n")
-                        for line in new_output:
-                            print(line)
-                            splits = line.split(",")
-                            desired_fields = []
-                            for index, split in enumerate(splits):
-                                if len(splits) == 11:
-                                    if index < 6 or index == 9:
-                                        desired_fields.append(split)
-                            print(desired_fields)
-                            output_queue.put(desired_fields)
-                            self.run_queue()
-                output = ""
-                time.sleep(.5)
-                if current_time - start_time > max_duration:
-                    break
+                    if "failed reading" in output:
+                        print("FAILED READING")
+                        break
+                    if "\x1b[1;1H$<5>" in buffer:
+                        try:
+                            print("IN TRY")
+                            clean_buffer = buffer.replace("\x1b[1;1H$<5>", "")
+                            fields = [field.strip() for field in clean_buffer.split(",")]
+                            x_dc_offset_value = fields[0].split("=", 1)[1].strip()
+                            y_dc_offset_value = fields[1].split("=", 1)[1].strip()
+                            x_min_max_value = fields[2].split("X  ", 1)[1].strip()
+                            y_min_max_value = fields[3].split("Y  ", 1)[1].strip()
+                            x_power_value = fields[4].split(": ", 1)[1].strip()
+                            y_power_value = fields[5].split(": ", 1)[1].strip()
 
-            channel.send("^S\n")
-            channel.send("^C\n")
-            client.close()
-            self.status_var.set("Run Finished")
+                            rate_value = fields[9].split(":", 1)[1].strip()
+                            final_rate = rate_value.split("=", 1)[0].strip()
+
+                            self.output_fpga_values = (
+                                x_dc_offset_value,
+                                y_dc_offset_value,
+                                x_min_max_value,
+                                y_min_max_value,
+                                x_power_value,
+                                y_power_value,
+                                final_rate,
+                            )
+
+                            print("FPGA VALUES:", self.output_fpga_values)
+
+                            # output_list = buffer.split("<5>", 1)
+                            # x_dc_offset_value = output_list[0].split("= ")
+                            # y_dc_offset_value = output_list[1].split("= ")
+                            # x_min_max_value = output_list[2].split("X  ")
+                            # y_min_max_value = output_list[3].split("Y  ")
+                            # x_power_value = output_list[4].split(": ")
+                            # y_power_value = output_list[5].split(": ")
+                            # rate_value = output_list[6].split(": ")
+                            # final_rate = rate_value[1].split("=")
+                            #
+                            # self.output_fpga_values = (x_dc_offset_value[1], y_dc_offset_value[1], x_min_max_value[1], y_min_max_value[1], x_power_value[1], y_power_value[1],final_rate[0])
+                        except (ValueError, IndexError) as e:
+                            print(e)
+                            continue
+                    print("CHANNEL ACTIVE", channel.active)
+
+                        #TODO PREVIOUS TRY
+                        # if "[1;1H$<5>" in after[1]:
+                        #     new_output = after[1].replace("[1;1H$<5>", "\n")
+                        #     new_output = new_output.split("\n")
+                        #     for line in new_output:
+                        #         print("FOR LINE IN OUTPUT: ", line)
+                        #         splits = line.split(",")
+                        #         desired_fields = []
+                        #         for index, split in enumerate(splits):
+                        #             if len(splits) == 11:
+                        #                 if index < 6 or index == 9:
+                        #                     desired_fields.append(split)
+                        #         print(desired_fields)
+                        #         output_queue.put(desired_fields)
+                        # else:
+                        #     new_output = after[1].replace("[1;1H$<5>", "\n")
+                        #     new_output = new_output.split("\n")
+                        #     for line in new_output:
+                        #         print("ELSE LINE IN OUTPUT: ", line)
+                        #         splits = line.split(",")
+                        #         desired_fields = []
+                        #         for index, split in enumerate(splits):
+                        #             if len(splits) == 11:
+                        #                 if index < 6 or index == 9:
+                        #                     desired_fields.append(split)
+                        #         print(desired_fields)
+                        #         output_queue.put(desired_fields)
+
+
         except:
             channel.send("^S\n")
             channel.send("^C\n")
             client.close()
             self.status_var.set("Run Finished")
+            self.hide_outputs()
+            self.show_inputs()
         if is_capture_run:
             self.status_var.set("Gathering capture files")
             self.get_bin_files(self)
 
+        # channel.send("^S\n")
+        # channel.send("^C\n")
+        # client.close()
+        # self.status_var.set("Run Finished")
+        # self.hide_outputs()
+        # self.show_inputs()
 
 
 
@@ -438,13 +540,11 @@ class MainFrame(customtkinter.CTkFrame):
             client.close()
 
     def run_queue(self):
-        #print(f"OPQ: {output_queue.get()}")
-        # while output_queue.qsize() > 10 and is_running:
-        #     self.after(100, self.io_frame.output_frame.update_all_textboxes(output_queue.get()))
+
         print(output_queue.qsize())
         try:
             if not output_queue.empty():
-                self.after(100, self.update_all_textboxes(output_queue.get()))
+                self.after(20, self.update_all_textboxes())
         except:
             print("Error occured")
 
