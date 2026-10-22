@@ -8,10 +8,13 @@ from usb_check import *
 from v2_positioner import *
 from v2_radar_functionality import *
 from v2_visualization import *
-from v2_fpga_layout import *
+#from v2_fpga_layout import *
+
 import customtkinter
 import tkinter.font as tkFont
 
+##TESTING
+from FPGA_RE_WRITE import *
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -35,7 +38,9 @@ class App(customtkinter.CTk):
         self.my_notebook.grid(row=1, column=0, sticky="nsew")
         self.my_notebook.grid_propagate(False)
         self.notebook_style = ttk.Style()
+        #FPGA TESTING
         self.main_frame = MainFrame(self.my_notebook)
+        #self.main_frame = MainFrame(self.my_notebook)
 
         # self.positioner_frame = PositionerFrame(self.my_notebook)
         # self.positioner_frame.control_frame.radars_available_frame.radar_drop()
