@@ -151,6 +151,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.canvas = None
         self.progress_bar = None
         self.progress_bar_stage = 0
+        self.CURRENT_FPGA_PID = None
 
         # self.power_queue = queue.Queue()
         self.latest_values = None
@@ -342,6 +343,9 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                 f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -Q {state.expected_Q_VALUE_VALUE} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} -X -D {self.dash_capital_D_var.get()} -y {self.dash_y_var.get()} -V {self.dash_capital_V_var.get()} -C {self.dash_capital_C_var.get()} -u\n""")
             time.sleep(.2)
             print(f"FPGA RUNNING STATE: {is_fpga_running}")
+            stdin, stdout,stderr = client.exec_command("pgrep -n fpgaStream")
+            self.CURRENT_FPGA_PID = stdout.read().decode('utf-8').strip()
+            print(self.CURRENT_FPGA_PID)
 
 
         except:
@@ -595,40 +599,10 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         password = f"{os.environ.get('CONNECTION_PASSWORD')}"
         client, channel = self.fl_network_mode()
         try:
-            channel.send("ps auxfww | grep '[f]pgaStream'\n")
-
-            output = ""
-            time.sleep(.1)
-            while channel.recv_ready():
-                output += channel.recv(4096).decode("iso-8859-1")
-
-            open_pids = []
-
-            for line in output.splitlines():
-                parts = line.split()
-                if len(parts) > 1:
-                    pid = parts[1]
-                    if pid.isdigit():
-                        open_pids.append(pid)
-
-            for pid in open_pids:
-                stdin, stdout, stderr = client.exec_command(f"sudo -S -p '' kill -9 {pid}\n")
-                stdin.write(f"{password}\n")
-                stdin.flush()
-
-                exit_status = stdout.channel.recv_exit_status()
-                error = stderr.read().decode("utf-8", errors="replace")
-
-                if exit_status != 0:
-                    print(f"Failed to kill process: {error}")
-
-                # channel.send(f"sudo kill -9 {pid}\n")
-                # time.sleep(.1)
-                #
-                # while channel.recv_ready():
-                #     chunk = channel.recv(4096).decode("iso-8859-1")
-                #     if "password for sq:" in chunk and password:
-                #         channel.send(f"{password}\n")
+            if self.CURRENT_FPGA_PID:
+                stdin, stdout, stderr = client.exec_command(f"kill -9 {self.CURRENT_FPGA_PID}")
+                print(f"STDOUT: {stdout.read().decode('utf-8')}")
+                print(f"STDERR: {stderr.read().decode('utf-8')}")
         finally:
             client.close()
             self.status_var.set("Abort Finished")
