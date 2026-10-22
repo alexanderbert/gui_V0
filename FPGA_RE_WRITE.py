@@ -1,6 +1,7 @@
 import logging
 import tkinter as tk
 import customtkinter
+import socket
 from tkinter import ttk, messagebox
 from settings import *
 import threading
@@ -385,13 +386,15 @@ class MainFrame(customtkinter.CTkFrame):
             # while channel.recv_ready() and is_running:
             print("IS RUNNING", is_running)
             print("IS CAPTURE", is_capture_run)
+            channel.settimeout(5)
             stdin, stdout,stderr = client.exec_command("pgrep -n fpgaStream")
             self.CURRENT_FPGA_PID = stdout.read().decode('utf-8').strip()
             print(self.CURRENT_FPGA_PID)
             while channel.active and is_running:
                 buffer = channel.recv(1024).decode("iso-8859-1")
-                print(repr(buffer))
+                print(f"OUTPUT FROM RUN BUFFER: {repr(buffer)}")
                 output += buffer
+
                 #TODO CURRENT TRY
                 if "Captured 10000 packets." in output:
                     is_capture_run = True
@@ -400,7 +403,14 @@ class MainFrame(customtkinter.CTkFrame):
 
                 if "failed reading" in output or "FAILED READING" in output:
                     print("FAILED READING FOUND IN OUTPUT")
-                    break
+                    self.status_var.set("Failed Reading")
+                    self.status_entry.configure(fg_color="red", text_color="white")
+                    self.hide_outputs()
+                    self.show_inputs()
+                    client.close()
+                    channel.close()
+                    is_running = False
+                    return 1
                 if "\x1b[1;1H$<5>" in buffer:
                     try:
                         clean_buffer = buffer.replace("\x1b[1;1H$<5>", "")
@@ -425,22 +435,18 @@ class MainFrame(customtkinter.CTkFrame):
                             final_rate,
                         )
 
-                        print("FPGA VALUES:", self.output_fpga_values)
-
-                        # output_list = buffer.split("<5>", 1)
-                        # x_dc_offset_value = output_list[0].split("= ")
-                        # y_dc_offset_value = output_list[1].split("= ")
-                        # x_min_max_value = output_list[2].split("X  ")
-                        # y_min_max_value = output_list[3].split("Y  ")
-                        # x_power_value = output_list[4].split(": ")
-                        # y_power_value = output_list[5].split(": ")
-                        # rate_value = output_list[6].split(": ")
-                        # final_rate = rate_value[1].split("=")
-                        #
-                        # self.output_fpga_values = (x_dc_offset_value[1], y_dc_offset_value[1], x_min_max_value[1], y_min_max_value[1], x_power_value[1], y_power_value[1],final_rate[0])
+                        #print("FPGA VALUES:", self.output_fpga_values)
                     except (ValueError, IndexError) as e:
                         print(e)
                         continue
+                    except socket.timeout:
+                        print("CHANNEL TIME OUT")
+                        channel.close()
+                        client.close()
+                        self.status_var.set("Channel Timed out")
+                        self.hide_outputs()
+                        self.show_inputs()
+                        return 1
 
                         #TODO PREVIOUS TRY
                         # if "[1;1H$<5>" in after[1]:
@@ -473,18 +479,20 @@ class MainFrame(customtkinter.CTkFrame):
 
         except:
             self.status_var.set("Run Error")
-            self.status_entry.configure(fg="red", text_color="white")
+            self.status_entry.configure(fg_color="red", text_color="white")
             self.hide_outputs()
             self.show_inputs()
             client.close()
             channel.close()
             is_running = False
+            return 1
         if is_capture_run:
             self.status_var.set("Gathering capture files")
             self.get_bin_files()
 
         channel.close()
         client.close()
+        self.status_entry.configure(fg_color="green", text_color="black")
         self.status_var.set("Run Finished")
         self.hide_outputs()
         self.show_inputs()
