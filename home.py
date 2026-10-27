@@ -23,6 +23,11 @@ class HomeFrame(customtkinter.CTkFrame):
 
         self.welcome_statement = f'''Radar Calibration and Testing Tool (RCATT) Version {state.current_version_number}. Please search for radars on your network 
         with the button located in the top right of the header.
+        
+        When first choosing the radar, make sure it is stopped via 'sudo service radar stop' or 'sudo sytemctl stop radar'
+        
+        The initial checklist tab consists of a usb check that displays the color coded usbmap'
+        
         Lorem ipsum dolor sit amet consectetur adipiscing elit. Quo duis eiusmod
             exercitation pariatur eos minim quos fugiat est quos ex. Esse magna
             excepturi voluptate deserunt esse. In ullamco mollit deserunt ut non
