@@ -638,28 +638,6 @@ class CommandFrame(customtkinter.CTkFrame):
             except Exception as e:
                 print(f"ERROR: {e}")
             self.output_frame.output_entry.see("end")
-
-            #TODO ATTEMPT AT COLOR CODING, WORKS BUT HAS LIST INDEX OUT OF RANGE SOMETIMES
-            # try:
-            #     if output.count("\n") >= 2:
-            #         lines = output.split("\n")
-            #         for line in lines:
-            #             chunks = line.split(" ", 3)
-            #             self.output_frame.output_entry.insert("end", chunks[0] + " ", "cyan")
-            #             self.output_frame.output_entry.insert("end", chunks[1] + " ", "magenta")
-            #             self.output_frame.output_entry.insert("end", chunks[2] + " ", "magenta")
-            #             self.output_frame.output_entry.insert("end", chunks[3] + "\n", "white")
-            #     else:
-            #         chunks = output.split(" ", 3)
-            #         self.output_frame.output_entry.insert("end", chunks[0] + " ", "cyan")
-            #         self.output_frame.output_entry.insert("end", chunks[1] + " ", "magenta")
-            #         self.output_frame.output_entry.insert("end", chunks[2] + " ", "magenta")
-            #         self.output_frame.output_entry.insert("end", chunks[3] + "\n", "white")
-            # except Exception as e:
-            #     print(e)
-            # print(f"OUTPUT AFTER BATCHING: {output} OUTPUT BATCH END")
-            # self.output_frame.output_entry.see("end")
-
         self.after(20, self.update_output_fields)
 
 
