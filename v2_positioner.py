@@ -544,7 +544,7 @@ class CommandFrame(customtkinter.CTkFrame):
         time.sleep(.1)
 
         print("----------------STARTING CONTINUOUS OUTPUT ---------------------")
-        self.output_frame.output_entry.insert("end", "Starting Output from Radar")
+        self.output_frame.output_entry.insert("end", "Starting Output from Radar\n")
         while not KILL_RUN:
             #if channel.active:
             print(
@@ -614,29 +614,30 @@ class CommandFrame(customtkinter.CTkFrame):
         if batch:
             output = "".join(batch)
             print(f"OUTPUT AFTER BATCHING: {output} BATCH END")
-            self.output_frame.output_entry.insert("end", output)
-            self.output_frame.output_entry.see("end")
+            #self.output_frame.output_entry.insert("end", output)
+            #self.output_frame.output_entry.see("end")
             #TODO ANOTHER ATTEMPT AT COLOR CODING
-            # try:
-            #     if output.count("\n") == 0:
-            #         self.output_frame.output_entry.insert("end", output)
-            #     elif output.count("\n") == 1:
-            #         chunks = output.split(" ", 3)
-            #         self.output_frame.output_entry.insert("end", chunks[0] + " ", "cyan")
-            #         self.output_frame.output_entry.insert("end", chunks[1] + " ", "magenta")
-            #         self.output_frame.output_entry.insert("end", chunks[2] + " ", "magenta")
-            #         self.output_frame.output_entry.insert("end", chunks[3] + "\n", "white")
-            #     elif output.count("\n") >= 2:
-            #         lines = output.split("\n")
-            #         for line in lines:
-            #             chunks = line.split(" ", 3)
-            #             self.output_frame.output_entry.insert("end", chunks[0] + " ", "cyan")
-            #             self.output_frame.output_entry.insert("end", chunks[1] + " ", "magenta")
-            #             self.output_frame.output_entry.insert("end", chunks[2] + " ", "magenta")
-            #             self.output_frame.output_entry.insert("end", chunks[3] + "\n", "white")
-            # except Exception as e:
-            #     print(f"ERROR: {e}")
-            # self.output_frame.output_entry.see("end")
+            try:
+                if "sq" not in output:
+                    if output == '' or output.count("\n") == 0:
+                        self.output_frame.output_entry.insert("end", output.strip() + "\n")
+                    elif output.count("\n") == 1:
+                        chunks = output.split(" ", 3)
+                        self.output_frame.output_entry.insert("end", chunks[0].lstrip() + " ", "cyan")
+                        self.output_frame.output_entry.insert("end", chunks[1].strip() + " ", "magenta")
+                        self.output_frame.output_entry.insert("end", chunks[2].strip() + " ", "magenta")
+                        self.output_frame.output_entry.insert("end", chunks[3].strip() + "\n", "white")
+                    elif output.count("\n") >= 2:
+                        lines = output.split("\n")
+                        for line in lines:
+                            chunks = line.split(" ", 3)
+                            self.output_frame.output_entry.insert("end", chunks[0].lstrip() + " ", "cyan")
+                            self.output_frame.output_entry.insert("end", chunks[1].strip() + " ", "magenta")
+                            self.output_frame.output_entry.insert("end", chunks[2].strip() + " ", "magenta")
+                            self.output_frame.output_entry.insert("end", chunks[3].strip() + "\n", "white")
+            except Exception as e:
+                print(f"ERROR: {e}")
+            self.output_frame.output_entry.see("end")
 
             #TODO ATTEMPT AT COLOR CODING, WORKS BUT HAS LIST INDEX OUT OF RANGE SOMETIMES
             # try:
