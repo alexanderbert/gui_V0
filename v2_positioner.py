@@ -423,6 +423,8 @@ class CommandFrame(customtkinter.CTkFrame):
     #or read/write simultaneously two seperate reading
 
     def start_scan(self):
+        global KILL_RUN
+        KILL_RUN = False
         #TODO IF START SCAN FAILS, reenable buttons
         #TRACKING ERROR WARNING
         #FAILING DUE TO TRACKING ERROR! Run 'scan rehome'
@@ -543,38 +545,38 @@ class CommandFrame(customtkinter.CTkFrame):
 
         print("----------------STARTING CONTINUOUS OUTPUT ---------------------")
         self.output_frame.output_entry.insert("end", "Starting Output from Radar")
-        while not KILL_RUN or channel.exit_status_ready() or channel.recv_ready():
-            if channel.recv_ready():
-                print(
-                    f"KILL_RUN={KILL_RUN}, "
-                    f"exit_ready={channel.exit_status_ready()}, "
-                    f"recv_ready={channel.recv_ready()}",
-                    flush=True
-                )
-                data = channel.recv(1024).decode("iso-8859-1")
-                print(f"DATA AFTER FRESH RECEIVE: {repr(data)}")
-                buffer += data
-                output = buffer.split("\r\r\n")
-                buffer = output.pop()
+        while not KILL_RUN:
+            #if channel.active:
+            print(
+                f"KILL_RUN={KILL_RUN}, "
+                f"exit_ready={channel.exit_status_ready()}, "
+                f"recv_ready={channel.recv_ready()}",
+                #flush=True
+            )
+            data = channel.recv(1024).decode("iso-8859-1")
+            print(f"DATA AFTER FRESH RECEIVE: {repr(data)}")
+            buffer += data
+            output = buffer.split("\r\r\n")
+            buffer = output.pop()
 
-                for line in output:
-                    print(f"LINE IN OUTPUT: {line}")
+            for line in output:
+                print(f"LINE IN OUTPUT: {line}")
 
-                    self.clean_output_data(line)
+                self.clean_output_data(line)
 
-                print(f"INSIDE START: {repr(buffer)}")
-                if "MUST HOME" in buffer or "homed?" in buffer or "TRACKING ERROR WARNING" in buffer:
-                    self.output_frame.output_entry.insert("end", "Use Homing Mode")
-                    self.input_frame.positioner_status_label.configure(text="Radar must be Homed", fg_color="orange")
-                    print("SUSPEND/BACKGROUNDING CAT AT HOMING MODE CHECK IN START SCAN")
-                    channel.send(f"\x1a")
-                    channel.send("bg\n")
-                    channel.close()
-                    client.close()
-                    return 1
-            elif channel.exit_status_ready():
-                print(f"EXIT STATUS READY = {channel.exit_status_ready()} ")
-            else:
+            print(f"INSIDE START: {repr(buffer)}")
+            if "MUST HOME" in buffer or "homed?" in buffer or "TRACKING ERROR WARNING" in buffer:
+                self.output_frame.output_entry.insert("end", "Use Homing Mode")
+                self.input_frame.positioner_status_label.configure(text="Radar must be Homed", fg_color="orange")
+                print("SUSPEND/BACKGROUNDING CAT AT HOMING MODE CHECK IN START SCAN")
+                channel.send(f"\x1a")
+                channel.send("bg\n")
+                channel.close()
+                client.close()
+                return 1
+        # elif channel.exit_status_ready():
+        #     print(f"EXIT STATUS READY = {channel.exit_status_ready()} ")
+        else:
                 time.sleep(0.01)
         self.output_frame.output_entry.insert("end", "Channel Closed")
         print("ENDING CONTINUOUS OUTPUT")
