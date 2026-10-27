@@ -10,7 +10,7 @@ COMMAND_UPDATE = {
     "-S": {"title": "Pulse per sec", "text": "How many pulses per second to analyze", "unit": "fps", "default_value": "800", 'col':0, 'row': 0, "shorthand": "Pulse/s", "lowerbound": 100, "upperbound": 1600},
     "-D": {"title": "Pulse to read", "text": "How many pulses to read before analyzing", "unit": "delay", "default_value": "200", 'col':0, 'row': 0, "shorthand": "Pulse to read", "lowerbound": 0.0, "upperbound": 1.0},
     "-y": {"title": "FIR center frequency", "text": "FIR: pass filter center frequency in MHz referenced to IF", "unit": "cfMHz","default_value": "5.8", 'col': 0, 'row': 0, "shorthand": "FIR center f"},
-    "-V": {"title": "FIR override", "text": "FIR: if non-zero, override pass filter bandwidth in MHz", "unit": "bwMHz","default_value": "6.3", 'col': 0, 'row': 0, "shorthand": "FIR override"},
+    "-V": {"title": "FIR bandwidth", "text": "FIR: if non-zero, override pass filter bandwidth in MHz", "unit": "bwMHz","default_value": "6.3", 'col': 0, 'row': 0, "shorthand": "FIR override"},
     "-C": {"title": "FIR Parks width", "text": "FIR: Parks Width of ratio of Nyquist Frequency", "unit": "pwNyq","default_value": "0.05", 'col': "0.05", 'row': 0, "shorthand": "FIR Parks W"},
     "-b": {"title": "RX start", "text": "RX pretrigger offset start (from tx)", "unit": "µS","default_value": "2.0", "col": 0, 'row': 0, "shorthand": "RX start", "lowerbound": 0.0, "upperbound": 10.0},
     "-g": {"title": "RX Stop", "text": "RX pretrigger offset stop (from tx)", "unit": "µS","default_value": "0.8", "col": 0, 'row': 0, "shorthand": "RX stop", "lowerbound": -10.0, "upperbound": 10.0},
