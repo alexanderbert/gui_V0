@@ -190,11 +190,6 @@ class InputFrame(customtkinter.CTkFrame):
         state.speed_value = speed_value_trace
 
 
-
-
-
-
-
 class CommandFrame(customtkinter.CTkFrame):
     def __init__(self, parent, input_frame, output_frame):
         super().__init__(parent)
@@ -535,6 +530,8 @@ class CommandFrame(customtkinter.CTkFrame):
     def continuous_output(self):
         self.continuous_output_list = []
         client, channel = self.fl_network_mode()
+        self.connect_positioner_button.configure(state="normal")
+        self.connect_positioner_button.configure(command= lambda: self.get_positioner_status_during_run(channel))
 
         buffer = ""
         ttyf = "/dev/ttyUSB1"
@@ -555,6 +552,10 @@ class CommandFrame(customtkinter.CTkFrame):
             )
             data = channel.recv(1024).decode("iso-8859-1")
             print(f"DATA AFTER FRESH RECEIVE: {repr(data)}")
+            if "scan status\r\r\nOK status" in data:
+                status_data = data.split("\r\r\n")
+                for line in status_data:
+                    self.output_frame.output_entry.insert("end", line + "\n")
             buffer += data
             output = buffer.split("\r\r\n")
             buffer = output.pop()
@@ -589,6 +590,8 @@ class CommandFrame(customtkinter.CTkFrame):
         client.close()
 
     def clean_output_data(self, data):
+        # if "status" in data or "OK status" in data:
+        #     self.output_queue.put(data)
         line = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', data)
         print(f"LINE IN CLEAN OUTPUT DATA OUTPUT: {line}")
         self.output_queue.put(f"{line.strip()}\n")
@@ -649,6 +652,7 @@ class CommandFrame(customtkinter.CTkFrame):
         instead of putting up another status, put up a stopping alert
         :return:
         '''
+        self.connect_positioner_button.configure(command=lambda: self.start_thread(self.get_positioner_status))
         global KILL_RUN
         KILL_RUN = True
         self.continuous_output_list = None
@@ -1086,6 +1090,20 @@ class CommandFrame(customtkinter.CTkFrame):
 
         self.down_button = customtkinter.CTkButton(self.input_frame, text="Down", width=30, command = lambda: self.movement_output("down", self.qualifier_box.get()))
         self.down_button.grid(column =5, row=6, sticky="ew")
+
+    def get_positioner_status_during_run(self, channel):
+        print("------------------CHECKING STATUS DURING RUN---------------------------")
+        channel.send("bg\n")
+        time.sleep(0.1)
+        channel.send(f"\x1a")
+        time.sleep(0.1)
+        ttyf = "/dev/ttyUSB1"
+        channel.send(f"echo scan status > {ttyf}\n")
+        time.sleep(0.1)
+        # data = channel.recv(1024).decode()
+        # for line in data.split("\n"):
+        #     self.output_frame.output_entry.insert("end", line)
+        channel.send("fg\n")
 
     def get_positioner_status(self):
         '''
