@@ -50,7 +50,7 @@ class HomeFrame(customtkinter.CTkFrame):
         # fuga vero dolor corrupti. Cumque eu nulla qui aliqua dolor molestias.'''
         self.output_textbox.tag_config("center", justify="center")
 
-        self.welcome_statement_2 = '''Radar Calibration and Testing Tool (RCATT) Version {state.current_version_number}. The application has tabs for different 
+        self.welcome_statement_2 = f'''Radar Calibration and Testing Tool (RCATT) Version {state.current_version_number}. The application has tabs for different 
 functionality. The dropdown menu in the header will populate after the 'Find Radars' button is pushed. Make sure to 
 select either Wi-Fi or Ethernet depending on the appropriate connection to the radar. A pop-up will display on the screen
 while the network is being searched. Use the dropdown to select the radar you wish to work on.
