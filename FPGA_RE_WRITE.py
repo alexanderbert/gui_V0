@@ -341,6 +341,7 @@ class MainFrame(customtkinter.CTkFrame):
 
 
     def run_command_connect(self, capture_check):
+        print(f"RUNNING FPGA COMMAND CAPTURE CHECK: {capture_check}")
         global is_running
         is_running = True
         is_capture_run = False
