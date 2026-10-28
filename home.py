@@ -44,5 +44,6 @@ class HomeFrame(customtkinter.CTkFrame):
         fuga vero dolor corrupti. Cumque eu nulla qui aliqua dolor molestias.'''
         self.output_textbox.tag_config("center", justify="center")
         self.output_textbox.insert("0.0", self.welcome_statement, "center")
+        self.output_textbox.configure(state="disabled")
 
 
