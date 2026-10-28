@@ -46,7 +46,7 @@ class Initial_Check(customtkinter.CTkFrame):
             print("CONNECTION ERROR")
             self.usb_check_output_textbox.configure(state="normal")
             self.usb_check_output_textbox.delete("0.0", "end")
-            self.usb_check_output_textbox.insert("0.0", "CONNECTION ERROR: Check Radar selection")
+            self.usb_check_output_textbox.insert("0.0", "CONNECTION ERROR: You must select a Radar")
             self.usb_check_output_textbox.configure(state="disabled")
             return 1
 
