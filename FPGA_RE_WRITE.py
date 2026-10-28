@@ -8,7 +8,7 @@ import threading
 import queue
 import paramiko
 #TODO NEED THIS LINE TO RUN
-# from scp import SCPClient
+from scp import SCPClient
 import time
 from dotenv import load_dotenv
 import os
@@ -544,9 +544,9 @@ class MainFrame(customtkinter.CTkFrame):
 
 
             #TODO NEED THESE TWO LINES TO RUN
-            # with SCPClient(client.get_transport()) as scp:
-            #     scp.get(f"{os.environ['FPGAPATH']}/raw-bin-{formatted_time}.tgz", "./generatedBinFiles/")
-                #todo unnecessary if exe exists on file
+            with SCPClient(client.get_transport()) as scp:
+                scp.get(f"{os.environ['FPGAPATH']}/raw-bin-{formatted_time}.tgz", "./generatedBinFiles/")
+                todo unnecessary if exe exists on file
                 #scp.get("/home/sq/sq/stormquant-beta/cmake-build-debug/common/raytestingutils/convertRawToCleartext", "../ClearText/")
                 #os.chmod("../ClearText/convertRawToCleartext", 0o755)
         except Exception as e:
