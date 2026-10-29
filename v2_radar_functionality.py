@@ -175,45 +175,45 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         return client
 
     def csv_writer_worker(self, timestamp):
-        csv_file = None
-        csv_writer = None
+        filename = os.path.join(
+            application_path,
+            f"heatmap_{timestamp}.csv"
+        )
+
         try:
-            while True:
-                item = self.csv_queue.get()
+            with open(
+                    filename,
+                    "w",
+                    newline="",
+                    encoding="utf-8",
+                    buffering=1
+            ) as csv_file:
+                csv_writer = csv.writer(csv_file)
 
-                try:
-                    if item is None:
-                        break
-                    if csv_file is None:
-                        # timestamp = datetime.now().strftime("%m%d_%H%M%S")
+                csv_writer.writerow([
+                    "Azimuth",
+                    "Elevation",
+                    "X Power",
+                    "Y Power"
+                ])
+                csv_file.flush()
 
-                        filename = os.path.join(
-                            application_path,
-                            f"heatmap_{timestamp}.csv"
-                        )
+                while True:
+                    item = self.csv_queue.get()
 
-                        csv_file = open(
-                            filename,
-                            "w",
-                            newline="",
-                            buffering=1
-                        )
+                    try:
+                        if item is None:
+                            break
 
-                        csv_writer = csv.writer(csv_file)
+                        csv_writer.writerow(item)
+                        csv_file.flush()
 
-                        csv_writer.writerow([
-                            "Azimuth",
-                            "Elevation",
-                            "X Power",
-                            "Y Power"
-                        ])
+                    finally:
+                        self.csv_queue.task_done()
 
-                    csv_writer.writerow(item)
-                finally:
-                    self.csv_queue.task_done()
-        finally:
-            if csv_file is not None:
-                csv_file.close()
+        except Exception as e:
+            print(f"CSV writer error: {e}")
+            raise
 
     def raw_csv_writer_worker(self, timestamp):
         # timestamp = datetime.now().strftime("%m%d_%H%M%S")
@@ -263,7 +263,9 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.status_entry.configure(font=("Arial", 14))
 
     def heat_map_fpga(self):
+        if_run_failure = False
         self.timestamp = datetime.now().strftime("%m%d_%H%M%S")
+        print(f"Starting FPGA RUN {self.timestamp}")
 
         self.csv_thread = threading.Thread(
             target=self.csv_writer_worker,
@@ -380,12 +382,14 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             last_position = None
 
             self.status_var.set("RUNNING")
+            self.run_heatmap_fpga_button.configure(state="disabled")
+            self.capture_packets_button.configure(state="disabled")
             while channel.active and is_fpga_running:
 
                 if channel.recv_ready():
                     data = channel.recv(1024).decode("iso-8859-1")
                     # TODO PRINT COMMAND TO VIEW DATA
-                    # print(repr(data))
+                    #print(repr(data))
 
                     # PUTTING RAW DATA INTO RAW CSV
                     self.raw_csv_queue.put(data)
@@ -406,7 +410,9 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                     failure_match = failure_pattern.search(buffer)
                     if failure_match:
                         print("FPGA FAILURE")
+                        print(data)
                         is_fpga_running = False
+                        if_run_failure = True
                         break
 
                     while True:
@@ -432,7 +438,10 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                                 num_value = int(power_match.group('num'))
                                 # THIS WILL UPDATE PROGRESS BAR
                                 # self.update_progressbar(num_value, expected_Q_Value)
-                                self.update_progressbar(num_value)
+                                try:
+                                    self.update_progressbar(num_value)
+                                except Exception as e:
+                                    print(f"PROGRESS BAR UPDATE FAILED {e}")
 
                                 self.latest_values = (az, el, x_power, y_power)
                                 self.csv_queue.put((az, el, x_power, y_power))
@@ -465,15 +474,22 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                     pass
             if client is not None:
                 client.close()
+
             self.csv_queue.put(None)
             self.raw_csv_queue.put(None)
+
             if self.csv_thread is not None:
                 self.csv_thread.join()
             if self.raw_csv_thread is not None:
                 self.raw_csv_thread.join()
-            print("RUN FINISHED")
-            self.status_var.set("FINISHED")
-            self.status_entry.configure(fg_color="white", text_color="black")
+
+            print("RUN FINISHED - in FINALLY OF heat_map_fpga")
+            if if_run_failure:
+                self.status_var.set("FPGA FAILURE")
+                self.status_entry.configure(fg_color="yellow", text_color="black")
+            else:
+                self.status_var.set("FINISHED")
+                self.status_entry.configure(fg_color="white", text_color="black")
             self.progress_bar_stage = 0
             self.progress_bar.destroy()
             self.progress_bar_label.destroy()
@@ -481,10 +497,19 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             self.hide_fpga_output()
             self.replace_initial_i_o()
             self.create_heatmap_button.grid()
+            self.capture_packets_button.configure(state="normal")
+            self.run_heatmap_fpga_button.configure(state="normal")
+            self.latest_values = None
+            self.az_var.set("")
+            self.el_var.set("")
+            self.x_power_var.set("")
+            self.y_power_var.set("")
 
     def capture_packets_run(self):
         Q_VALUE = 10000
         self.hide_initial_i_o()
+        self.capture_packets_button.configure(state="disabled")
+        self.run_heatmap_fpga_button.configure(state="disabled")
         self.progress_bar_label = customtkinter.CTkLabel(self.output_frame, text="Progress: ", justify="center")
         self.progress_bar_label.grid(column=0, row=5, sticky="e", padx=20)
 
@@ -552,6 +577,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
         channel.close()
         client.close()
+        self.capture_packets_button.configure(state="normal")
+        self.run_heatmap_fpga_button.configure(state="normal")
         self.create_heatmap_button.grid()
         self.status_var.set("Capture Run Finished")
         self.status_entry.configure(fg_color="white", text_color="black")
@@ -567,23 +594,12 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         I won't know until testing. The other option would be to create a .after(x, update_progressbar) function
         INCLUDE MAx num for color change?
         '''
-        # twenty_five = int(max_num * .25)
-        # fifty = int(max_num * .5)
-        # seventy_five = int(max_num * .75)
         self.progress_bar['value'] = value
-        # if self.progress_bar_stage == 0 and value > twenty_five:
-        #     self.progress_bar.config(style="red.Horizontal.TProgressbar")
-        #     self.progress_bar_stage = 1
-        # if self.progress_bar_stage == 1 and value > fifty:
-        #     self.progress_bar.config(style="blue.Horizontal.TProgressbar")
-        #     self.progress_bar_stage = 2
-        # if self.progress_bar_stage == 2 and value > seventy_five:
-        #     self.progress_bar.config(style="green.Horizontal.TProgressbar")
-        #     self.progress_bar_stage = 3
 
-        # self.update_idletasks()
 
     def kill_fpga(self):
+        timestamp = time.time()
+        print(f"{timestamp}: Killing FPGA")
         if self.az_label is not None:
             self.hide_fpga_output()
             self.create_heatmap_button.grid()
@@ -596,24 +612,23 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         is_fpga_running = False
         self.status_var.set("Running Abort")
         self.status_entry.configure(fg_color="orange")
-        password = f"{os.environ.get('CONNECTION_PASSWORD')}"
-        client, channel = self.fl_network_mode()
+        client = None
+
         try:
+            client, channel = self.fl_network_mode()
+
             if self.CURRENT_FPGA_PID:
                 stdin, stdout, stderr = client.exec_command(f"kill -9 {self.CURRENT_FPGA_PID}")
                 print(f"STDOUT: {stdout.read().decode('utf-8')}")
-                print(f"STDERR: {stderr.read().decode('utf-8')}")
+                #print(f"STDERR: {stderr.read().decode('utf-8')}")
+        except Exception as e:
+            print(f"FPGA abort error: {e}")
         finally:
-            client.close()
+            if client is not None:
+                client.close()
             self.status_var.set("Abort Finished")
-            self.csv_queue.put(None)
-            self.raw_csv_queue.put(None)
-            if self.csv_thread is not None:
-                self.csv_thread.join()
-            if self.raw_csv_thread is not None:
-                self.raw_csv_thread.join()
-            print("RUN FINISHED")
-            self.status_var.set("FINISHED")
+
+            print("END OF ABORT FUNCTION")
             self.status_entry.configure(fg_color="white", text_color="black")
 
             self.progress_bar_stage = 0
