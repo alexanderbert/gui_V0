@@ -616,8 +616,9 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         socat_pid = None
         try:
             target_directory = "./captureMode"
-            subprocess.run(['socat', 'tcp-l:7777,reuseaddr,fork', 'system:\'cpio -i\''], cwd=target_directory,
-                           check=True)
+            # subprocess.run(['socat', 'tcp-l:7777,reuseaddr,fork', 'system:\'cpio -i\''], cwd=target_directory,
+            #                check=True)
+            subprocess.Popen(['socat', 'tcp-l:7777,reuseaddr,fork', 'system:\'cpio -i\''], cwd=target_directory)
         except subprocess.CalledProcessError as e:
             print(f"Command failed with exit code {e.returncode}")
             return False
@@ -630,8 +631,10 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             print(f"Command failed with exit code {e.returncode}")
 
         if socat_pid is not None and socat_pid != "":
+            print(f"SOCAT PID:{socat_pid}")
             return socat_pid
         else:
+            print("SOCAT INSTANTIATION FAILED")
             return False
 
 
