@@ -11,6 +11,7 @@ import threading
 import queue
 import re
 from datetime import datetime
+from datetime import date
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
@@ -506,7 +507,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             self.y_power_var.set("")
 
     def capture_packets_run(self):
-        Q_VALUE = 10000
+        capture_run_Q_VALUE = 10000
         self.hide_initial_i_o()
         self.capture_packets_button.configure(state="disabled")
         self.run_heatmap_fpga_button.configure(state="disabled")
@@ -515,13 +516,13 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
         self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate",
                                             style="yellow.Horizontal.TProgressbar", length=400,
-                                            maximum=Q_VALUE)
+                                            maximum=capture_run_Q_VALUE)
         self.progress_bar.grid(column=1, row=5, sticky="w",padx=50)
         self.progress_bar['value'] = 0
         #TODO SEE IF THIS EXECUTES CORRECTLY
         self.command_list_label = customtkinter.CTkLabel(self.output_frame,
                                                          text=f"""Command String: -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} 
-        -S {self.dash_capital_S_var.get()} -Q {state.expected_Q_VALUE_VALUE} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} 
+        -S {self.dash_capital_S_var.get()} -Q {capture_run_Q_VALUE} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())} 
         -X -D {self.dash_capital_D_var.get()} -y {self.dash_y_var.get()} -V {self.dash_capital_V_var.get()} -C {self.dash_capital_C_var.get()} -u""")
         self.command_list_label.grid(column=0, columnspan=2, row=12)
         self.command_list_label.configure(font=("Arial", 14), justify="center")
@@ -531,12 +532,21 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         global is_fpga_running
         is_fpga_running = True
         # Todo make sure this works correctly. No cues but based off of -Q 10000
-        try:
-            target_directory = "./captureMode"
-            subprocess.run(['socat', 'tcp-l:7777,reuseaddr,fork', 'system:\'cpio -i\''], cwd=target_directory,
-                           check=True)
-        except subprocess.CalledProcessError as e:
-            print(f"Command failed with exit code {e.returncode}")
+        socat_pid = self.start_socat()
+        if not socat_pid:
+            print("SOCAT ISSUE, ERROR OCCURRED")
+            self.capture_packets_button.configure(state="normal")
+            self.run_heatmap_fpga_button.configure(state="normal")
+            self.create_heatmap_button.grid()
+            self.status_var.set("SOCAT ERROR")
+            self.status_entry.configure(fg_color="Yellow", text_color="black")
+            self.progress_bar_stage = 0
+            self.progress_bar_label.destroy()
+            self.progress_bar.destroy()
+            self.replace_initial_i_o()
+            self.command_list_label.grid_remove()
+            return 0
+
 
         client, channel = self.fl_network_mode()
         print("After connection to fl network")
@@ -549,7 +559,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         channel.send(
             #f"""./fpgaStream -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -S {self.dash_capital_S_var.get()} -k 8000 -Q 10000 -q -c -y 6.25 -V {1 / self.dash_w_var.get()} -C 0.05 -u | socat - tcp:10.42.0.1:7777\n""")
         # EXAMPLE STREAM'./fpgaStream -S 300 -D 10 -u -w 0.96 -s 2.0 -e 2.0 -b 0.0 -g -1.0 -y 5.8 -V 6.3 -C 0.1 -k 8000 -q -Q 3000 -n'
-            f'./fpgaStream -S {self.dash_capital_S_var.get()} -D {self.dash_capital_D_var.get()} -u -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -y {self.dash_y_var.get()} -V {self.dash_capital_V_var.get()} -C {self.dash_capital_C_var.get()} -k 10000 -q -Q {10 * self.dash_capital_S_var.get()} -n | socat - tcp:10.42.0.1:7777\n '
+            f'./fpgaStream -S {self.dash_capital_S_var.get()} -D {self.dash_capital_D_var.get()} -u -w {self.dash_w_var.get()} -s {self.dash_s_var.get()} -e {self.dash_e_var.get()} -b {self.dash_b_var.get()} -g {self.dash_g_var.get()} -y {self.dash_y_var.get()} -V {self.dash_capital_V_var.get()} -C {self.dash_capital_C_var.get()} -k 10000 -q -Q {capture_run_Q_VALUE} -n | socat - tcp:10.42.0.1:7777\n '
         )
         time.sleep(.1)
 
@@ -587,6 +597,9 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.progress_bar.destroy()
         self.replace_initial_i_o()
         self.command_list_label.grid_remove()
+        #KILL SOCAT
+        self.kill_socat(socat_pid)
+        return None
 
     def update_progressbar(self, value):
         '''
@@ -595,6 +608,39 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         INCLUDE MAx num for color change?
         '''
         self.progress_bar['value'] = value
+
+
+    def start_socat(self):
+        #SET UP SOCAT ON LOCAL MACHINE
+        print("SOCAT INSTANTIATION")
+        socat_pid = None
+        try:
+            target_directory = "./captureMode"
+            subprocess.run(['socat', 'tcp-l:7777,reuseaddr,fork', 'system:\'cpio -i\''], cwd=target_directory,
+                           check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Command failed with exit code {e.returncode}")
+            return False
+        #GET SOCAT PID FOR CLEAN EXIT
+        try:
+            pid_check_result = subprocess.Popen(['pgrep', 'socat'], stdout=subprocess.PIPE, text=True)
+            stdout, stderr = pid_check_result.communicate()
+            socat_pid = stdout.strip()
+        except subprocess.CalledProcessError as e:
+            print(f"Command failed with exit code {e.returncode}")
+
+        if socat_pid is not None and socat_pid != "":
+            return socat_pid
+        else:
+            return False
+
+
+    def kill_socat(self, pid):
+        print("KILLING SOCAT")
+        pid_kill_check = subprocess.Popen(['kill', f'{pid}'], stdout=subprocess.PIPE, text=True)
+        stdout, stderr = pid_kill_check.communicate()
+        print(f"CLOSE SOCAT STDOUT REPORT: {stdout}")
+        print(f"CLOSE SOCAT STDERR REPORT: {stderr}")
 
 
     def kill_fpga(self):
@@ -778,7 +824,12 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                 except ValueError:
                     continue
         if not azimuth_raw or not elevation_raw or not x_power_raw or not y_power_raw:
-            raise ValueError("No valid data")
+            self.status_var.set("Data error in CSV file")
+            self.status_entry.configure(fg_color="Yellow", text_color="Black")
+            print("VALID DATA MISSING")
+            self.replace_initial_i_o()
+            self.heat_map_specific_show()
+            return
         azimuth = np.array(azimuth_raw)
         elevation = np.array(elevation_raw)
         x_power = np.array(x_power_raw)
@@ -844,10 +895,20 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
             # plt.fig(4, 6)
 
+            #TITLE CHECK TO CONTAIN DATE INFO
+            if "heatmap_" in csv_file:
+                date_title = csv_file.split("heatmap_")[1].split(".csv")[0]
+                print(f" DATE_TITLE: {date_title}")
+                formatted_title = self.date_converter(date_title)
+                print(f"FORMATTED_TITLE {formatted_title}")
+                ax.set_title(f"X Power - {formatted_title}")
+            else:
+                ax.set_title("X Power Heatmap")
+
             fig.colorbar(heatmap, ax=ax, label="X Power (dB)")
             ax.set_xlabel("Azimuth (degrees)")
             ax.set_ylabel("Elevation (degrees)")
-            ax.set_title("X Power Heatmap")
+
             plt.tight_layout()
         except:
             self.replace_initial_i_o()
@@ -937,6 +998,28 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.close_heatmap_button.configure(width=200, font=("Arial", 14))
         return self.canvas
 
+    def date_converter(self, date_of_data):
+        # ex: 0116_123548
+        current_year = str(date.today().year)
+        print(current_year)
+        print("INSIDE DATE CONVERTER")
+        date_string = ""
+        months = ["index zero","Jan", "Feb", "March", "April", "May", "June", "July", "August", "Sept", "Oct","Nov", "Dec"]
+        date_array = date_of_data.split("_")
+        month = int(date_array[0][0:2])
+        print(month)
+        date_string += f"{months[month]}"
+        print(date_string)
+        day = date_array[1][2:3]
+        date_string += " " + day + " " + f"{current_year[2:]}" + " "
+        print(date_string)
+        for i, char in enumerate(date_array[1]):
+            if i %2 ==0 and i != 0:
+                date_string += ":"
+            date_string += char
+            print(date_string)
+        return date_string
+
     def close_heatmap(self):
         if self.canvas is not None:
             self.output_frame.grid(columnspan=1)
@@ -958,6 +1041,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
         self.replace_initial_i_o()
         self.heat_map_specific_show()
+        self.status_var.set("Not Running")
+        self.status_entry.configure(fg_color="white", text_color="black")
 
         # self.initial_output_frame()
 
