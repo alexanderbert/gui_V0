@@ -507,6 +507,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             self.y_power_var.set("")
 
     def capture_packets_run(self):
+        packet_run_date_time = datetime.now().strftime("%m%d_%H%M%S")
+        fake_update_bar_value = 0
         capture_run_Q_VALUE = 10000
         self.hide_initial_i_o()
         self.capture_packets_button.configure(state="disabled")
@@ -572,9 +574,11 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         while channel.active and is_fpga_running:
             if channel.recv_ready():
                 data = channel.recv(1024).decode("iso-8859-1")
+                fake_update_bar_value += 100
                 print(repr(data))
                 buffer += data
                 num_match = num_pattern.search(buffer)
+                self.update_progressbar(fake_update_bar_value)
 
                 captured_match = re.search(r"Captured\s+(\d+)\s+packets\.", buffer)
                 if captured_match:
@@ -601,6 +605,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.command_list_label.grid_remove()
         #KILL SOCAT
         self.kill_socat(socat_pid)
+        self.rename_fpga_output(packet_run_date_time)
         return None
 
     def update_progressbar(self, value):
@@ -611,6 +616,10 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         '''
         self.progress_bar['value'] = value
 
+    def rename_fpga_output(self, timestamp):
+        result = subprocess.run(['mv', '000', f"{timestamp}"], capture_output=True, text=True)
+        print(result.stdout)
+        print(result.stderr)
 
     def start_socat(self):
         #SET UP SOCAT ON LOCAL MACHINE
