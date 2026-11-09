@@ -617,7 +617,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         print("SOCAT INSTANTIATION")
         socat_pid = None
         try:
-            target_directory = "./captureMode"
+            target_directory = "/home/sq/alex_august/repo/dist/captureMode"
             # subprocess.run(['socat', 'tcp-l:7777,reuseaddr,fork', 'system:\'cpio -i\''], cwd=target_directory,
             #                check=True)
             subprocess.Popen(['socat', 'tcp-l:7777,reuseaddr,fork', 'system:\'cpio -i\''], cwd=target_directory)
