@@ -617,7 +617,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.progress_bar['value'] = value
 
     def rename_fpga_output(self, timestamp):
-        result = subprocess.run(['mv', '000', f"{timestamp}"], capture_output=True, text=True)
+        result = subprocess.run(['mv', './captureMode/000', f"./captureMode/{timestamp}"], capture_output=True, text=True)
         print(result.stdout)
         print(result.stderr)
 
