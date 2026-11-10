@@ -595,6 +595,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                         self.update_progressbar(num_value)
         except:
             print("EXCEPTION OCCURRED IN capture_packets_run")
+            self.kill_socat(socat_pid)
+            socat_pid = None
 
         finally:
             channel.close()
@@ -611,7 +613,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             self.replace_initial_i_o()
             self.command_list_label.grid_remove()
             #KILL SOCAT
-            self.kill_socat(socat_pid)
+            if socat_pid is not None:
+                self.kill_socat(socat_pid)
             self.rename_fpga_output(packet_run_date_time)
             return None
 
@@ -635,6 +638,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         cwd = Path.cwd()
 
         try:
+            #TODO
+            #A ZOMBIE PROCESS IS CREATED IF SOCAT EXIT STATUS IS NOT READ, WITH THE CURRENT ABORT SEQUENCE
             target_directory = f"{cwd}/captureMode"
             # subprocess.run(['socat', 'tcp-l:7777,reuseaddr,fork', 'system:\'cpio -i\''], cwd=target_directory,
             #                check=True)
