@@ -659,7 +659,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
 
     def kill_socat(self, pid):
-        print("KILLING SOCAT")
+        print(f"KILLING SOCAT {pid}")
         pid_kill_check = subprocess.Popen(['kill', f'{pid}'], stdout=subprocess.PIPE, text=True)
         stdout, stderr = pid_kill_check.communicate()
         print(f"CLOSE SOCAT STDOUT REPORT: {stdout}")
