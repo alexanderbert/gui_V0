@@ -27,6 +27,8 @@ class App(customtkinter.CTk):
         self.columnconfigure(0, weight=1)
         self.grid_propagate(False)
 
+        customtkinter.set_appearance_mode("dark")
+
         state.init_state(self)
 
         self.header_frame = HeaderFrame(self)
