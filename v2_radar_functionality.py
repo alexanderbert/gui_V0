@@ -513,6 +513,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.hide_initial_i_o()
         self.capture_packets_button.configure(state="disabled")
         self.run_heatmap_fpga_button.configure(state="disabled")
+        self.create_heatmap_button.configure(state="disabled")
         self.progress_bar_label = customtkinter.CTkLabel(self.output_frame, text="Progress: ", justify="center")
         self.progress_bar_label.grid(column=0, row=5, sticky="e", padx=20)
 
@@ -538,6 +539,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             print("SOCAT ISSUE, ERROR OCCURRED")
             self.capture_packets_button.configure(state="normal")
             self.run_heatmap_fpga_button.configure(state="normal")
+            self.create_heatmap_button.configure(state="normal")
             self.create_heatmap_button.grid()
             self.status_var.set("SOCAT ERROR")
             self.status_entry.configure(fg_color="Yellow", text_color="black")
@@ -571,42 +573,47 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         buffer = ''
         self.status_var.set("Capture Run Started")
         self.status_entry.configure(fg_color="green", text_color="white")
-        while channel.active and is_fpga_running:
-            if channel.recv_ready():
-                data = channel.recv(1024).decode("iso-8859-1")
-                fake_update_bar_value += 100
-                print(repr(data))
-                buffer += data
-                num_match = num_pattern.search(buffer)
-                self.update_progressbar(fake_update_bar_value)
+        try:
+            while channel.active and is_fpga_running:
+                if channel.recv_ready():
+                    data = channel.recv(1024).decode("iso-8859-1")
+                    fake_update_bar_value += 100
+                    print(repr(data))
+                    buffer += data
+                    num_match = num_pattern.search(buffer)
+                    self.update_progressbar(fake_update_bar_value)
 
-                captured_match = re.search(r"Captured\s+(\d+)\s+packets\.", buffer)
-                if captured_match:
-                    captured_count = int(captured_match.group(1))
-                    print(f"FPGA FINISHED: captured {captured_count} packets")
-                    is_fpga_running = False
-                    break
+                    captured_match = re.search(r"Captured\s+(\d+)\s+packets\.", buffer)
+                    if captured_match:
+                        captured_count = int(captured_match.group(1))
+                        print(f"FPGA FINISHED: captured {captured_count} packets")
+                        is_fpga_running = False
+                        break
 
-                if num_match:
-                    num_value = int(num_match.group("num"))
-                    self.update_progressbar(num_value)
+                    if num_match:
+                        num_value = int(num_match.group("num"))
+                        self.update_progressbar(num_value)
+        except:
+            print("EXCEPTION OCCURRED IN capture_packets_run")
 
-        channel.close()
-        client.close()
-        self.capture_packets_button.configure(state="normal")
-        self.run_heatmap_fpga_button.configure(state="normal")
-        self.create_heatmap_button.grid()
-        self.status_var.set("Capture Run Finished")
-        self.status_entry.configure(fg_color="white", text_color="black")
-        self.progress_bar_stage = 0
-        self.progress_bar_label.destroy()
-        self.progress_bar.destroy()
-        self.replace_initial_i_o()
-        self.command_list_label.grid_remove()
-        #KILL SOCAT
-        self.kill_socat(socat_pid)
-        self.rename_fpga_output(packet_run_date_time)
-        return None
+        finally:
+            channel.close()
+            client.close()
+            self.capture_packets_button.configure(state="normal")
+            self.run_heatmap_fpga_button.configure(state="normal")
+            self.create_heatmap_button.configure(state="normal")
+            self.create_heatmap_button.grid()
+            self.status_var.set("Capture Run Finished")
+            self.status_entry.configure(fg_color="white", text_color="black")
+            self.progress_bar_stage = 0
+            self.progress_bar_label.destroy()
+            self.progress_bar.destroy()
+            self.replace_initial_i_o()
+            self.command_list_label.grid_remove()
+            #KILL SOCAT
+            self.kill_socat(socat_pid)
+            self.rename_fpga_output(packet_run_date_time)
+            return None
 
     def update_progressbar(self, value):
         '''
