@@ -834,6 +834,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.heat_map_specific_hide()
         self.status_label.grid_remove()
         self.status_entry.grid_remove()
+        self.run_heatmap_fpga_button.configure(state="disabled")
+        self.capture_packets_button.configure(state="disabled")
         azimuth_raw = []
         elevation_raw = []
         x_power_raw = []
@@ -852,6 +854,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         if not csv_file:
             self.replace_initial_i_o()
             self.heat_map_specific_show()
+            self.run_heatmap_fpga_button.configure(state="normal")
+            self.capture_packets_button.configure(state="normal")
             return
 
         with open(csv_file, "r", newline="") as file:
@@ -874,6 +878,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             print("VALID DATA MISSING")
             self.replace_initial_i_o()
             self.heat_map_specific_show()
+            self.run_heatmap_fpga_button.configure(state="normal")
+            self.capture_packets_button.configure(state="normal")
             return
         azimuth = np.array(azimuth_raw)
         elevation = np.array(elevation_raw)
@@ -959,6 +965,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         except:
             self.replace_initial_i_o()
             self.heat_map_specific_show()
+            self.run_heatmap_fpga_button.configure(state="normal")
+            self.capture_packets_button.configure(state="normal")
             return
 
         # TODO Hide this initial version of HEATMAP FOR NOW
@@ -1101,6 +1109,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
         self.replace_initial_i_o()
         self.heat_map_specific_show()
+        self.run_heatmap_fpga_button.configure(state="normal")
+        self.capture_packets_button.configure(state="normal")
         self.status_var.set("Not Running")
         self.status_entry.configure(fg_color="white", text_color="black")
 
