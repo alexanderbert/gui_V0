@@ -175,10 +175,10 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
         return client
 
-    def csv_writer_worker(self, timestamp):
+    def csv_writer_worker(self, timestamp, radar_selected):
         filename = os.path.join(
             application_path,
-            f"heatmap_{timestamp}.csv"
+            f"heatmap_{radar_selected}_{timestamp}.csv"
         )
 
         try:
@@ -216,12 +216,12 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             print(f"CSV writer error: {e}")
             raise
 
-    def raw_csv_writer_worker(self, timestamp):
+    def raw_csv_writer_worker(self, timestamp, radar_selected):
         # timestamp = datetime.now().strftime("%m%d_%H%M%S")
 
         filename = os.path.join(
             application_path,
-            f"RAW_OUTPUT_{timestamp}.csv"
+            f"RAW_OUTPUT_{radar_selected}_{timestamp}.csv"
         )
         with open(
                 filename,
@@ -267,15 +267,16 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         if_run_failure = False
         self.timestamp = datetime.now().strftime("%m%d_%H%M%S")
         print(f"Starting FPGA RUN {self.timestamp}")
+        self.current_radar_key = state.radar_choice.get()
 
         self.csv_thread = threading.Thread(
             target=self.csv_writer_worker,
-            args=(self.timestamp,),
+            args=(self.timestamp, self.current_radar_key),
             daemon=True
         )
         self.raw_csv_thread = threading.Thread(
             target=self.raw_csv_writer_worker,
-            args=(self.timestamp,),
+            args=(self.timestamp,self.current_radar_key),
             daemon=True
         )
 
@@ -812,14 +813,13 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.after(20, self.update_textboxes)
 
     def create_heatmap(self):
-        # self.current_radar = self.radar_dict[self.radar_selected.get()]
-        print(self.current_radar)
         '''
         Will Create a heatmap based on data accumulated by heat_map_fpga.
         Does not have protections against faulty data.
         calculation is currently based off of X POWER.
         :return:
         '''
+
         if self.az_label is not None:
             self.remove_output_network_widgets()
             self.heat_map_specific_hide()
