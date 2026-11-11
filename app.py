@@ -1,3 +1,4 @@
+from dds_programming import DDS_Frame
 from home import *
 #from fpga_layout import *
 from header import *
@@ -57,6 +58,8 @@ class App(customtkinter.CTk):
         #self.radar_functionality_frame = RadarFunctionality(self.my_notebook)
         self.radar_functionality = RadarFunctionality2(self.my_notebook)
 
+        self.dds_frame = DDS_Frame(self.my_notebook)
+
         self.my_notebook.add(self.connection_frame, text = "Home")
         ### seperate tab for home
         self.initial_connection_check = Initial_Check(self.my_notebook)
@@ -65,6 +68,7 @@ class App(customtkinter.CTk):
         self.my_notebook.add(self.positioner_frame, text = "Positioner Control")
         self.my_notebook.add(self.visualization_frame, text = "Visualize Radar Output")
         self.my_notebook.add(self.radar_functionality, text = "Collect Calibration Data")
+        self.my_notebook.add(self.dds_frame, text = "DDS Data")
 
 
 
