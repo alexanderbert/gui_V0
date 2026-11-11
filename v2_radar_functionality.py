@@ -528,9 +528,9 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         # -S {self.dash_capital_S_var.get()} -Q {capture_run_Q_VALUE} -8 {int(self.dash_eight_var.get())} -9 {int(self.dash_nine_var.get())}
         # -X -D {self.dash_capital_D_var.get()} -y {self.dash_y_var.get()} -V {self.dash_capital_V_var.get()} -C {self.dash_capital_C_var.get()} -u""")
         command_string_text = f"""Command String: \t-S {self.dash_capital_S_var.get()} \t-D {self.dash_capital_D_var.get()} \t-u -w {self.dash_w_var.get()} \t-s {self.dash_s_var.get()} 
-                                    \t-e {self.dash_e_var.get()} \t-b {self.dash_b_var.get()} \t-g {self.dash_g_var.get()} \t-y {self.dash_y_var.get()} \t-V {self.dash_capital_V_var.get()} 
-                                    \t-C {self.dash_capital_C_var.get()} \t-k 10000 \t-q \t-c \t-Q {capture_run_Q_VALUE} \t-n 
-                                    \t| socat - tcp:192.168.69.197:7777"""
+                                \t-e {self.dash_e_var.get()} \t-b {self.dash_b_var.get()} \t-g {self.dash_g_var.get()} \t-y {self.dash_y_var.get()} \t-V {self.dash_capital_V_var.get()} 
+                                    \t-C {self.dash_capital_C_var.get()} \t-k 10000 \t-q -c \t-Q {capture_run_Q_VALUE} \t-n 
+                                \t| socat - tcp:192.168.69.197:7777"""
         self.command_list_label = customtkinter.CTkLabel(self.output_frame, text=command_string_text)
         self.command_list_label.grid(column=0, columnspan=2, row=12)
         self.command_list_label.configure(font=("Arial", 14), justify="center")
