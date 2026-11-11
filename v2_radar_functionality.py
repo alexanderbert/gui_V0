@@ -1393,12 +1393,12 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         except:
             input_warning = messagebox.showwarning("Warning", "Inputs entered incorrectly.")
             return 1
-        if not self.dash_eight_var.get() or not self.dash_nine_var.get():
-            input_warning = messagebox.showwarning("warning", "input values")
-            return 1
         if mode == "heat_map_fpga":
             if state.starting_azimuth_value == "Start Az" or state.ending_azimuth_value == "End Az" or state.starting_el_value == "Start ElBeam" or state.ending_el_value == "End ElBeam":
                 input_warning = messagebox.showwarning("Warning",
                                                        f"Please enter values in the Positioner tab first.")
+                return 1
+            if not self.dash_eight_var.get() or not self.dash_nine_var.get():
+                input_warning = messagebox.showwarning("warning", "input values")
                 return 1
         return 0
