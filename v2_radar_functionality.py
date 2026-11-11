@@ -599,10 +599,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             socat_pid = None
 
         finally:
-            channel.send(f"mkdir packet_run_{packet_run_date_time} && mv *.bin packet_run_{packet_run_date_time}\n")
-            time.sleep(0.01)
-            channel.close()
-            client.close()
+            self.radar_packet_file_consolidation(channel, packet_run_date_time)
             self.capture_packets_button.configure(state="normal")
             self.run_heatmap_fpga_button.configure(state="normal")
             self.create_heatmap_button.configure(state="normal")
@@ -615,6 +612,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             self.replace_initial_i_o()
             self.command_list_label.grid_remove()
             #KILL SOCAT
+            channel.close()
+            client.close()
             if socat_pid is not None:
                 self.kill_socat(socat_pid)
             self.rename_fpga_output(packet_run_date_time)
@@ -664,6 +663,12 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             print("SOCAT INSTANTIATION FAILED")
             return False
 
+    def radar_packet_file_consolidation(self, channel, timestamp):
+        try:
+            channel.send(f"mkdir packet_run_{timestamp} && mv *.bin packet_run_{timestamp}\n")
+            time.sleep(0.1)
+        except subprocess.CalledProcessError as e:
+            print(f"Command failed with exit code {e.returncode}")
 
     def kill_socat(self, pid):
         print(f"KILLING SOCAT {pid}")
