@@ -178,7 +178,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
     def csv_writer_worker(self, timestamp, radar_selected):
         filename = os.path.join(
             application_path,
-            f"heatmap_{radar_selected}_{timestamp}.csv"
+            f"{radar_selected}_heatmap_{timestamp}.csv"
         )
 
         try:
@@ -221,7 +221,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
         filename = os.path.join(
             application_path,
-            f"RAW_OUTPUT_{radar_selected}_{timestamp}.csv"
+            f"{radar_selected}_RAW_OUTPUT_{timestamp}.csv"
         )
         with open(
                 filename,
@@ -942,11 +942,12 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
             #TITLE CHECK TO CONTAIN DATE INFO
             if "heatmap_" in csv_file:
-                date_title = csv_file.split("heatmap_")[1].split(".csv")[0]
-                print(f" DATE_TITLE: {date_title}")
+                date_title = csv_file.split("_heatmap_")[1].split(".csv")[0]
+                radar_for_title = csv_file.split("_heatmap_")[0]
+                print(f" DATE_TITLE: {date_title} - {radar_for_title}")
                 formatted_title = self.date_converter(date_title)
                 print(f"FORMATTED_TITLE {formatted_title}")
-                ax.set_title(f"X Power - {formatted_title}")
+                ax.set_title(f"X Power -{radar_for_title.title()}-{formatted_title}")
             else:
                 ax.set_title("X Power Heatmap")
 
