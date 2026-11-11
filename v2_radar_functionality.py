@@ -823,7 +823,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         calculation is currently based off of X POWER.
         :return:
         '''
-
+        radar_for_title = None
         if self.az_label is not None:
             self.remove_output_network_widgets()
             self.heat_map_specific_hide()
@@ -943,11 +943,11 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             #TITLE CHECK TO CONTAIN DATE INFO
             if "heatmap_" in csv_file:
                 date_title = csv_file.split("_heatmap_")[1].split(".csv")[0]
-                radar_for_title = csv_file.split("_heatmap_")[0]
+                radar_for_title = os.path.basename(csv_file).split("_")[0]
                 print(f" DATE_TITLE: {date_title} - {radar_for_title}")
                 formatted_title = self.date_converter(date_title)
                 print(f"FORMATTED_TITLE {formatted_title}")
-                ax.set_title(f"X Power -{radar_for_title.title()}-{formatted_title}")
+                ax.set_title(f"X Power: {radar_for_title.title()} {formatted_title}")
             else:
                 ax.set_title("X Power Heatmap")
 
@@ -1005,15 +1005,29 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
         # CREATE JPG IF IT DOESNT EXIT
         csv_path = Path(csv_file)
-        output_dir = csv_path.parent / "generatedHeatmaps"
-        current_heatmap_output = output_dir / (csv_path.stem + ".jpg")
-        if not current_heatmap_output.exists():
-            fig.savefig(
-                current_heatmap_output,
-                format="jpg",
-                dpi=300,
-                bbox_inches="tight"
-            )
+        if radar_for_title:
+            radar_path = Path(f"./generatedHeatmaps/{radar_for_title}")
+            radar_path.mkdir(parents=True, exist_ok=True)
+
+            output_dir = csv_path.parent / f"generatedHeatmaps/{radar_for_title}"
+            current_heatmap_output = output_dir / (csv_path.stem + ".jpg")
+            if not current_heatmap_output.exists():
+                fig.savefig(
+                    current_heatmap_output,
+                    format="jpg",
+                    dpi=300,
+                    bbox_inches="tight"
+                )
+        else:
+            output_dir = csv_path.parent / "generatedHeatmaps/"
+            current_heatmap_output = output_dir / (csv_path.stem + ".jpg")
+            if not current_heatmap_output.exists():
+                fig.savefig(
+                    current_heatmap_output,
+                    format="jpg",
+                    dpi=300,
+                    bbox_inches="tight"
+                )
 
         def fixed_width_coord(x,y):
             return f'x={x:8.2f}, y={y:8.2f}'
