@@ -508,6 +508,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             self.y_power_var.set("")
 
     def capture_packets_run(self):
+        self.current_radar_key = state.radar_choice.get()
         packet_run_date_time = datetime.now().strftime("%m%d_%H%M%S")
         fake_update_bar_value = 0
         capture_run_Q_VALUE = 10000
@@ -623,7 +624,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             client.close()
             if socat_pid is not None:
                 self.kill_socat(socat_pid)
-            self.rename_fpga_output(packet_run_date_time)
+            self.rename_fpga_output(self.current_radar_key, packet_run_date_time)
             return None
 
     def update_progressbar(self, value):
@@ -634,8 +635,11 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         '''
         self.progress_bar['value'] = value
 
-    def rename_fpga_output(self, timestamp):
-        result = subprocess.run(['mv', './captureMode/000', f"./captureMode/{timestamp}"], capture_output=True, text=True)
+    def rename_fpga_output(self, selected_radar, timestamp):
+        radar_path = Path(f"./captureMode/{selected_radar}")
+        radar_path.mkdir(parents=True, exist_ok=True)
+
+        result = subprocess.run(['mv', './captureMode/000', f"./captureMode/{selected_radar}/{timestamp}"], capture_output=True, text=True)
         print(result.stdout)
         print(result.stderr)
 
