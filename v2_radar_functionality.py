@@ -599,6 +599,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             socat_pid = None
 
         finally:
+            channel.send(f"mkdir packet_run_{packet_run_date_time} && mv *.bin packet_run_{packet_run_date_time}\n")
+            time.sleep(0.01)
             channel.close()
             client.close()
             self.capture_packets_button.configure(state="normal")
