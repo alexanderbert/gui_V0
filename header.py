@@ -115,21 +115,23 @@ class HeaderFrame(customtkinter.CTkFrame):
         #TODO remove okay, re
         self.create_popup()
         #state.radars_found.update_dict({"sq-radar-4": "192.168.69.188"})
-
+        nmap_result = None
         nm = nmap.PortScanner()
         # host_ip = os.environ.get("HOST_IP")
         # nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
         #CHANGE NMAP SCAN BASED ON NETWORK STATE
         try:
-            result = nm.scan(hosts=state.network_state, arguments="-sn", timeout=20)
+            nmap_result = nm.scan(hosts=state.network_state, arguments="-sn", timeout=20)
+
 
         except:
+            print(f"NMAP RESULT: {nmap_result}")
             print("NETWORK ERROR")
             self.connection_button.configure(fg_color='yellow', text_color="black")
             self.popup.destroy()
             return
         host_ip = state.network_state
-        print(f"NMAP RESULT: {result}")
+
 
         print(f"running on {host_ip}")
         for host in nm.all_hosts():
