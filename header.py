@@ -122,8 +122,8 @@ class HeaderFrame(customtkinter.CTkFrame):
         #CHANGE NMAP SCAN BASED ON NETWORK STATE
         try:
             #nmap_result = nm.scan(hosts=state.network_state, arguments="-sn", timeout=20)
-            nmap_result = nm.scan(hosts=state.network_state, arguments="-sn")
-
+            nmap_result = nm.scan(hosts=state.network_state, arguments="-sn -n -T4 --max-retries 1 --host-timeout 500ms")
+            # -n No DNS resolution, -T4 agressive timing
         except Exception as e:
             print(f"NETWORK CONNECTION ERROR: {e}")
             print(f"NMAP RESULT: {nmap_result}")
