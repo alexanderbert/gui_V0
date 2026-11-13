@@ -123,8 +123,10 @@ class HeaderFrame(customtkinter.CTkFrame):
         try:
             nmap_result = nm.scan(hosts=state.network_state, arguments="-sn", timeout=20)
 
-
-        except:
+            if nmap_result is None:
+                self.connection_button.configure(fg_color="orange", text_color="black")
+        except Exception as e:
+            print(f"NETWORK CONNECTION ERROR: {e}")
             print(f"NMAP RESULT: {nmap_result}")
             print("NETWORK ERROR")
             self.connection_button.configure(fg_color='yellow', text_color="black")
