@@ -114,14 +114,14 @@ class HeaderFrame(customtkinter.CTkFrame):
     def find_other_radars(self):
         #TODO remove okay, re
         self.create_popup()
-        # state.radars_found.update_dict({"sq-radar-4": "192.168.69.188"})
+        #state.radars_found.update_dict({"sq-radar-4": "192.168.69.188"})
 
         nm = nmap.PortScanner()
         # host_ip = os.environ.get("HOST_IP")
         # nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
         #CHANGE NMAP SCAN BASED ON NETWORK STATE
         try:
-            nm.scan(hosts=state.network_state, arguments="-sn", timeout=20)
+            result = nm.scan(hosts=state.network_state, arguments="-sn", timeout=20)
 
         except:
             print("NETWORK ERROR")
@@ -129,6 +129,7 @@ class HeaderFrame(customtkinter.CTkFrame):
             self.popup.destroy()
             return
         host_ip = state.network_state
+        print(f"NMAP RESULT: {result}")
 
         print(f"running on {host_ip}")
         for host in nm.all_hosts():
