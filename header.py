@@ -149,6 +149,7 @@ class HeaderFrame(customtkinter.CTkFrame):
         self.update_radar_pulldown()
         self.connection_button.configure(fg_color="green", text_color="white")
         self.popup.destroy()
+        print(f"NMAP RESULT: {nmap_result}")
         #input_warning = messagebox.showwarning("Warning", "Finished Searching Network")
 
 
