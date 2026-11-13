@@ -121,14 +121,12 @@ class HeaderFrame(customtkinter.CTkFrame):
         # nm.scan(hosts=f"{os.environ.get('HOST_IP')}", arguments="-sn")
         #CHANGE NMAP SCAN BASED ON NETWORK STATE
         try:
-            nmap_result = nm.scan(hosts=state.network_state, arguments="-sn", timeout=20)
+            #nmap_result = nm.scan(hosts=state.network_state, arguments="-sn", timeout=20)
+            nmap_result = nm.scan(hosts=state.network_state, arguments="-sn")
 
-            if nmap_result is None:
-                self.connection_button.configure(fg_color="orange", text_color="black")
         except Exception as e:
             print(f"NETWORK CONNECTION ERROR: {e}")
             print(f"NMAP RESULT: {nmap_result}")
-            print("NETWORK ERROR")
             self.connection_button.configure(fg_color='yellow', text_color="black")
             self.popup.destroy()
             return
