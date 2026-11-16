@@ -922,9 +922,10 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             )
 
             ax.annotate(
-                f"{peak_azimuth:.2f}, {peak_elevation:.2f}",
+                #f"{peak_azimuth:.2f}, {peak_elevation:.2f}",
+                f"{peak_azimuth:.2f}, {peak_elevation:.2f}\n {peak_power:.2f} dB",
                 (peak_azimuth, peak_elevation),
-                xytext=(-10, -20),
+                xytext=(-20, -30),
                 textcoords="offset points",
                 color="black",
 
@@ -937,14 +938,14 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                 cmap="inferno",
             )
 
-            heatmap = ax.contour(
-                AZ,
-                EL,
-                POWER,
-                shading="auto",
-                cmap="inferno"
-                # cmap="gray
-            )
+            # heatmap = ax.contour(
+            #     AZ,
+            #     EL,
+            #     POWER,
+            #     shading="auto",
+            #     cmap="inferno"
+            #     # cmap="gray
+            # )
 
             # plt.fig(4, 6)
 
