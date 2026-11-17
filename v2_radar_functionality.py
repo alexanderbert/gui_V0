@@ -940,10 +940,10 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         elevation = np.array(elevation_raw)
         if state.power_selected == "X-Power":
             power_selected = np.array(x_power_raw)
-            self.create_other_power_jpg(csv_file, azimuth, elevation, y_power_raw)
+            self.create_other_power_jpg(csv_file, azimuth, elevation, y_power_raw, 'Y-Power')
         elif state.power_selected == "Y-Power":
             power_selected = np.array(y_power_raw)
-            self.create_other_power_jpg(csv_file, azimuth, elevation,x_power_raw)
+            self.create_other_power_jpg(csv_file, azimuth, elevation, x_power_raw, 'X-Power')
         else:
             print("ERROR")
 
@@ -1129,7 +1129,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.close_heatmap_button.configure(width=200, font=("Arial", 14))
         return self.canvas
 
-    def create_other_power_jpg(self,csv_file, azimuth, elevation, power_selected):
+    def create_other_power_jpg(self,csv_file, azimuth, elevation, power_selected, title):
         radar_for_title = None
         try:
             fig, ax = plt.subplots(figsize=(8, 6))
@@ -1187,11 +1187,11 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                 print(f" DATE_TITLE: {date_title} - {radar_for_title}")
                 formatted_title = self.date_converter(date_title)
                 print(f"FORMATTED_TITLE {formatted_title}")
-                ax.set_title(f"{state.power_selected}: {radar_for_title.title()} {formatted_title}")
+                ax.set_title(f"{title}: {radar_for_title.title()} {formatted_title}")
             else:
-                ax.set_title(f"{state.power_selected} Heatmap")
+                ax.set_title(f"{title} Heatmap")
 
-            fig.colorbar(heatmap, ax=ax, label=f"{state.power_selected} (dB)")
+            fig.colorbar(heatmap, ax=ax, label=f"{title} (dB)")
             ax.set_xlabel("Azimuth (degrees)")
             ax.set_ylabel("Elevation (degrees)")
 
@@ -1205,7 +1205,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             radar_path.mkdir(parents=True, exist_ok=True)
 
             output_dir = csv_path.parent / f"generatedHeatmaps/{radar_for_title}"
-            current_heatmap_output = output_dir / (csv_path.stem + f"_{state.power_selected}" + ".jpg")
+            current_heatmap_output = output_dir / (csv_path.stem + f"_{title}" + ".jpg")
             if not current_heatmap_output.exists():
                 fig.savefig(
                     current_heatmap_output,
@@ -1215,7 +1215,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                 )
         else:
             output_dir = csv_path.parent / "generatedHeatmaps/"
-            current_heatmap_output = output_dir / (csv_path.stem + f"_{state.power_selected}" + ".jpg")
+            current_heatmap_output = output_dir / (csv_path.stem + f"_{title}" + ".jpg")
             if not current_heatmap_output.exists():
                 fig.savefig(
                     current_heatmap_output,
@@ -1227,23 +1227,18 @@ class RadarFunctionality2(customtkinter.CTkFrame):
     def date_converter(self, date_of_data):
         # ex: 0116_123548
         current_year = str(date.today().year)
-        print(current_year)
         print("INSIDE DATE CONVERTER")
         date_string = ""
         months = ["index zero","Jan", "Feb", "March", "April", "May", "June", "July", "August", "Sept", "Oct","Nov", "Dec"]
         date_array = date_of_data.split("_")
         month = int(date_array[0][0:2])
-        print(month)
         date_string += f"{months[month]}"
-        print(date_string)
         day = date_array[1][2:3]
         date_string += " " + day + " " + f"{current_year[2:]}" + " "
-        print(date_string)
         for i, char in enumerate(date_array[1]):
             if i %2 ==0 and i != 0:
                 date_string += ":"
             date_string += char
-            print(date_string)
         return date_string
 
     def close_heatmap(self):
