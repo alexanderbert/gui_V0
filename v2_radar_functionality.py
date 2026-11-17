@@ -21,6 +21,7 @@ import subprocess
 from pathlib import Path
 from scipy.interpolate import griddata
 import customtkinter
+from PIL import Image, ImageTk
 
 from network_toggle import NetworkSwitch
 from power_toggle import PowerSwitch
@@ -77,6 +78,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.timestamp = None
         self.current_radar = None
 
+        self.current_photo = None
+
         self.radar_style = ttk.Style()
 
         self.radar_style.layout('text.Horizontal.TProgressbar',
@@ -109,13 +112,13 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.fpga_control_frame = customtkinter.CTkFrame(self)
         self.fpga_control_frame.grid(row=0, column=2, sticky="nsew")
         self.fpga_control_frame.grid_columnconfigure(0, weight=1)
-        self.fpga_control_frame.grid_rowconfigure(list(range(0, 7)), weight=1)
+        self.fpga_control_frame.grid_rowconfigure(list(range(0, 11)), weight=1)
         # self.fpga_control_frame.grid_columnconfigure(1, weight=1)
 
-        self.radar_control_frame = customtkinter.CTkFrame(self)
-        self.radar_control_frame.grid(row=1, column=2, sticky="nsew")
-        self.radar_control_frame.grid_columnconfigure(0, weight=1)
-        self.radar_control_frame.grid_rowconfigure(list(range(0, 4)), weight=1)
+        # self.radar_control_frame = customtkinter.CTkFrame(self)
+        # self.radar_control_frame.grid(row=1, column=2, sticky="nsew")
+        # self.radar_control_frame.grid_columnconfigure(0, weight=1)
+        # self.radar_control_frame.grid_rowconfigure(list(range(0, 4)), weight=1)
 
         self.output_frame = customtkinter.CTkFrame(self)
         self.output_frame.grid(column=0, row=0, rowspan=2, sticky="nsew")
@@ -159,6 +162,9 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
         self.power_switch = PowerSwitch(self.fpga_control_frame, label_a="X-Power", label_b="Y-Power")
         self.power_switch.grid(column=0, row=4)
+
+        self.image_viewer_button = customtkinter.CTkButton(self.fpga_control_frame, text="Image Viewer", command=lambda: self.image_viewer())
+        self.image_viewer_button.grid(column=0, row=5)
 
         self.close_heatmap_button = None
 
@@ -1282,21 +1288,21 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.dash_capital_C_var.set(0.1)
 
         self.wave_form_label = customtkinter.CTkLabel(self.fpga_control_frame, text="Wave Form Commands", fg_color = "#2B2B2B", text_color = "#E5A93B")
-        self.wave_form_label.grid(column=0, row=5, sticky='ew')
+        self.wave_form_label.grid(column=0, row=7, sticky='ew')
         self.wave_form_label.configure(font=("Arial", 14, "underline"))
 
         self.continuous_waveform_button = customtkinter.CTkButton(self.fpga_control_frame, width=10,
                                                                   text="Set Continuous Wave form",
                                                                   command=lambda: self.start_threading(
                                                                       self.continuous_waveform))
-        self.continuous_waveform_button.grid(column=0, row=6)
+        self.continuous_waveform_button.grid(column=0, row=8)
         self.continuous_waveform_button.configure(width=200, font=("Arial", 14))
 
         self.standard_60_waveform_button = customtkinter.CTkButton(self.fpga_control_frame, width=10,
                                                                    text="Set 60 Wave form",
                                                                    command=lambda: self.start_threading(
                                                                        self.standard_60_waveform))
-        self.standard_60_waveform_button.grid(column=0, row=7)
+        self.standard_60_waveform_button.grid(column=0, row=9)
         self.standard_60_waveform_button.configure(width=200, font=("Arial", 14))
 
     def continuous_waveform(self):
@@ -1464,3 +1470,27 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                 input_warning = messagebox.showwarning("warning", "input values")
                 return 1
         return 0
+
+    def image_viewer(self):
+        self.hide_initial_i_o()
+        self.status_entry.grid_remove()
+        self.status_label.grid_remove()
+        print("HELLO")
+        file_path = filedialog.askopenfilename(
+            title="Select a JPG Image",
+            filetypes=[
+                ("JPEG files", "*.jpg *.jpeg"),
+                ("All image files", "*.jpg *.jpeg *.png *.bmp *.gif"),
+            ],
+        )
+        if not file_path:
+            return
+
+        img = Image.open(file_path)
+        img.thumbnail((760, 500), Image.Resampling.LANCZOS)
+
+        # Convert to a Tkinter-compatible PhotoImage
+        self.current_photo = ImageTk.PhotoImage(img)
+        self.image_label = tk.Label(self.output_frame, image=self.current_photo)
+
+        self.image_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
