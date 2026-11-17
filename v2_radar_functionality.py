@@ -77,6 +77,15 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.timestamp = None
         self.current_radar = None
 
+        self.radar_style = ttk.Style()
+
+        self.radar_style.layout('text.Horizontal.TProgressbar',
+                     [('Horizontal.Progressbar.trough',
+                       {'children': [('Horizontal.Progressbar.pbar',
+                                      {'side': 'left', 'sticky': 'ns'})],
+                        'sticky': 'nswe'}),
+                      ('Horizontal.Progressbar.label', {'sticky': ''})])
+
         self.dash_w_var = tk.DoubleVar()
         self.dash_s_var = tk.DoubleVar()
         self.dash_e_var = tk.DoubleVar()
@@ -308,7 +317,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             elDelta = float(state.ending_el_value) - float(state.starting_el_value)
             azDeegPerS = 360.0 / float(state.speed_value)
             elDegPerStep = float(state.increment_value) * 2.0
-            expected_Q_Value = int((azDelta / azDeegPerS) * (elDelta / elDegPerStep) * 2.0 * self.dash_capital_S_var.get() * 1.2)
+            #REMOVE the 2.0 from expected_Q_value calculation
+            expected_Q_Value = int((azDelta / azDeegPerS) * (elDelta / elDegPerStep) * self.dash_capital_S_var.get() * 1.2)
             state.expected_Q_VALUE_VALUE = expected_Q_Value
 
             print(self.dash_capital_S_var.get(), elDelta, azDeegPerS, elDegPerStep, expected_Q_Value)
@@ -337,7 +347,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.progress_bar_label = customtkinter.CTkLabel(self.output_frame, text="Progress: ", justify="center")
         self.progress_bar_label.grid(column=0, row=5, sticky="e", padx=20)
         self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate",
-                                            style="yellow.Horizontal.TProgressbar", length=400,
+                                            style="text.Horizontal.TProgressbar", length=400, value = 0,
                                             maximum=state.expected_Q_VALUE_VALUE)
         self.progress_bar.grid(column=1, row=5, sticky="w")
         self.progress_bar['value'] = 0
@@ -445,7 +455,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                                 # THIS WILL UPDATE PROGRESS BAR
                                 # self.update_progressbar(num_value, expected_Q_Value)
                                 try:
-                                    self.update_progressbar(num_value)
+                                    self.update_progressbar(num_value,state.expected_Q_VALUE_VALUE)
                                 except Exception as e:
                                     print(f"PROGRESS BAR UPDATE FAILED {e}")
 
@@ -526,7 +536,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.progress_bar_label.grid(column=0, row=5, sticky="e", padx=20)
 
         self.progress_bar = ttk.Progressbar(self.output_frame, orient="horizontal", mode="determinate",
-                                            style="yellow.Horizontal.TProgressbar", length=400,
+                                            #style="yellow.Horizontal.TProgressbar", length=400,
+                                            style="text.Horizontal.TProgressbar", length=400, value=0,
                                             maximum=capture_run_Q_VALUE)
         self.progress_bar.grid(column=1, row=5, sticky="w",padx=50)
         self.progress_bar['value'] = 0
@@ -595,7 +606,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                     print(repr(data))
                     buffer += data
                     num_match = num_pattern.search(buffer)
-                    self.update_progressbar(fake_update_bar_value)
+                    self.update_progressbar(fake_update_bar_value, capture_run_Q_VALUE)
 
                     captured_match = re.search(r"Captured\s+(\d+)\s+packets\.", buffer)
                     if captured_match:
@@ -606,7 +617,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
                     if num_match:
                         num_value = int(num_match.group("num"))
-                        self.update_progressbar(num_value)
+                        self.update_progressbar(num_value, capture_run_Q_VALUE)
         except:
             print("EXCEPTION OCCURRED IN capture_packets_run")
             self.kill_socat(socat_pid)
@@ -633,13 +644,22 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             self.rename_fpga_output(self.current_radar_key, packet_run_date_time)
             return None
 
-    def update_progressbar(self, value):
+    def update_progressbar(self, value, max_q_value):
         '''
         Updates the progress bar, update_idletasks forces a gui refresh so this might not be optimal but
         I won't know until testing. The other option would be to create a .after(x, update_progressbar) function
         INCLUDE MAx num for color change?
         '''
+        percentage = round(value/max_q_value*100)
+        self.progress_bar.config(value=percentage)
         self.progress_bar['value'] = value
+        self.radar_style.configure(
+            'text.Horizontal.TProgressbar',
+            text=f'{percentage} %'
+        )
+
+        #self.progress_bar.configure(style="yellow.Horizontal.TProgressbar")
+
 
     def rename_fpga_output(self, selected_radar, timestamp):
         radar_path = Path(f"./captureMode/{selected_radar}")
