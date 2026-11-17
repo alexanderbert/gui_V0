@@ -165,6 +165,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
         self.image_viewer_button = customtkinter.CTkButton(self.fpga_control_frame, text="Image Viewer", command=lambda: self.image_viewer())
         self.image_viewer_button.grid(column=0, row=5)
+        self.image_viewer_button.configure(width=200, font=("Arial", 14))
 
         self.close_heatmap_button = None
 
@@ -1472,25 +1473,115 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         return 0
 
     def image_viewer(self):
-        self.hide_initial_i_o()
-        self.status_entry.grid_remove()
-        self.status_label.grid_remove()
+        # self.hide_initial_i_o()
+        # self.status_entry.grid_remove()
+        # self.status_label.grid_remove()
         print("HELLO")
-        file_path = filedialog.askopenfilename(
-            title="Select a JPG Image",
-            filetypes=[
-                ("JPEG files", "*.jpg *.jpeg"),
-                ("All image files", "*.jpg *.jpeg *.png *.bmp *.gif"),
-            ],
-        )
-        if not file_path:
+        # file_path = filedialog.askopenfilename(
+        #     title="Select a JPG Image",
+        #     filetypes=[
+        #         ("JPEG files", "*.jpg *.jpeg"),
+        #         ("All image files", "*.jpg *.jpeg *.png *.bmp *.gif"),
+        #     ],
+        # )
+        # if not file_path:
+        #     return
+        #
+        # img = Image.open(file_path)
+        # img.thumbnail((760, 500), Image.Resampling.LANCZOS)
+        #
+        # # Convert to a Tkinter-compatible PhotoImage
+        # self.current_photo = ImageTk.PhotoImage(img)
+        # self.image_label = tk.Label(self.output_frame, image=self.current_photo)
+        # self.image_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
+
+        self.image_carousel = ImageCarousel(self.output_frame)
+
+
+
+class ImageCarousel(customtkinter.CTkFrame):
+    def __init__(self, parent, folder_path=None, **kwargs):
+        super().__init__(master=parent, **kwargs)
+
+        if not folder_path:
+            folder_path = filedialog.askdirectory(title="Select Folder", initialdir="./generatedHeatmaps")
+        if not folder_path:
             return
 
-        img = Image.open(file_path)
+        self.image_paths = sorted(
+            os.path.join(folder_path, f)
+            for f in os.listdir(folder_path)
+            if f.lower().endswith((".jpg", ".jpeg"))
+        )
+
+        if not self.image_paths:
+            messagebox.showinfo("No Images", "No .jpg files found in that folder.")
+            return
+
+        self.index = 0
+        self.current_photo = None  # Keep reference to prevent garbage collection
+
+        # Image display area
+        self.image_label = tk.Label(bg="#1e1e1e")
+        self.image_label.pack(expand=True, fill="both", padx=20, pady=10)
+
+        # Bottom navigation bar
+        self.nav_frame = tk.Frame(bg="#2d2d2d")
+        self.nav_frame.pack(fill="x", side="bottom")
+
+        # self.image_label = tk.Label(self, bg="#1e1e1e")
+        # self.image_label.grid(row=0, column=0, padx=20, pady=10)
+
+
+        self.prev_btn = tk.Button(
+            self.nav_frame, text="◀ Previous", command=self.prev_image, width=12
+        )
+        self.prev_btn.pack(side="left", padx=15, pady=10)
+
+        self.status_label = tk.Label(
+            self.nav_frame, text="", fg="white", bg="#2d2d2d", font=("sans-serif", 10)
+        )
+        self.status_label.pack(side="left", expand=True)
+
+        self.next_btn = tk.Button(
+            self.nav_frame, text="Next ▶", command=self.next_image, width=12
+        )
+        self.next_btn.pack(side="right", padx=15, pady=10)
+
+        self.close_btn = tk.Button(self.nav_frame, text="Close", command=self.close_window)
+        self.close_btn.pack(side="right", padx=15, pady=10)
+
+        # Keyboard & mouse wheel bindings
+        self.bind("<Left>", lambda e: self.prev_image())
+        self.bind("<Right>", lambda e: self.next_image())
+        self.bind("<Button-4>", lambda e: self.prev_image())  # Linux scroll up
+        self.bind("<Button-5>", lambda e: self.next_image())  # Linux scroll down
+        self.bind("<Escape>", lambda e: self.destroy())
+
+        self.show_image()
+
+    def show_image(self):
+        path = self.image_paths[self.index]
+        img = Image.open(path)
+
+        # Resize proportionally to fit inside 760x500
         img.thumbnail((760, 500), Image.Resampling.LANCZOS)
-
-        # Convert to a Tkinter-compatible PhotoImage
         self.current_photo = ImageTk.PhotoImage(img)
-        self.image_label = tk.Label(self.output_frame, image=self.current_photo)
 
-        self.image_label.grid(row=0, column=0, columnspan=2, sticky="nsew")
+        self.image_label.config(image=self.current_photo)
+        filename = os.path.basename(path)
+        self.status_label.config(
+            text=f"{filename}   ({self.index + 1} / {len(self.image_paths)})"
+        )
+
+    def next_image(self):
+        self.index = (self.index + 1) % len(self.image_paths)
+        self.show_image()
+
+    def prev_image(self):
+        self.index = (self.index - 1) % len(self.image_paths)
+        self.show_image()
+
+    def close_window(self):
+        self.image_label.destroy()
+        self.nav_frame.destroy()
