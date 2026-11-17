@@ -78,13 +78,34 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.current_radar = None
 
         self.radar_style = ttk.Style()
+        self.radar_style.theme_use('clam')
+        self.radar_style.layout(
+            'text.Horizontal.TProgressbar',
+            [
+                ('Horizontal.Progressbar.trough', {
+                    'children': [
+                        ('Horizontal.Progressbar.pbar', {
+                            'side': 'left',
+                            'sticky': 'ns'
+                        }),
+                        ('Horizontal.Progressbar.label', {
+                            'sticky': 'nswe'
+                        })
+                    ],
+                    'sticky': 'nswe'
+                })
+            ]
+        )
+        self.radar_style.configure(
+            'text.Horizontal.TProgressbar',
+            anchor='center',
+            foreground='black'
+        )
 
-        self.radar_style.layout('text.Horizontal.TProgressbar',
-                     [('Horizontal.Progressbar.trough',
-                       {'children': [('Horizontal.Progressbar.pbar',
-                                      {'side': 'left', 'sticky': 'ns'})],
-                        'sticky': 'nswe'}),
-                      ('Horizontal.Progressbar.label', {'sticky': ''})])
+
+        print(self.radar_style.element_names())
+        print(self.radar_style.layout('text.Horizontal.TProgressbar'))
+        print(self.radar_style.theme_use())
 
         self.dash_w_var = tk.DoubleVar()
         self.dash_s_var = tk.DoubleVar()
@@ -651,11 +672,11 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         INCLUDE MAx num for color change?
         '''
         percentage = round(value/max_q_value*100)
-        self.progress_bar.config(value=percentage)
-        self.progress_bar['value'] = value
+        self.progress_bar.config(maximum = max_q_value, value=value)
+        #self.progress_bar['value'] = value
         self.radar_style.configure(
             'text.Horizontal.TProgressbar',
-            text=f'{percentage} %'
+            text=f'{percentage:.1f}%'
         )
 
         #self.progress_bar.configure(style="yellow.Horizontal.TProgressbar")
