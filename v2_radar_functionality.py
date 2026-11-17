@@ -940,8 +940,10 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         elevation = np.array(elevation_raw)
         if state.power_selected == "X-Power":
             power_selected = np.array(x_power_raw)
+            self.create_other_power_jpg(csv_file, azimuth, elevation, y_power_raw)
         elif state.power_selected == "Y-Power":
             power_selected = np.array(y_power_raw)
+            self.create_other_power_jpg(csv_file, azimuth, elevation,x_power_raw)
         else:
             print("ERROR")
 
@@ -1126,6 +1128,101 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.close_heatmap_button.grid(column=0, row=2)
         self.close_heatmap_button.configure(width=200, font=("Arial", 14))
         return self.canvas
+
+    def create_other_power_jpg(self,csv_file, azimuth, elevation, power_selected):
+        radar_for_title = None
+        try:
+            fig, ax = plt.subplots(figsize=(8, 6))
+            az_grid = np.linspace(azimuth.min(), azimuth.max(), 500)
+            el_grid = np.linspace(elevation.min(), elevation.max(), 500)
+
+            AZ, EL = np.meshgrid(az_grid, el_grid)
+
+            POWER = griddata(
+                (azimuth, elevation),
+                power_selected,
+                (AZ, EL),
+                method="linear",
+            )
+
+            peak_index = np.nanargmax(POWER)
+
+            peak_el, peak_az = np.unravel_index(
+                peak_index,
+                POWER.shape
+            )
+
+            peak_azimuth = AZ[peak_el, peak_az]
+            peak_elevation = EL[peak_el, peak_az]
+            peak_power = POWER[peak_el, peak_az]
+            ax.plot(
+                peak_azimuth,
+                peak_elevation,
+                marker="x",
+                markersize=12,
+                markeredgewidth=3,
+                color="black"
+            )
+
+            ax.annotate(
+                # f"{peak_azimuth:.2f}, {peak_elevation:.2f}",
+                f"{peak_azimuth:.2f}, {peak_elevation:.2f}\n {peak_power:.2f} dB",
+                (peak_azimuth, peak_elevation),
+                xytext=(-20, -30),
+                textcoords="offset points",
+                color="black",
+
+            )
+            heatmap = ax.pcolormesh(
+                AZ,
+                EL,
+                POWER,
+                shading="auto",
+                cmap="inferno",
+            )
+
+            if "heatmap_" in csv_file:
+                date_title = csv_file.split("_heatmap_")[1].split(".csv")[0]
+                radar_for_title = os.path.basename(csv_file).split("_")[0]
+                print(f" DATE_TITLE: {date_title} - {radar_for_title}")
+                formatted_title = self.date_converter(date_title)
+                print(f"FORMATTED_TITLE {formatted_title}")
+                ax.set_title(f"{state.power_selected}: {radar_for_title.title()} {formatted_title}")
+            else:
+                ax.set_title(f"{state.power_selected} Heatmap")
+
+            fig.colorbar(heatmap, ax=ax, label=f"{state.power_selected} (dB)")
+            ax.set_xlabel("Azimuth (degrees)")
+            ax.set_ylabel("Elevation (degrees)")
+
+            plt.tight_layout()
+        except Exception as e:
+            print(f"ERROR CREATING SECOND JPEG IN CREATE HEATMAP{e}")
+
+        csv_path = Path(csv_file)
+        if radar_for_title:
+            radar_path = Path(f"./generatedHeatmaps/{radar_for_title}")
+            radar_path.mkdir(parents=True, exist_ok=True)
+
+            output_dir = csv_path.parent / f"generatedHeatmaps/{radar_for_title}"
+            current_heatmap_output = output_dir / (csv_path.stem + f"_{state.power_selected}" + ".jpg")
+            if not current_heatmap_output.exists():
+                fig.savefig(
+                    current_heatmap_output,
+                    format="jpg",
+                    dpi=300,
+                    bbox_inches="tight"
+                )
+        else:
+            output_dir = csv_path.parent / "generatedHeatmaps/"
+            current_heatmap_output = output_dir / (csv_path.stem + f"_{state.power_selected}" + ".jpg")
+            if not current_heatmap_output.exists():
+                fig.savefig(
+                    current_heatmap_output,
+                    format="jpg",
+                    dpi=300,
+                    bbox_inches="tight"
+                )
 
     def date_converter(self, date_of_data):
         # ex: 0116_123548
