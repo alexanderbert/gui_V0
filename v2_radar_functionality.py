@@ -23,6 +23,7 @@ from scipy.interpolate import griddata
 import customtkinter
 
 from network_toggle import NetworkSwitch
+from power_toggle import PowerSwitch
 import state
 
 dir_path = Path("./captureMode")
@@ -146,6 +147,9 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                                                                   self.capture_packets_run))
         self.capture_packets_button.grid(column=0, row=3)
         self.capture_packets_button.configure(width=200, font=("Arial", 14))
+
+        self.power_switch = PowerSwitch(self.fpga_control_frame, label_a="X-Power", label_b="Y-Power")
+        self.power_switch.grid(column=0, row=4)
 
         self.close_heatmap_button = None
 
@@ -728,6 +732,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             self.progress_bar_stage = 0
 
     def start_threading(self, funct, *args):
+        print(state.power_selected)
         # TODO THE FOLLOWING GETS THE RADAR SELECTED IN THE HEADER
         radar_choice = state.radar_choice.get()
         radar_dict = state.radars_found.get_dict()
@@ -885,7 +890,12 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             return
         azimuth = np.array(azimuth_raw)
         elevation = np.array(elevation_raw)
-        x_power = np.array(x_power_raw)
+        if state.power_selected == "X-Power":
+            power_selected = np.array(x_power_raw)
+        elif state.power_selected == "Y-Power":
+            power_selected = np.array(y_power_raw)
+        else:
+            print("ERROR")
 
         # NEW HEATMAP CREATION
         try:
@@ -897,7 +907,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
 
             POWER = griddata(
                 (azimuth, elevation),
-                x_power,
+                power_selected,
                 (AZ, EL),
                 method="linear",
             )
@@ -956,11 +966,11 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                 print(f" DATE_TITLE: {date_title} - {radar_for_title}")
                 formatted_title = self.date_converter(date_title)
                 print(f"FORMATTED_TITLE {formatted_title}")
-                ax.set_title(f"X Power: {radar_for_title.title()} {formatted_title}")
+                ax.set_title(f"{state.power_selected}: {radar_for_title.title()} {formatted_title}")
             else:
-                ax.set_title("X Power Heatmap")
+                ax.set_title(f"{state.power_selected} Heatmap")
 
-            fig.colorbar(heatmap, ax=ax, label="X Power (dB)")
+            fig.colorbar(heatmap, ax=ax, label=f"{state.power_selected} (dB)")
             ax.set_xlabel("Azimuth (degrees)")
             ax.set_ylabel("Elevation (degrees)")
 
@@ -1021,7 +1031,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             radar_path.mkdir(parents=True, exist_ok=True)
 
             output_dir = csv_path.parent / f"generatedHeatmaps/{radar_for_title}"
-            current_heatmap_output = output_dir / (csv_path.stem + ".jpg")
+            current_heatmap_output = output_dir / (csv_path.stem + f"_{state.power_selected}"+ ".jpg")
             if not current_heatmap_output.exists():
                 fig.savefig(
                     current_heatmap_output,
@@ -1031,7 +1041,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                 )
         else:
             output_dir = csv_path.parent / "generatedHeatmaps/"
-            current_heatmap_output = output_dir / (csv_path.stem + ".jpg")
+            current_heatmap_output = output_dir / (csv_path.stem + f"_{state.power_selected}" + ".jpg")
             if not current_heatmap_output.exists():
                 fig.savefig(
                     current_heatmap_output,

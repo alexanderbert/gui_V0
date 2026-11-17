@@ -23,6 +23,7 @@ repeat_value = 1
 S_FLAG_VALUE = 300
 expected_Q_VALUE_VALUE = 0
 radar_choice = None
+power_selected = "X-Power"
 
 
 radars_found = None
