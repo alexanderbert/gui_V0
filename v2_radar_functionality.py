@@ -105,11 +105,6 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             foreground='black'
         )
 
-
-        print(self.radar_style.element_names())
-        print(self.radar_style.layout('text.Horizontal.TProgressbar'))
-        print(self.radar_style.theme_use())
-
         self.dash_w_var = tk.DoubleVar()
         self.dash_s_var = tk.DoubleVar()
         self.dash_e_var = tk.DoubleVar()
@@ -187,6 +182,14 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.image_viewer_button = customtkinter.CTkButton(self.fpga_control_frame, text="Image Viewer", command=lambda: self.image_viewer())
         self.image_viewer_button.grid(column=0, row=5)
         self.image_viewer_button.configure(width=200, font=("Arial", 14))
+
+
+        self.pulse_control_defaults = ["Default", "Balloon", "Kickback", "Radar Checkout"]
+        self.pulse_control_combo_drop = customtkinter.CTkComboBox(self.fpga_control_frame, values=self.pulse_control_defaults, state="readonly",
+                                                    command=print("HELO"))
+        self.pulse_control_combo_drop.set(self.pulse_control_defaults[0])
+        self.pulse_control_combo_drop.grid(column=0, row=6)
+        self.pulse_control_combo_drop.configure(width=200, font=("Arial", 20), dropdown_font=("Arial", 20), justify="center")
 
         self.close_heatmap_button = None
 
