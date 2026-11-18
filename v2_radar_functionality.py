@@ -896,6 +896,9 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         x_power_raw = []
         y_power_raw = []
 
+        fig = None
+        ax = None
+
         csv_file = filedialog.askopenfilename(
             initialdir=".",
             title="Choose a folder",
@@ -938,167 +941,139 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             return
         azimuth = np.array(azimuth_raw)
         elevation = np.array(elevation_raw)
-        if state.power_selected == "X-Power":
-            power_selected = np.array(x_power_raw)
-            self.create_other_power_jpg(csv_file, azimuth, elevation, y_power_raw, 'Y-Power')
-        elif state.power_selected == "Y-Power":
-            power_selected = np.array(y_power_raw)
-            self.create_other_power_jpg(csv_file, azimuth, elevation, x_power_raw, 'X-Power')
-        else:
-            print("ERROR")
 
-        # NEW HEATMAP CREATION
         try:
-            fig, ax = plt.subplots(figsize=(8, 6))
-            az_grid = np.linspace(azimuth.min(), azimuth.max(), 500)
-            el_grid = np.linspace(elevation.min(), elevation.max(), 500)
-
-            AZ, EL = np.meshgrid(az_grid, el_grid)
-
-            POWER = griddata(
-                (azimuth, elevation),
-                power_selected,
-                (AZ, EL),
-                method="linear",
-            )
-
-            peak_index = np.nanargmax(POWER)
-
-            peak_el, peak_az = np.unravel_index(
-                peak_index,
-                POWER.shape
-            )
-
-            peak_azimuth = AZ[peak_el, peak_az]
-            peak_elevation = EL[peak_el, peak_az]
-            peak_power = POWER[peak_el, peak_az]
-            ax.plot(
-                peak_azimuth,
-                peak_elevation,
-                marker="x",
-                markersize=12,
-                markeredgewidth=3,
-                color="black"
-            )
-
-            ax.annotate(
-                #f"{peak_azimuth:.2f}, {peak_elevation:.2f}",
-                f"{peak_azimuth:.2f}, {peak_elevation:.2f}\n {peak_power:.2f} dB",
-                (peak_azimuth, peak_elevation),
-                xytext=(-20, -30),
-                textcoords="offset points",
-                color="black",
-
-            )
-            heatmap = ax.pcolormesh(
-                AZ,
-                EL,
-                POWER,
-                shading="auto",
-                cmap="inferno",
-            )
-
-            # heatmap = ax.contour(
-            #     AZ,
-            #     EL,
-            #     POWER,
-            #     shading="auto",
-            #     cmap="inferno"
-            #     # cmap="gray
-            # )
-
-            # plt.fig(4, 6)
-
-            #TITLE CHECK TO CONTAIN DATE INFO
-            if "heatmap_" in csv_file:
-                date_title = csv_file.split("_heatmap_")[1].split(".csv")[0]
-                radar_for_title = os.path.basename(csv_file).split("_")[0]
-                print(f" DATE_TITLE: {date_title} - {radar_for_title}")
-                formatted_title = self.date_converter(date_title)
-                print(f"FORMATTED_TITLE {formatted_title}")
-                ax.set_title(f"{state.power_selected}: {radar_for_title.title()} {formatted_title}")
+            if state.power_selected == "X-Power":
+                #power_selected = np.array(x_power_raw)
+                self.create_power_jpg(csv_file, azimuth, elevation, y_power_raw, 'Y-Power')
+                fig, ax = self.create_power_jpg(csv_file, azimuth, elevation, x_power_raw, 'X-Power')
             else:
-                ax.set_title(f"{state.power_selected} Heatmap")
+                #power_selected = np.array(y_power_raw)
+                self.create_power_jpg(csv_file, azimuth, elevation, x_power_raw, 'X-Power')
+                fig, ax = self.create_power_jpg(csv_file, azimuth, elevation, y_power_raw, 'Y-Power')
+        except Exception as e:
+            print(f"WITHIN CREATE HEATMAP: {e}")
 
-            fig.colorbar(heatmap, ax=ax, label=f"{state.power_selected} (dB)")
-            ax.set_xlabel("Azimuth (degrees)")
-            ax.set_ylabel("Elevation (degrees)")
-
-            plt.tight_layout()
-        except:
+        if fig is None or ax is None:
+            self.status_var.set("Data error in CSV file")
+            self.status_entry.configure(fg_color="Yellow", text_color="Black")
+            print("VALID DATA MISSING")
             self.replace_initial_i_o()
             self.heat_map_specific_show()
             self.run_heatmap_fpga_button.configure(state="normal")
             self.capture_packets_button.configure(state="normal")
-            return
+            return 1
 
-        # TODO Hide this initial version of HEATMAP FOR NOW
-        # heatmap = np.full(
-        #     (len(elevation), len(azimuth)),np.nan
-        # )
-        # for az, el, p in zip(azimuth, elevation, x_power):
-        #     az_index = np.where(azimuth == az)[0][0]
-        #     el_index = np.where(elevation == el)[0][0]
+        # # NEW HEATMAP CREATION
+        # try:
+        #     fig, ax = plt.subplots(figsize=(8, 6))
+        #     az_grid = np.linspace(azimuth.min(), azimuth.max(), 500)
+        #     el_grid = np.linspace(elevation.min(), elevation.max(), 500)
         #
-        #     heatmap[el_index, az_index] = p
+        #     AZ, EL = np.meshgrid(az_grid, el_grid)
         #
-        # fig, ax = plt.subplots(figsize=(3.5,6))
+        #     POWER = griddata(
+        #         (azimuth, elevation),
+        #         power_selected,
+        #         (AZ, EL),
+        #         method="linear",
+        #     )
         #
-        # print("Number of oints:", len(azimuth))
-        # print("Non-Nan heatmap values:", np.count_nonzero(~np.isnan(heatmap)))
-        # print("Power min", np.nanmin(heatmap))
-        # print("Power max", np.nanmax(heatmap))
+        #     peak_index = np.nanargmax(POWER)
         #
-        # im = ax.imshow(
-        #     heatmap,
-        #     origin="lower",
-        #     aspect="auto",
-        #     extent =[
-        #         azimuth.min(),
-        #         azimuth.max(),
-        #         elevation.min(),
-        #         elevation.max()
-        #     ],
-        #     cmap="inferno",
-        #     interpolation="nearest"
-        #     #cmap=gray
-        # )
+        #     peak_el, peak_az = np.unravel_index(
+        #         peak_index,
+        #         POWER.shape
+        #     )
         #
-        # ax.set_xlabel("Azimuth")
-        # ax.set_ylabel("Elevation")
-        # ax.set_title("Linear X/Y Power")
+        #     peak_azimuth = AZ[peak_el, peak_az]
+        #     peak_elevation = EL[peak_el, peak_az]
+        #     peak_power = POWER[peak_el, peak_az]
+        #     ax.plot(
+        #         peak_azimuth,
+        #         peak_elevation,
+        #         marker="x",
+        #         markersize=12,
+        #         markeredgewidth=3,
+        #         color="black"
+        #     )
         #
-        # fig.colorbar(
-        #     im,
-        #     ax=ax,
-        #     label="Power (dB)"
-        # )
-
-        # CREATE JPG IF IT DOESNT EXIT
-        csv_path = Path(csv_file)
-        if radar_for_title:
-            radar_path = Path(f"./generatedHeatmaps/{radar_for_title}")
-            radar_path.mkdir(parents=True, exist_ok=True)
-
-            output_dir = csv_path.parent / f"generatedHeatmaps/{radar_for_title}"
-            current_heatmap_output = output_dir / (csv_path.stem + f"_{state.power_selected}"+ ".jpg")
-            if not current_heatmap_output.exists():
-                fig.savefig(
-                    current_heatmap_output,
-                    format="jpg",
-                    dpi=300,
-                    bbox_inches="tight"
-                )
-        else:
-            output_dir = csv_path.parent / "generatedHeatmaps/"
-            current_heatmap_output = output_dir / (csv_path.stem + f"_{state.power_selected}" + ".jpg")
-            if not current_heatmap_output.exists():
-                fig.savefig(
-                    current_heatmap_output,
-                    format="jpg",
-                    dpi=300,
-                    bbox_inches="tight"
-                )
+        #     ax.annotate(
+        #         #f"{peak_azimuth:.2f}, {peak_elevation:.2f}",
+        #         f"{peak_azimuth:.2f}, {peak_elevation:.2f}\n {peak_power:.2f} dB",
+        #         (peak_azimuth, peak_elevation),
+        #         xytext=(-20, -30),
+        #         textcoords="offset points",
+        #         color="black",
+        #
+        #     )
+        #     heatmap = ax.pcolormesh(
+        #         AZ,
+        #         EL,
+        #         POWER,
+        #         shading="auto",
+        #         cmap="inferno",
+        #     )
+        #
+        #     # heatmap = ax.contour(
+        #     #     AZ,
+        #     #     EL,
+        #     #     POWER,
+        #     #     shading="auto",
+        #     #     cmap="inferno"
+        #     #     # cmap="gray
+        #     # )
+        #
+        #     # plt.fig(4, 6)
+        #
+        #     #TITLE CHECK TO CONTAIN DATE INFO
+        #     if "heatmap_" in csv_file:
+        #         date_title = csv_file.split("_heatmap_")[1].split(".csv")[0]
+        #         radar_for_title = os.path.basename(csv_file).split("_")[0]
+        #         print(f" DATE_TITLE: {date_title} - {radar_for_title}")
+        #         formatted_title = self.date_converter(date_title)
+        #         print(f"FORMATTED_TITLE {formatted_title}")
+        #         ax.set_title(f"{state.power_selected}: {radar_for_title.title()} {formatted_title}")
+        #     else:
+        #         ax.set_title(f"{state.power_selected} Heatmap")
+        #
+        #     fig.colorbar(heatmap, ax=ax, label=f"{state.power_selected} (dB)")
+        #     ax.set_xlabel("Azimuth (degrees)")
+        #     ax.set_ylabel("Elevation (degrees)")
+        #
+        #     plt.tight_layout()
+        # except:
+        #     self.replace_initial_i_o()
+        #     self.heat_map_specific_show()
+        #     self.run_heatmap_fpga_button.configure(state="normal")
+        #     self.capture_packets_button.configure(state="normal")
+        #     return
+        #
+        # # CREATE JPG IF IT DOESNT EXIT
+        # csv_path = Path(csv_file)
+        # if radar_for_title:
+        #     radar_path = Path(f"./generatedHeatmaps/{radar_for_title}")
+        #     radar_path.mkdir(parents=True, exist_ok=True)
+        #
+        #     output_dir = csv_path.parent / f"generatedHeatmaps/{radar_for_title}"
+        #     current_heatmap_output = output_dir / (csv_path.stem + f"_{state.power_selected}"+ ".jpg")
+        #     if not current_heatmap_output.exists():
+        #         fig.savefig(
+        #             current_heatmap_output,
+        #             format="jpg",
+        #             dpi=300,
+        #             bbox_inches="tight"
+        #         )
+        # else:
+        #     output_dir = csv_path.parent / "generatedHeatmaps/"
+        #     current_heatmap_output = output_dir / (csv_path.stem + f"_{state.power_selected}" + ".jpg")
+        #     if not current_heatmap_output.exists():
+        #         fig.savefig(
+        #             current_heatmap_output,
+        #             format="jpg",
+        #             dpi=300,
+        #             bbox_inches="tight"
+        #         )
 
         def fixed_width_coord(x,y):
             return f'x={x:8.2f}, y={y:8.2f}'
@@ -1129,8 +1104,10 @@ class RadarFunctionality2(customtkinter.CTkFrame):
         self.close_heatmap_button.configure(width=200, font=("Arial", 14))
         return self.canvas
 
-    def create_other_power_jpg(self,csv_file, azimuth, elevation, power_selected, title):
+    def create_power_jpg(self,csv_file, azimuth, elevation, power_selected, title):
         radar_for_title = None
+        fig = None
+        ax = None
         try:
             fig, ax = plt.subplots(figsize=(8, 6))
             az_grid = np.linspace(azimuth.min(), azimuth.max(), 500)
@@ -1198,6 +1175,7 @@ class RadarFunctionality2(customtkinter.CTkFrame):
             plt.tight_layout()
         except Exception as e:
             print(f"ERROR CREATING SECOND JPEG IN CREATE HEATMAP{e}")
+            return False
 
         csv_path = Path(csv_file)
         if radar_for_title:
@@ -1223,6 +1201,8 @@ class RadarFunctionality2(customtkinter.CTkFrame):
                     dpi=300,
                     bbox_inches="tight"
                 )
+
+        return fig, ax
 
     def date_converter(self, date_of_data):
         # ex: 0116_123548
